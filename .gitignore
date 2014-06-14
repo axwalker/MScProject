@@ -1,5 +1,10 @@
 *.*~
 *.class
+.metadata/
+*.prefs
+practice/.settings
+.settings/org.eclipse.jdt.core.prefs
+
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
