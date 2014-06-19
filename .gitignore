@@ -1,10 +1,8 @@
+# Temp files
 *.*~
-*.class
-.metadata/
-*.prefs
-practice/.settings
-.settings/org.eclipse.jdt.core.prefs
 
+# Java files
+*.class
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
@@ -13,6 +11,15 @@ practice/.settings
 *.jar
 *.war
 *.ear
+
+# Eclipse files
+.metadata/
+*.prefs
+practice/.settings
+.settings/org.eclipse.jdt.core.prefs
+
+# Graph data folders
+data/
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*

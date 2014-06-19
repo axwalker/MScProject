@@ -1,5 +1,4 @@
 package pagerank;
-//package edu.cmu.graphchi.apps;
 
 import edu.cmu.graphchi.*;
 import edu.cmu.graphchi.datablocks.FloatConverter;
@@ -32,7 +31,7 @@ public class Pagerank implements GraphChiProgram<Float, Float> {
     public void update(ChiVertex<Float, Float> vertex, GraphChiContext context)  {
         if (context.getIteration() == 0) {
             /* Initialize on first iteration */
-            vertex.setValue(1.0f);
+            vertex.setValue(0.125f);
         } else {
             /* On other iterations, set my value to be the weighted
                average of my in-coming neighbors pageranks.
@@ -44,12 +43,13 @@ public class Pagerank implements GraphChiProgram<Float, Float> {
             vertex.setValue(0.15f + 0.85f * sum);
         }
 
+        System.out.println("vertex: " + vertex.getId() + " out edges: " + vertex.numOutEdges()
+        		+ " in edges: " + vertex.numInEdges() + " value: " + vertex.getValue());
         /* Write my value (divided by my out-degree) to my out-edges so neighbors can read it. */
         float outValue = vertex.getValue() / vertex.numOutEdges();
         for(int i=0; i<vertex.numOutEdges(); i++) {
             vertex.outEdge(i).setValue(outValue);
         }
-
     }
 
 
@@ -118,8 +118,8 @@ public class Pagerank implements GraphChiProgram<Float, Float> {
         /* Output results */
         int i = 0;
         VertexIdTranslate trans = engine.getVertexIdTranslate();
-        TreeSet<IdFloat> top20 = Toplist.topListFloat(baseFilename, engine.numVertices(), 20);
-        for(IdFloat vertexRank : top20) {
+        TreeSet<IdFloat> top30 = Toplist.topListFloat(baseFilename, engine.numVertices(), 30);
+        for(IdFloat vertexRank : top30) {
             System.out.println(++i + ": " + trans.backward(vertexRank.getVertexId()) + " = " + vertexRank.getValue());
         }
     }
