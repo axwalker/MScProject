@@ -87,10 +87,8 @@ Background
 \end_layout
 
 \begin_layout Standard
-Networks representing real systems often display a number of topological
- features.
- Of particular interest is the presence of a community structure.
- Vertices may be organised in communities, with many edges joining vertices
+Networks representing real systems often have a community structure.
+ Vertices will be organised in communities, with many edges joining vertices
  of the same communities and comparatively few edges joining vertices of
  diﬀerent communities 
 \begin_inset CommandInset citation
@@ -137,7 +135,7 @@ key "kyrola2012graphchi"
 
 \begin_layout Enumerate
 Many algorithms used for identifying communities take polynomial time in
- the number of edges and/or vertices 
+ the number of edges and/or vertices
 \begin_inset CommandInset citation
 LatexCommand citep
 key "fortunato2010community"
@@ -176,7 +174,7 @@ key "blondel2008fast"
 \end_layout
 
 \begin_layout Itemize
-ORCA Reduction and ContrAction graph clustering.
+ORCA reduction and contraction graph clustering.
  
 \begin_inset CommandInset citation
 LatexCommand citep
@@ -340,7 +338,7 @@ Week
 \begin_inset space ~
 \end_inset
 
-10 Investigate research question in extras.
+10 Investigate research questions in extras.
 \end_layout
 
 \begin_layout Section
