@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="utf-8">
+        <meta name="description" content="Test Page for MSc project">
+        <meta name="author" content="Andrew Walker">
+
+        <title>Community Detection</title>
+
+        <link rel="stylesheet" href="css/main.css">
+    </head>
+
+    <body>
+
+    <div id="main">
+        <div id="input">
+            <div id="fileupload" class="left">
+                <form method="POST" action="upload" enctype="multipart/form-data" >
+                    File:
+                    <input type="file" name="file" id="file" /> <br/>
+                    Destination:
+                    <input type="text" value="/tmp" name="destination"/>
+                    </br>
+                    <input type="submit" value="Upload" name="upload" id="upload" />
+                </form>
+            </div>
+            <div id="uploadoptions" class="right">            
+                <p> More upload options:
+                    <input type="button" value="Show Server Time" onclick='ajaxAsyncRequest("get-current-time")'/> </p>
+            </div>
+        </div>
+        <div id="output">
+            <div id="cy"> </div>
+        </div>
+
+
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js""></script>
+        <script src="http://cytoscape.github.io/cytoscape.js/api/cytoscape.js-latest/cytoscape.min.js"></script>
+        <script src="js/cyexample.js"></script>
+    </body>
+
+</html>
