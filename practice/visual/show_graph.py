@@ -21,14 +21,6 @@ def get_node_colour_map_binary(filename):
             index += 1
     return label_map
 
-def get_node_colour_map(filename):
-    label_map = {}
-    with open(filename, 'r') as f:
-        for line in f:
-            elements = line.rstrip().split(" ")
-            label_map[elements[0]] = int(elements[1])
-    return label_map
-
 G = make_graph(sys.argv[1])
 val_map = get_node_colour_map_binary(sys.argv[1] + ".4Bj.vout")
 
