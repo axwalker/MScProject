@@ -1,29 +1,38 @@
-function ajaxAsyncRequest(reqURL)
-{
-    //Creating a new XMLHttpRequest object
-    var xmlhttp;
-    if (window.XMLHttpRequest){
-        xmlhttp = new XMLHttpRequest(); //for IE7+, Firefox, Chrome, Opera, Safari
-    } else {
-        xmlhttp = new ActiveXObject("Microsoft.XMLHTTP"); //for IE6, IE5
-    }
-    //Create a asynchronous GET request
-    xmlhttp.open("GET", reqURL, true);
-     
-    //When readyState is 4 then get the server output
-    xmlhttp.onreadystatechange = function() {
-        if (xmlhttp.readyState == 4) { 
-            if (xmlhttp.status == 200) 
-            {
-                document.getElementById("message").innerHTML = xmlhttp.responseText;
-                //alert(xmlhttp.responseText);
-            } 
-            else
-            {
-                alert('Something is wrong !!');
+$(document).ready(function() {
+    console.log("script run?");                                     
+    $("#myButton").click(function(e) {
+        console.log("entered message button click...");                     
+        $.ajax({
+            type: "POST",
+            url: "HelloWorld",
+            data: "name=andrew",
+            dataType: "json",
+
+            success: function( data, textStatus, jqXHR) {
+                if(data.success) {
+                    $("#ajaxResponse").html("");
+                    $("#ajaxResponse").append("<b>Name:</b> " + data.nameInfo.nameSt);
+                } 
+
+                else {
+                    $("#ajaxResponse").html("<div><b>Country code in Invalid!</b></div>");
+                }
+            },
+
+            error: function(jqXHR, textStatus, errorThrown){
+                 console.log("Something really bad happened " + textStatus);
+                  $("#ajaxResponse").html(jqXHR.responseText);
+            },
+
+            beforeSend: function(jqXHR, settings) {
+                $('#myButton').attr("disabled", true);
+            },
+
+            complete: function(jqXHR, textStatus){
+                $('#myButton').attr("disabled", false);
             }
-        }
-    };
-     
-    xmlhttp.send(null);
-}
+      
+        });        
+    });
+ 
+});

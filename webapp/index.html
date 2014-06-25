@@ -27,7 +27,9 @@
             </div>
             <div id="uploadoptions" class="right">            
                 <p> More upload options:
-                    <input type="button" value="Show Server Time" onclick='ajaxAsyncRequest("get-current-time")'/> </p>
+                    <input id="myButton" type="button" value="Submit" />
+                    <div id="ajaxResponse">!</div>
+                </p>
             </div>
         </div>
         <div id="output">
@@ -37,6 +39,7 @@
 
         <script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js""></script>
         <script src="http://cytoscape.github.io/cytoscape.js/api/cytoscape.js-latest/cytoscape.min.js"></script>
+        <script src="js/ajaxpractice.js"></script>
         <script src="js/cyexample.js"></script>
     </body>
 

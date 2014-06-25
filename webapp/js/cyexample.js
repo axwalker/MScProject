@@ -1,5 +1,7 @@
 $(function(){ // on dom ready
 
+console.log("cyexample script running...?");
+
 $('#cy').cytoscape({
   style: cytoscape.stylesheet()
     .selector('node')
