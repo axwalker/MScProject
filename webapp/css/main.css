@@ -5,49 +5,30 @@
 }
 
 body { 
-  font: 14px helvetica neue, helvetica, arial, sans-serif;
+    font-family: "proxima-nova", sans-serif;
+}
+
+#left {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 20%;
+    border-right: solid black 1px;
+    padding: 10px;
+}
+
+#right {
+    margin-left: 20%;
+    height: 100%;
+    width: 80%;
 }
 
 #main {
-    max-width: 1000px;
-    margin: 10px auto; 
-    border: solid black 1px;
-    padding: 2px;
-}
-
-#input {
-    max-width: 98%;
-    margin: 10px auto; 
-    border: solid black 1px;
-    padding: 5px;
-}
-
-#fileupload {
-    display: inline-block;
-    width: 30%;
-    height: 100%;
-    margin: 5px;
-}
-
-#uploadoptions {
-    display: inline-block;
-    width: 65%;
-    height: 100%;
-    margin: 5px;
-}
-
-#output {
-    max-width: 98%;
-    margin: 10px auto; 
-    border: solid black 1px;
-    padding: 0px;
 }
 
 #cy {
-    bottom: 0px;
-    display: block;
-    height: 550px;
-    line-height: 28px;
-    right: 0px;
-    width: 100%;
+    min-height: 750px;
+    height: 100%;
 }
