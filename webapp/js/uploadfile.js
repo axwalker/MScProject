@@ -3,9 +3,24 @@ $('#uploadButton').click(function(){
     console.log("running upload");
     $.ajax({
         type: 'POST',
-        url: 'UploadFile',  //Server script to process data
+        url: 'RunLabelPropagation',
         data: formData,
         dataType: "json",
+
+        success: function( data, textStatus, jqXHR) {
+            if(data.success) {
+                console.log("java says success");
+                cy = cytoscape( options = {
+                    container: document.getElementById('cy')
+                });
+                cy.load(data);
+                $("#ajaxResponse").html("<div>" + JSON.stringify(data) + "</div>");
+            } else {
+                console.log("java says failure");
+                console.log(data.error);
+                $("#ajaxResponse").html("<div><b>Failed to process graph</b></div>");
+            }
+        },
 
         beforeSend: function(jqXHR, settings) {
             $('#myButton').attr("disabled", true);
@@ -15,19 +30,11 @@ $('#uploadButton').click(function(){
             $('#myButton').attr("disabled", false);
         },
 
-        success: function( data, textStatus, jqXHR) {
-            if(data.success) {
-                console.log("java says success");
-                console.log(data.filename);
-            } else {
-                console.log("java says failure");
-            }
-        },
-
         error: function(jqXHR, textStatus, errorThrown){
             console.log("Something really bad happened " + textStatus);
+            $("#ajaxResponse").html("<div><b>Failed to process graph: POST error</b></div>");
         },
-        //Options to tell jQuery not to process data or worry about content-type.
+        
         cache: false,
         contentType: false,
         processData: false

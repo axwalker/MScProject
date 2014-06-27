@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
     <head>
         <meta charset="utf-8">
         <meta name="description" content="Test Page for MSc project">
@@ -13,35 +12,31 @@
 
     <body>
 
-    <div id="main">
+        <div id="main">
 
-        <div id="left">
-            <form action="upload" method="post" enctype="multipart/form-data">
-                <input type="file" name="file">
-                <input id= "uploadButton" type="button" value="Upload" /> <br>
-                <label for="algorithm">Algorithm:</label> <br>
-                <select id="algorithm">
-                    <option>Label Propagation</option>
-                    <option>Louvain Method</option>
-                    <option>ORCA</option>
-                </select> <br>
-                <input id="myButton" type="button" value="Visualise graph" />
-            </form>
-            <div id="ajaxResponse">This text will get replaced</div>
+            <div id="left">
+                <form action="upload" method="post" enctype="multipart/form-data">
+                    <input type="file" name="file">
+                    <label for="algorithm">Algorithm:</label> <br>
+                    <select id="algorithm">
+                        <option>Label Propagation</option>
+                        <option>Louvain Method</option>
+                        <option>ORCA</option>
+                    </select> <br>
+                    <input id="uploadButton" type="button" value="Visualise graph" />
+                </form>
+                <div id="ajaxResponse">Press the button to upload a graph</div>
+            </div>
+
+            <div id="right">
+                <div id="cy"></div>
+            </div>
+
         </div>
 
-        <div id="right">
-            <div id="cy"></div>
-        </div>
-
-    </div>
-
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js""></script>
-    <script src="http://cytoscape.github.io/cytoscape.js/api/cytoscape.js-latest/cytoscape.min.js"></script>
-    <script src="js/ajaxpracticegraph.js"></script>
-    <script src="js/uploadfile.js"></script>
-    <!--<script src="js/cyexample.js"></script>-->
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js""></script>
+        <script src="http://cytoscape.github.io/cytoscape.js/api/cytoscape.js-latest/cytoscape.min.js"></script>
+        <script src="js/uploadfile.js"></script>
 
     </body>
-
 </html>

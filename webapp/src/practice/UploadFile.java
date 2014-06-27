@@ -1,4 +1,4 @@
-package hello;
+package practice;
 
 import java.io.*;
 
