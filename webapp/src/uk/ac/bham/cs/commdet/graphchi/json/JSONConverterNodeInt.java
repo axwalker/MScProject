@@ -40,7 +40,7 @@ public class JSONConverterNodeInt implements JSONConverterNode {
 		JsonObject nodeContainer = new JsonObject();
         JsonObject node = new JsonObject();
         node.addProperty("id", "n" + nodeID);
-        //node.addProperty("parent", "n" + label);
+        node.addProperty("label", "n" + label);
 		nodeContainer.add("data", node);
         
         return nodeContainer;
