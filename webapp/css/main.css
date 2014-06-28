@@ -4,31 +4,70 @@
           box-sizing: border-box;
 }
 
-body { 
-    font-family: "proxima-nova", sans-serif;
+html, body { 
+    height: 100%; 
+    padding: 0; 
+    margin: 0; 
+    font-family: proxima-nova, sans-serif;
+    line-height: 1.6;
 }
 
-#left {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    top: 0;
+div { width: 50%; height: 50%; float: left; }
+
+form { padding: 5px;}
+
+fieldset { border-style: none; }
+
+li { list-style-type: none; }
+
+ul { 
+    -webkit-padding-start: 5px;
+    -webkit-margin-before: 0.2em;
+    -webkit-margin-after: 0.2em; 
+}
+
+#upLeft { 
+    width: 20%; 
+    height: 70%; 
+    background: #DDD; 
+    overflow: auto;
+}
+
+#upRight { 
+    width: 80%; 
+    height: 70%; 
+}
+
+#botLeft { 
+    width: 20%; 
+    height: 30%; 
+    background: #DDD;
+}
+
+#botRight { 
+    width: 80%; 
+    height: 30%; 
+    background: #444;
+    padding: 5px;
+}
+
+#progress {
+    overflow: auto;
+    border-style: solid;
+    border-width: 1px;
+    position: relative;
+    width: 100%;
     height: 100%;
-    width: 20%;
-    border-right: solid black 1px;
-    padding: 10px;
+    padding: 5px;
 }
 
-#right {
-    margin-left: 20%;
+#ajaxResponse {
+    position: relative;
+    width: 100%;
     height: 100%;
-    width: 80%;
-}
-
-#main {
 }
 
 #cy {
-    min-height: 750px;
+    width: 100%;
     height: 100%;
 }

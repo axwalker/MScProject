@@ -1,6 +1,6 @@
 $('#uploadButton').click(function(){
     var formData = new FormData($('form')[0]);
-    console.log("running upload");
+    var arborSeconds = document.getElementById('arborTime').value * 1000;
     $.ajax({
         type: 'POST',
         url: 'RunLabelPropagation',
@@ -9,7 +9,6 @@ $('#uploadButton').click(function(){
 
         success: function( data, textStatus, jqXHR) {
             if(data.success) {
-                console.log("java says success!");
                 cy = cytoscape({
                     container: document.getElementById('cy'),
                     style: 'node { background-color: green; content : data(label); }',
@@ -19,7 +18,7 @@ $('#uploadButton').click(function(){
                             liveUpdate: true, // whether to show the layout as it's running
                             ready: undefined, // callback on layoutready 
                             stop: undefined, // callback on layoutstop
-                            maxSimulationTime: 10000, // max length in ms to run the layout
+                            maxSimulationTime: arborSeconds, // max length in ms to run the layout
                             fit: true, // reset viewport to fit default simulationBounds
                             padding: [ 50, 50, 50, 50 ], // top, right, bottom, left
                             simulationBounds: undefined, // [x1, y1, x2, y2]; [0, 0, width, height] by default
@@ -50,29 +49,35 @@ $('#uploadButton').click(function(){
                 });
                 cy.load(data, 
                 function(e){
-                    $("#ajaxResponse").html("<div>Laying out elements...</div>");
+                    $("#ajaxResponse").append("<li>>: Laying out elements...</li>");
+                    $("#progress").scrollTop($("#progress")[0].scrollHeight);
                 }, 
                 function(e){
-                    $("#ajaxResponse").html("<div>Graph laid out.</div>");
+                    $("#ajaxResponse").append("<li>>: Graph laid out.</li>");
+                    $("#progress").scrollTop($("#progress")[0].scrollHeight);
                 });
             } else {
-                console.log("java says failure");
                 console.log(data.error);
-                $("#ajaxResponse").html("<div><b>Failed to process graph</b></div>");
+                $("#ajaxResponse").append("<li><b>>: Failed to process graph</b></li>");
+                $("#progress").scrollTop($("#progress")[0].scrollHeight);
             }
         },
 
         beforeSend: function(jqXHR, settings) {
-            $('#myButton').attr("disabled", true);
+            $('#uploadButton').attr("disabled", true);
+            $("#ajaxResponse").append("<li>>: Uploading graph...</li>");
+            $("#progress").scrollTop($("#progress")[0].scrollHeight);
         },
 
         complete: function(jqXHR, textStatus){
-            $('#myButton').attr("disabled", false);
+            $("#ajaxResponse").append("<li>>: Graph processed.</li>");
+            $('#uploadButton').attr("disabled", false);
+            $("#progress").scrollTop($("#progress")[0].scrollHeight);
         },
 
         error: function(jqXHR, textStatus, errorThrown){
             console.log("Something really bad happened " + textStatus);
-            $("#ajaxResponse").html("<div><b>Failed to process graph: POST error</b></div>");
+            $("#ajaxResponse").append("<li><b>>: Failed to process graph: POST error</b></li>");
         },
         
         cache: false,

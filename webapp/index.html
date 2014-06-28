@@ -8,36 +8,64 @@
         <title>Community Detection</title>
 
         <link rel="stylesheet" href="css/main.css">
-        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js""></script>
+
+        <script src="js/jquery.min.js"></script>
         <script src="js/arbor.js"></script>
     </head>
 
     <body>
+        <div id="upLeft">
+            <form action="upload" method="post" enctype="multipart/form-data">
+                <fieldset>
+                    <label for="file"><b>Graph file:</b></label> <br>
+                    <input type="file" name="file"> <br>
 
-        <div id="main">
+                    <input type="radio" name="weight" value="weighted" checked="checked" id="weighted">
+                    <label for="weighted">Weighted</label>
+                    <input type="radio" name="weight" value="unweighted" id="unweighted">
+                    <label for="unweighted">Unweighted</label> <br>
 
-            <div id="left">
-                <form action="upload" method="post" enctype="multipart/form-data">
-                    <input type="file" name="file">
-                    <label for="algorithm">Algorithm:</label> <br>
-                    <select id="algorithm">
+                    <input type="radio" name="direction" value="directed" checked="checked" id="directed">
+                    <label for="directed">Directed</label>
+                    <input type="radio" name="direction" value="undirected" id="undirected">
+                    <label for="undirected">Undirected</label> <br>
+
+                    <label for="vertexType"><b>Vertex Data Type:</b></label> <br>
+                    <select id="vertexType" name="vertexType">
+                        <option>String</option>
+                        <option>Integer</option>
+                    </select> <br>
+                    
+                    <label for="algorithm"><b>Detection Algorithm:</b></label> <br>
+                    <select id="algorithm" name="algorithm">
                         <option>Label Propagation</option>
                         <option>Louvain Method</option>
                         <option>ORCA</option>
                     </select> <br>
-                    <input id="uploadButton" type="button" value="Visualise graph" />
-                </form>
-                <div id="ajaxResponse">Press the button to upload a graph</div>
-            </div>
+                    
+                    <label for="arborTime"><b>Max time for layout (seconds):</b></label> <br>
+                    <input type="number" min="5" max="50" step="1" value="10" name="arborTime" id="arborTime"> <br>           
 
-            <div id="right">
-                <div id="cy"></div>
-            </div>
-
+                    <input id="uploadButton" type="button" value="Process Graph" /> <br>
+                </fieldset>
+            </form>
         </div>
 
-        <script src="http://cytoscape.github.io/cytoscape.js/api/cytoscape.js-latest/cytoscape.min.js"></script>
-        <script src="js/uploadfile.js"></script>
+        <div id="upRight">
+            <div id="cy"></div>
+        </div>
 
+        <div id="botLeft">
+            <div id="progress">
+                <div id="ajaxResponse">
+                    <ul style="text-decoration:underline">Progress:</ul>
+                </div>
+            </div>
+        </div>
+
+        <div id="botRight">NodeInfo will go here.</div>
+
+        <script src="js/cytoscape.min.js"></script>
+        <script src="js/uploadfile.js"></script>
     </body>
 </html>
