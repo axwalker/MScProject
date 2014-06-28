@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
         <meta charset="utf-8">
-        <meta name="description" content="Test Page for MSc project">
+        <meta name="description" content="Community Detection Application">
         <meta name="author" content="Andrew Walker">
 
         <title>Community Detection</title>
@@ -14,7 +14,7 @@
     </head>
 
     <body>
-        <div id="upLeft">
+        <div class="left col">
             <form action="upload" method="post" enctype="multipart/form-data">
                 <fieldset>
                     <label for="file"><b>Graph file:</b></label> <br>
@@ -48,23 +48,21 @@
 
                     <input id="uploadButton" type="button" value="Process Graph" /> <br>
                 </fieldset>
-            </form>
+            </form>  
         </div>
-
-        <div id="upRight">
-            <div id="cy"></div>
-        </div>
-
-        <div id="botLeft">
-            <div id="progress">
-                <div id="ajaxResponse">
-                    <ul style="text-decoration:underline">Progress:</ul>
+        <div class="right col">
+            <div class="header row">
+                <b>Community Detection Application</b>
+            </div>
+            <div class="body row">
+                <div id="cy"></div>
+            </div>
+            <div class="footer row scroll-y">
+                <div id="progress">
+                    <div id="ajaxResponse"></div>
                 </div>
             </div>
         </div>
-
-        <div id="botRight">NodeInfo will go here.</div>
-
         <script src="js/cytoscape.min.js"></script>
         <script src="js/uploadfile.js"></script>
     </body>

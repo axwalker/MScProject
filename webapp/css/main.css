@@ -4,70 +4,29 @@
           box-sizing: border-box;
 }
 
-html, body { 
-    height: 100%; 
-    padding: 0; 
-    margin: 0; 
+body { 
+    margin: 0;
     font-family: proxima-nova, sans-serif;
     line-height: 1.6;
 }
 
-div { width: 50%; height: 50%; float: left; }
+.row, .col { overflow: hidden; position: absolute; }
+.row { left: 0; right: 0; }
+.col { top: 0; bottom: 0; }
+.scroll-x { overflow-x: auto; }
+.scroll-y { overflow-y: auto; }
 
-form { padding: 5px;}
+.left.col { width: 300px; background: #A5A5A5; }
+.right.col { left: 300px; right: 0; }
+.header.row { height: 30px; line-height: 26px; background: #858585; padding: 4px; text-align:center; }
+.body.row { top: 30px; bottom: 200px; }
+.footer.row { height: 200px; bottom: 0; background: #858585; }
 
 fieldset { border-style: none; }
-
 li { list-style-type: none; }
 
-ul { 
-    -webkit-padding-start: 5px;
-    -webkit-margin-before: 0.2em;
-    -webkit-margin-after: 0.2em; 
-}
-
-#upLeft { 
-    width: 20%; 
-    height: 70%; 
-    background: #DDD; 
-    overflow: auto;
-}
-
-#upRight { 
-    width: 80%; 
-    height: 70%; 
-}
-
-#botLeft { 
-    width: 20%; 
-    height: 30%; 
-    background: #DDD;
-}
-
-#botRight { 
-    width: 80%; 
-    height: 30%; 
-    background: #444;
-    padding: 5px;
-}
-
-#progress {
-    overflow: auto;
-    border-style: solid;
-    border-width: 1px;
-    position: relative;
-    width: 100%;
-    height: 100%;
-    padding: 5px;
-}
-
-#ajaxResponse {
-    position: relative;
-    width: 100%;
-    height: 100%;
-}
-
 #cy {
+    position: relative;
     width: 100%;
     height: 100%;
 }

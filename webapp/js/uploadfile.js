@@ -9,6 +9,7 @@ $('#uploadButton').click(function(){
 
         success: function( data, textStatus, jqXHR) {
             if(data.success) {
+                $("#ajaxResponse").append("<li>>: Graph processed.</li>");
                 cy = cytoscape({
                     container: document.getElementById('cy'),
                     style: 'node { background-color: green; content : data(label); }',
@@ -70,7 +71,6 @@ $('#uploadButton').click(function(){
         },
 
         complete: function(jqXHR, textStatus){
-            $("#ajaxResponse").append("<li>>: Graph processed.</li>");
             $('#uploadButton').attr("disabled", false);
             $("#progress").scrollTop($("#progress")[0].scrollHeight);
         },
