@@ -1,8 +1,12 @@
 package uk.ac.bham.cs.commdet.servlet;
 
 import java.io.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 
 import javax.servlet.*;
 import javax.servlet.annotation.MultipartConfig;
@@ -19,50 +23,65 @@ import com.google.gson.JsonObject;
 public class RunLabelPropagation extends HttpServlet {
 
 	private static final long serialVersionUID = 1L;
+	private InputStream filecontent;
+	private String filename;
+	private String tempFolderPath;
+	private File tempFolder;
+	private JsonObject responseJson = new JsonObject();
+	
+	protected void doPost(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
+		PrintWriter out = response.getWriter();
+		response.setContentType("text/html");
+		parseFileContents(request.getPart("file"));
+		makeTempFolder();
+		writeGraphFile();
+        processGraph();
+        out.println(responseJson.toString());
+        FileUtils.deleteDirectory(tempFolder);
+	}
 	
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         doPost(request,response);
     }
-
-	protected void doPost(HttpServletRequest request, HttpServletResponse response)
-			throws ServletException, IOException {
-		PrintWriter out = response.getWriter();
-        JsonObject responseJson = new JsonObject();        
-		
-		Part filePart = request.getPart("file");
-	    String filename = getFilename(filePart);
-	    InputStream filecontent = filePart.getInputStream();
-	    String webInfPath = getServletConfig().getServletContext().getRealPath("WEB-INF");
-	    String workingFolder = webInfPath + "/tmp/";
-	    
-	    FileOutputStream outputStream = new FileOutputStream(new File(workingFolder + filename));
+	
+	private void parseFileContents(Part filePart) throws IOException {
+		filename = getFilename(filePart);
+	    filecontent = filePart.getInputStream();		
+	}
+	
+	private void makeTempFolder() {
+	    String currentTime = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss").format(new Date());
+	    tempFolderPath = getServletConfig().getServletContext().getRealPath("WEB-INF") + "/tmp/";
+	    tempFolderPath += currentTime + "_" + filename.hashCode() + "/";
+	    tempFolder = new File(tempFolderPath);
+	    tempFolder.mkdir();
+	}
+	
+	private void writeGraphFile() throws IOException {
+		FileOutputStream outputStream = new FileOutputStream(new File(tempFolderPath + filename));
 		int read = 0;
 		byte[] bytes = new byte[1024];
 		while ((read = filecontent.read(bytes)) != -1) {
 			outputStream.write(bytes, 0, read);
 		}
 		outputStream.close();
-		
-        response.setContentType("text/html");
+	}
+	
+	private void processGraph() {
 		try {
-			LabelPropagation.run(workingFolder + filename, 1, "edgelist");
+			LabelPropagation.run(tempFolderPath + filename, 1, "edgelist");
 			responseJson.addProperty("success", true);
 			JSONConverterNode nodeConverter = new JSONConverterNodeInt();
 			JSONConverterEdge  edgeConverter = new JSONConverterEdgelistUnweighted();
-			FileInputStream nodeStream = new FileInputStream(new File(workingFolder + filename + ".4Bj.vout"));
-			FileInputStream edgeStream = new FileInputStream(new File(workingFolder + filename));
+			FileInputStream nodeStream = new FileInputStream(new File(tempFolderPath + filename + ".4Bj.vout"));
+			FileInputStream edgeStream = new FileInputStream(new File(tempFolderPath + filename));
 			responseJson.add("nodes", nodeConverter.getNodesJson(nodeStream));
 			responseJson.add("edges", edgeConverter.getEdgesJson(edgeStream));
-		} catch (IllegalArgumentException e) {
-			responseJson.addProperty("success", false);
-			responseJson.addProperty("error", "label propagation failed: " + e.getMessage() + "\n" + Arrays.asList(e.getStackTrace()));
 		} catch (Exception e) {
 			responseJson.addProperty("success", false);
 			responseJson.addProperty("error", "label propagation failed: " + e.toString());
 		}
-        out.println(responseJson.toString());
-	    
-        FileUtils.cleanDirectory(new File(workingFolder));
 	}
 	
 	private static String getFilename(Part part) {
