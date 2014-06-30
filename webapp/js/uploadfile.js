@@ -10,9 +10,28 @@ $('#uploadButton').click(function(){
         success: function( data, textStatus, jqXHR) {
             if(data.success) {
                 $("#ajaxResponse").append("<li>>: Graph processed.</li>");
+                console.log('#' + intToARGB(hashCode('n2')));
                 cy = cytoscape({
                     container: document.getElementById('cy'),
-                    style: 'node { background-color: green; content : data(label); }',
+                    
+                    style: [
+                        { 
+                            selector: 'node',
+                            css: {
+                                'content': 'data(id)',
+                                'background-color': 'data(colour)',
+                                'text-valign': 'top',
+                                'text-halign': 'center'
+                            }
+                        },
+                        {
+                            selector: 'edge',
+                            css: {
+                                //'line-color': 'black'
+                            }
+                        }
+                    ],
+
                     layout: {
                         name: 'arbor',
 
@@ -51,28 +70,28 @@ $('#uploadButton').click(function(){
                 cy.load(data, 
                 function(e){
                     $("#ajaxResponse").append("<li>>: Laying out elements...</li>");
-                    $("#progress").scrollTop($("#progress")[0].scrollHeight);
+                    $(".footer").scrollTop($(".footer")[0].scrollHeight);
                 }, 
                 function(e){
                     $("#ajaxResponse").append("<li>>: Graph laid out.</li>");
-                    $("#progress").scrollTop($("#progress")[0].scrollHeight);
+                    $(".footer").scrollTop($(".footer")[0].scrollHeight);
                 });
             } else {
                 console.log(data.error);
                 $("#ajaxResponse").append("<li><b>>: Failed to process graph</b></li>");
-                $("#progress").scrollTop($("#progress")[0].scrollHeight);
+                $(".footer").scrollTop($(".footer")[0].scrollHeight);
             }
         },
 
         beforeSend: function(jqXHR, settings) {
             $('#uploadButton').attr("disabled", true);
             $("#ajaxResponse").append("<li>>: Uploading graph...</li>");
-            $("#progress").scrollTop($("#progress")[0].scrollHeight);
+            $(".footer").scrollTop($(".footer")[0].scrollHeight);
         },
 
         complete: function(jqXHR, textStatus){
             $('#uploadButton').attr("disabled", false);
-            $("#progress").scrollTop($("#progress")[0].scrollHeight);
+            $(".footer").scrollTop($(".footer")[0].scrollHeight);
         },
 
         error: function(jqXHR, textStatus, errorThrown){
@@ -85,3 +104,18 @@ $('#uploadButton').click(function(){
         processData: false
     });
 });
+
+function hashCode(str) { // java String#hashCode
+    var hash = 0;
+    for (var i = 0; i < str.length; i++) {
+       hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return hash;
+} 
+
+function intToARGB(i){
+    return ((i>>24)&0xFF).toString(16) + 
+           ((i>>16)&0xFF).toString(16) + 
+           ((i>>8)&0xFF).toString(16) + 
+           (i&0xFF).toString(16);
+}
