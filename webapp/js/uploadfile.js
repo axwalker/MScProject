@@ -10,24 +10,37 @@ $('#uploadButton').click(function(){
         success: function( data, textStatus, jqXHR) {
             if(data.success) {
                 $("#ajaxResponse").append("<li>>: Graph processed.</li>");
-                console.log('#' + intToARGB(hashCode('n2')));
                 cy = cytoscape({
                     container: document.getElementById('cy'),
                     
                     style: [
-                        { 
+                        {
                             selector: 'node',
                             css: {
-                                'content': 'data(id)',
                                 'background-color': 'data(colour)',
-                                'text-valign': 'top',
+                                'height' : 'data(size)',
+                                'width' : 'data(size)',
+                                'text-valign': 'center',
                                 'text-halign': 'center'
+                            }
+                        },
+                        {
+                            selector: 'node[type = "detail"]',
+                            css: {
+                                'content': 'data(id)'                               
+                            }
+                        },
+                        {
+                            selector: ':selected',
+                            css: {
+                                'border-color': '#fff',
+                                'line-color': '#000'                                
                             }
                         },
                         {
                             selector: 'edge',
                             css: {
-                                //'line-color': 'black'
+                                'width': 'data(weight)'
                             }
                         }
                     ],
@@ -66,8 +79,20 @@ $('#uploadButton').click(function(){
                               return (e.max <= 0.5) || (e.mean <= 0.3);
                             }
                     },
+                    ready: function(){
+                        window.cy = this;
+                        
+                        cy.on('click', 'node', function(){
+                            if (this.data('size')) {
+                                label = this.data('id');
+                                cy.load(data.graphs[label]);
+                            } else {
+                                cy.load(data.graphs.HighLevel);
+                            }
+                        });
+                    }
                 });
-                cy.load(data, 
+                cy.load(data.graphs.HighLevel, 
                 function(e){
                     $("#ajaxResponse").append("<li>>: Laying out elements...</li>");
                     $(".footer").scrollTop($(".footer")[0].scrollHeight);
@@ -104,18 +129,3 @@ $('#uploadButton').click(function(){
         processData: false
     });
 });
-
-function hashCode(str) { // java String#hashCode
-    var hash = 0;
-    for (var i = 0; i < str.length; i++) {
-       hash = str.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    return hash;
-} 
-
-function intToARGB(i){
-    return ((i>>24)&0xFF).toString(16) + 
-           ((i>>16)&0xFF).toString(16) + 
-           ((i>>8)&0xFF).toString(16) + 
-           (i&0xFF).toString(16);
-}

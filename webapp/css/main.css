@@ -18,8 +18,7 @@ body {
 
 .left.col { width: 300px; background: #A5A5A5; }
 .right.col { left: 300px; right: 0; }
-.header.row { height: 30px; line-height: 26px; background: #858585; padding: 4px; text-align:center; }
-.body.row { top: 30px; bottom: 200px; }
+.body.row { top: 0px; bottom: 200px; }
 .footer.row { height: 200px; bottom: 0; background: #858585; }
 
 fieldset { border-style: none; }
