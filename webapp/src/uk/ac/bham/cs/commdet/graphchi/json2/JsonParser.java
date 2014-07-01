@@ -1,11 +1,14 @@
 package uk.ac.bham.cs.commdet.graphchi.json2;
 
+import java.awt.Color;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
+import java.util.TreeSet;
 
 import org.apache.commons.io.IOUtils;
 
@@ -13,6 +16,10 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import edu.cmu.graphchi.datablocks.IntConverter;
+import edu.cmu.graphchi.engine.GraphChiEngine;
+import edu.cmu.graphchi.preprocessing.VertexIdTranslate;
+import edu.cmu.graphchi.util.IdInt;
+import edu.cmu.graphchi.util.Toplist;
 
 public class JsonParser {
 
@@ -20,15 +27,20 @@ public class JsonParser {
 	private Map<Integer, JsonObject> lowLevel = new HashMap<Integer, JsonObject>();
 	private Map<Integer, Integer> allNodes = new HashMap<Integer, Integer>();
 	private Map<Edge, Integer> highLevelEdges = new HashMap<Edge, Integer>();
+	private Map<Integer, String> labelColours = new HashMap<Integer, String>();
+	private GraphChiEngine engine;
+	private String filepath;
 	
-	public JsonParser() {
+	public JsonParser(GraphChiEngine engine, String filepath) {
 		JsonArray nodes = new JsonArray();
 		JsonArray edges = new JsonArray();
 		this.highLevel.add("nodes", nodes);
 		this.highLevel.add("edges", edges);
+		this.engine = engine;
+		this.filepath = filepath;
 	}
 	
-	public JsonObject parseGraph(InputStream vertexInputStream, InputStream edgeInputStream) {
+	public JsonObject parseGraph(InputStream vertexInputStream, InputStream edgeInputStream) throws IOException {
 		parseVertices(vertexInputStream);
 		parseEdges(edgeInputStream);
 		JsonObject graphs = new JsonObject();
@@ -39,29 +51,21 @@ public class JsonParser {
 		return graphs;
 	}
 
-	private void parseVertices(InputStream inputStream) {
-		byte[] input;
-		try {
-			input = IOUtils.toByteArray(inputStream);
-			for (int i = 0; i < input.length; i += 4) {
-				byte[] labelArray = new byte[4];
-				int nodeIndex = i/4;
-				labelArray[0] = input[i];
-				labelArray[1] = input[i+1];
-				labelArray[2] = input[i+2];
-				labelArray[3] = input[i+3];
-				int label = (new IntConverter()).getValue(labelArray);
-				if (label >= 0) {
-					if (!labelExists(label)) {
-						addNewLabelGraph(label);
-					}
-					addNodeToLabelGraph(nodeIndex, label);
-					allNodes.put(nodeIndex, label);
-				}
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+	private void parseVertices(InputStream inputStream) throws IOException {
+		VertexIdTranslate trans = engine.getVertexIdTranslate();
+        TreeSet<IdInt> top = Toplist.topListInt(filepath, engine.numVertices(), 1000000);
+        for(IdInt vertex : top) {
+        	int nodeID = trans.backward(vertex.getVertexId());
+        	int label = (int)vertex.getValue();
+        	if (label >= 0) {
+        		if (!labelExists(label)) {
+        			labelColours.put(label, getRandomColour());
+            		addNewLabelGraph(label);
+            	}
+        		addNodeToLabelGraph(nodeID, label);
+                allNodes.put(nodeID, label);	
+        	}		
+        }
 		updateHighLevelNodes();
 	}
 	
@@ -89,10 +93,10 @@ public class JsonParser {
 	private JsonObject newHighNode(int label, int size) {
 		JsonObject nodeContainer = new JsonObject();
 		JsonObject node = new JsonObject();
-		node.addProperty("id", "n" + label);
+		node.addProperty("id", "" + label);
 		node.addProperty("label", "" + label);
 		node.addProperty("size", size);
-		node.addProperty("colour", intToARGB(label));
+		node.addProperty("colour", getColour(label));
 		nodeContainer.add("data", node);
 		return nodeContainer;
 	}
@@ -100,9 +104,10 @@ public class JsonParser {
 	private void addNodeToLabelGraph(int nodeID, int label) {
 		JsonObject nodeContainer = new JsonObject();
 		JsonObject node = new JsonObject();
-		node.addProperty("id", "n" + nodeID);
+		node.addProperty("id", "" + nodeID);
 		node.addProperty("label", "" + label);
-		node.addProperty("colour", intToARGB(label));
+		node.addProperty("type", "detail");
+		node.addProperty("colour", getColour(label));
 		nodeContainer.add("data", node);
 		JsonArray labelNodes = lowLevel.get(label).getAsJsonArray("nodes");
 		labelNodes.add(nodeContainer);
@@ -116,19 +121,25 @@ public class JsonParser {
 		try {
 			while ((line = br.readLine()) != null) {
 				Edge edge = getUnweightedEdge(edgeID, line);
-				if (getNodeLabel(edge.getSource()) == getNodeLabel(edge.getTarget())) {
+				if (getNodeLabel(edge.getSource()).equals(getNodeLabel(edge.getTarget()))) {
 					JsonObject edgeContainer = new JsonObject();
-			        JsonObject edgeJson = new JsonObject();
+			        JsonObject edgeJson = new JsonObject(); 
 			        edgeJson.addProperty("id", "e" + edgeID);
-			        edgeJson.addProperty("source", "n" + edge.getSource());
-			        edgeJson.addProperty("target", "n" + edge.getTarget());
+			        edgeJson.addProperty("source", "" + edge.getSource());
+			        edgeJson.addProperty("target", "" + edge.getTarget());
 					edgeContainer.add("data", edgeJson);
-					JsonArray labelEdges = lowLevel.get(getNodeLabel(edge.getSource())).getAsJsonArray("edges");
+					JsonObject labelObject = lowLevel.get(getNodeLabel(edge.getSource()));
+					JsonArray labelEdges;
+					try {
+						labelEdges = labelObject.getAsJsonArray("edges"); //Null pointer exception
+					} catch (NullPointerException npe) {
+						throw new NullPointerException("label:" + getNodeLabel(edge.getSource()));
+					}
 					labelEdges.add(edgeContainer);
 				} else {
-					Edge interLabelEdge = new Edge(edge.getId(), getNodeLabel(edge.getSource()), getNodeLabel(edge.getTarget()));
-					Edge interLabelEdgeRev = new Edge(edge.getId(), getNodeLabel(edge.getTarget()), getNodeLabel(edge.getSource()));
-					if (highLevelEdges.containsKey(interLabelEdge) || highLevelEdges.containsKey(interLabelEdge)) {
+					Edge interLabelEdge = new Edge(edgeID, getNodeLabel(edge.getSource()), getNodeLabel(edge.getTarget()));
+					Edge interLabelEdgeRev = new Edge(edgeID, getNodeLabel(edge.getTarget()), getNodeLabel(edge.getSource()));
+					if (highLevelEdges.containsKey(interLabelEdge) || highLevelEdges.containsKey(interLabelEdgeRev)) {
 						if (highLevelEdges.containsKey(interLabelEdge)) {
 							int weight = highLevelEdges.get(interLabelEdge);
 							highLevelEdges.put(interLabelEdge, weight + 1);
@@ -140,8 +151,8 @@ public class JsonParser {
 					} else {
 						highLevelEdges.put(interLabelEdge, 1);
 					}		
-					edgeID++;
 				}
+				edgeID++;
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -150,9 +161,9 @@ public class JsonParser {
 		for (Map.Entry<Edge, Integer> entry : highLevelEdges.entrySet()) {
 			JsonObject edgeContainer = new JsonObject();
 	        JsonObject edgeJson = new JsonObject();
-	        edgeJson.addProperty("id", "e" + edgeID);
-	        edgeJson.addProperty("source", "n" + entry.getKey().getSource());
-	        edgeJson.addProperty("target", "n" + entry.getKey().getTarget());
+	        edgeJson.addProperty("id", "e" + entry.getKey().getId());
+	        edgeJson.addProperty("source", "" + entry.getKey().getSource());
+	        edgeJson.addProperty("target", "" + entry.getKey().getTarget());
 	        edgeJson.addProperty("weight", entry.getValue());
 			edgeContainer.add("data", edgeJson);
 			highLevelEdgesJson.add(edgeContainer);
@@ -171,60 +182,15 @@ public class JsonParser {
 		return allNodes.get(nodeID);
 	}
 
-	private static String intToARGB(int i){
-		i = smear(i * 9999);
-		return "#" + Integer.toHexString(((i>>24)&0xFF))+
-				Integer.toHexString(((i>>16)&0xFF))+
-				Integer.toHexString(((i>>8)&0xFF))+
-				Integer.toHexString((i&0xFF));
+	private String getColour(int label) {
+		return labelColours.get(label);
 	}
-
-	/*
-	 * This method is identical to the (package private) hash
-	 * method in OpenJDK 7's java.util.HashMap class.
-	 */
-	private static int smear(int hashCode) {
-		hashCode ^= (hashCode >>> 20) ^ (hashCode >>> 12);
-		return hashCode ^ (hashCode >>> 7) ^ (hashCode >>> 4);
-	}
-}
-
-class Edge {
-	private int id;
-	private int source;
-	private int target;
 	
-	public Edge(int id, int source, int target) {
-		this.id = id;
-		this.source = source;
-		this.target = target;
-	}	
-	
-	public int getId() {
-		return id;
-	}
-
-	public int getSource() {
-		return source;
-	}
-
-	public int getTarget() {
-		return target;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		Edge other = (Edge) obj;
-		if (source != other.source)
-			return false;
-		if (target != other.target)
-			return false;
-		return true;
+	private static String getRandomColour() {
+		int r = (int) Math.round(Math.random() * 255);
+		int g = (int) Math.round(Math.random() * 255);
+		int b = (int) Math.round(Math.random() * 255);
+		Color color = new Color(r, g, b);
+		return "#" + Integer.toHexString(color.getRGB()).substring(2);
 	}
 }

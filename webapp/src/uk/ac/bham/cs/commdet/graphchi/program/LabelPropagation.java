@@ -12,6 +12,7 @@ import org.apache.commons.io.FileUtils;
 import com.google.gson.JsonObject;
 
 import uk.ac.bham.cs.commdet.graphchi.json.*;
+import uk.ac.bham.cs.commdet.graphchi.json2.JsonParser;
 
 import edu.cmu.graphchi.*;
 import edu.cmu.graphchi.datablocks.IntConverter;
@@ -142,7 +143,7 @@ public class LabelPropagation implements GraphChiProgram<Integer, BidirectionalL
 	 * Usage: java edu.cmu.graphchi.demo.ConnectedComponents graph-name num-shards filetype(edgelist|adjlist)
 	 * For specifying the number of shards, 20-50 million edges/shard is often a good configuration.
 	 */
-	public static void run(String baseFilename, int nShards, String fileType) throws  Exception {
+	public static GraphChiEngine run(String baseFilename, int nShards, String fileType) throws  Exception {
 		LabelPropagation program = new LabelPropagation();
 
 		FastSharder sharder = program.createSharder(baseFilename, nShards);
@@ -155,17 +156,20 @@ public class LabelPropagation implements GraphChiProgram<Integer, BidirectionalL
 		engine.run(program, 8);
 		
 		//logger.info("Ready. Going to output...");
+		return engine;
 	}
 	
 	public static void main(String[] args) throws Exception {
-		LabelPropagation.run("sampledata/sample_edg.txt", 1, "edgelist");
+		GraphChiEngine engine = LabelPropagation.run("sampledata/karateclub_edg.txt", 1, "edgelist");
 		JsonObject responseJson = new JsonObject();
-		JSONConverterEdge  edgeConverter = new JSONConverterEdgelistUnweighted();
-        JSONConverterNode nodeConverter = new JSONConverterNodeInt();
-        FileInputStream edgeStream = new FileInputStream(new File("sampledata/sample_edg.txt"));
-        FileInputStream nodeStream = new FileInputStream(new File("sampledata/sample_edg.txt" + ".4Bj.vout"));
-        responseJson.add("edges", edgeConverter.getEdgesJson(edgeStream));
-        responseJson.add("nodes", nodeConverter.getNodesJson(nodeStream));
+		//JSONConverterEdge  edgeConverter = new JSONConverterEdgelistUnweighted();
+        //JSONConverterNode nodeConverter = new JSONConverterNodeInt();
+        FileInputStream edgeStream = new FileInputStream(new File("sampledata/karateclub_edg.txt"));
+        FileInputStream nodeStream = new FileInputStream(new File("sampledata/karateclub_edg.txt" + ".4Bj.vout"));
+        //responseJson.add("edges", edgeConverter.getEdgesJson(edgeStream));
+        //responseJson.add("nodes", nodeConverter.getNodesJson(nodeStream));
+		JsonParser parser = new JsonParser(engine, "sampledata/karateclub_edg.txt");
+		responseJson.add("graphs", parser.parseGraph(nodeStream, edgeStream));
         FileUtils.cleanDirectory(new File("sampledata/"));
         System.out.println(responseJson);
 	}

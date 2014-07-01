@@ -14,7 +14,10 @@ import javax.servlet.http.*;
 
 import org.apache.commons.io.FileUtils;
 
+import edu.cmu.graphchi.engine.GraphChiEngine;
+
 import uk.ac.bham.cs.commdet.graphchi.json.*;
+import uk.ac.bham.cs.commdet.graphchi.json2.JsonParser;
 import uk.ac.bham.cs.commdet.graphchi.program.LabelPropagation;
 
 import com.google.gson.JsonObject;
@@ -70,17 +73,19 @@ public class RunLabelPropagation extends HttpServlet {
 	
 	private void processGraph() {
 		try {
-			LabelPropagation.run(tempFolderPath + filename, 1, "edgelist");
+			GraphChiEngine engine = LabelPropagation.run(tempFolderPath + filename, 1, "edgelist");
 			responseJson.addProperty("success", true);
-			JSONConverterNode nodeConverter = new JSONConverterNodeInt();
-			JSONConverterEdge  edgeConverter = new JSONConverterEdgelistUnweighted();
+			//JSONConverterNode nodeConverter = new JSONConverterNodeInt();
+			//JSONConverterEdge  edgeConverter = new JSONConverterEdgelistUnweighted();
 			FileInputStream nodeStream = new FileInputStream(new File(tempFolderPath + filename + ".4Bj.vout"));
 			FileInputStream edgeStream = new FileInputStream(new File(tempFolderPath + filename));
-			responseJson.add("nodes", nodeConverter.getNodesJson(nodeStream));
-			responseJson.add("edges", edgeConverter.getEdgesJson(edgeStream));
+			//responseJson.add("nodes", nodeConverter.getNodesJson(nodeStream));
+			//responseJson.add("edges", edgeConverter.getEdgesJson(edgeStream));
+			JsonParser parser = new JsonParser(engine, tempFolderPath + filename);
+			responseJson.add("graphs", parser.parseGraph(nodeStream, edgeStream));
 		} catch (Exception e) {
 			responseJson.addProperty("success", false);
-			responseJson.addProperty("error", "label propagation failed: " + e.toString());
+			responseJson.addProperty("error", "label propagation failed: " + e.toString() + "\n" + Arrays.asList(e.getStackTrace()));
 		}
 	}
 	
