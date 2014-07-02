@@ -1,10 +1,7 @@
 package uk.ac.bham.cs.commdet.servlet;
 
 import java.io.*;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 
@@ -16,14 +13,15 @@ import org.apache.commons.io.FileUtils;
 
 import edu.cmu.graphchi.engine.GraphChiEngine;
 
-import uk.ac.bham.cs.commdet.graphchi.json.*;
+import uk.ac.bham.cs.commdet.graphchi.behaviours.LabelPropagationDirected;
 import uk.ac.bham.cs.commdet.graphchi.json2.JsonParser;
-import uk.ac.bham.cs.commdet.graphchi.program.LabelPropagation;
+import uk.ac.bham.cs.commdet.graphchi.program.GCProgram;
+import uk.ac.bham.cs.commdet.graphchi.program.GCProgramFactory;
 
 import com.google.gson.JsonObject;
 
 @MultipartConfig
-public class RunLabelPropagation extends HttpServlet {
+public class ProcessGraph extends HttpServlet {
 
 	private static final long serialVersionUID = 1L;
 	private InputStream filecontent;
@@ -31,22 +29,22 @@ public class RunLabelPropagation extends HttpServlet {
 	private String tempFolderPath;
 	private File tempFolder;
 	private JsonObject responseJson = new JsonObject();
+	private GCProgram GCprogram;
 	
-	protected void doPost(HttpServletRequest request, HttpServletResponse response)
-			throws ServletException, IOException {
-		PrintWriter out = response.getWriter();
-		response.setContentType("text/html");
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		initialiseGraphChiProgram(request);
 		parseFileContents(request.getPart("file"));
 		makeTempFolder();
-		writeGraphFile();
+		writeGraphFileToTempFolder();
         processGraph();
-        out.println(responseJson.toString());
+        response.setContentType("text/html");
+        response.getWriter().println(responseJson.toString());
         FileUtils.deleteDirectory(tempFolder);
 	}
 	
-	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        doPost(request,response);
-    }
+	public void initialiseGraphChiProgram(HttpServletRequest request) {
+		this.GCprogram = GCProgramFactory.getGCProgram("Unweighted", "Directed", new LabelPropagationDirected());
+	}
 	
 	private void parseFileContents(Part filePart) throws IOException {
 		filename = getFilename(filePart);
@@ -61,7 +59,7 @@ public class RunLabelPropagation extends HttpServlet {
 	    tempFolder.mkdir();
 	}
 	
-	private void writeGraphFile() throws IOException {
+	private void writeGraphFileToTempFolder() throws IOException {
 		FileOutputStream outputStream = new FileOutputStream(new File(tempFolderPath + filename));
 		int read = 0;
 		byte[] bytes = new byte[1024];
@@ -73,22 +71,18 @@ public class RunLabelPropagation extends HttpServlet {
 	
 	private void processGraph() {
 		try {
-			GraphChiEngine engine = LabelPropagation.run(tempFolderPath + filename, 1, "edgelist");
-			responseJson.addProperty("success", true);
-			//JSONConverterNode nodeConverter = new JSONConverterNodeInt();
-			//JSONConverterEdge  edgeConverter = new JSONConverterEdgelistUnweighted();
-			FileInputStream nodeStream = new FileInputStream(new File(tempFolderPath + filename + ".4Bj.vout"));
+			GraphChiEngine engine = GCprogram.run(tempFolderPath + filename, 1);
 			FileInputStream edgeStream = new FileInputStream(new File(tempFolderPath + filename));
-			//responseJson.add("nodes", nodeConverter.getNodesJson(nodeStream));
-			//responseJson.add("edges", edgeConverter.getEdgesJson(edgeStream));
-			JsonParser parser = new JsonParser(engine, tempFolderPath + filename);
-			responseJson.add("graphs", parser.parseGraph(nodeStream, edgeStream));
+			JsonObject graphs = new JsonParser(engine, edgeStream, tempFolderPath + filename).parseGraph();
+			responseJson.add("graphs", graphs);
+			responseJson.addProperty("success", true);
 		} catch (Exception e) {
 			responseJson.addProperty("success", false);
 			responseJson.addProperty("error", "label propagation failed: " + e.toString() + "\n" + Arrays.asList(e.getStackTrace()));
 		}
 	}
 	
+	//source
 	private static String getFilename(Part part) {
 	    for (String cd : part.getHeader("content-disposition").split(";")) {
 	        if (cd.trim().startsWith("filename")) {

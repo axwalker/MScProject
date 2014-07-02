@@ -13,23 +13,14 @@
 	</welcome-file-list>
 	
 	<servlet>
-              <servlet-name>HelloServletName</servlet-name>
-              <servlet-class>uk.ac.bham.cs.commdet.servlet.HelloServlet</servlet-class>
-     </servlet>
-     <servlet-mapping>
-             <servlet-name>HelloServletName</servlet-name>
-             <url-pattern>/HelloWorld</url-pattern>
-     </servlet-mapping>
-	
-	<servlet>
-    	<description>Run Label Propagation - jQuery Ajax Request</description>
-   		<display-name>Run Label Propagation</display-name>
-        <servlet-name>RunLabelPropagation</servlet-name>
-        <servlet-class>uk.ac.bham.cs.commdet.servlet.RunLabelPropagation</servlet-class>
+    	<description>Process Graph - jQuery Ajax Request</description>
+   		<display-name>Process Graph</display-name>
+        <servlet-name>ProcessGraph</servlet-name>
+        <servlet-class>uk.ac.bham.cs.commdet.servlet.ProcessGraph</servlet-class>
     </servlet>
     <servlet-mapping>
-    	<servlet-name>RunLabelPropagation</servlet-name>
-    	<url-pattern>/RunLabelPropagation</url-pattern>
-    </servlet-mapping>	
+    	<servlet-name>ProcessGraph</servlet-name>
+    	<url-pattern>/ProcessGraph</url-pattern>
+    </servlet-mapping>
  
 </web-app>

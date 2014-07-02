@@ -1,29 +1,22 @@
-package uk.ac.bham.cs.commdet.graphchi.program;
+package uk.ac.bham.cs.commdet.graphchi.behaviours;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
-import java.util.*;
-import java.util.logging.Logger;
+import uk.ac.bham.cs.commdet.graphchi.program.BidirectionalLabel;
 
-import org.apache.commons.io.FileUtils;
-
-import com.google.gson.JsonObject;
-
-import uk.ac.bham.cs.commdet.graphchi.json.*;
-import uk.ac.bham.cs.commdet.graphchi.json2.JsonParser;
-
-import edu.cmu.graphchi.*;
-import edu.cmu.graphchi.datablocks.IntConverter;
-import edu.cmu.graphchi.engine.GraphChiEngine;
+import edu.cmu.graphchi.ChiVertex;
+import edu.cmu.graphchi.GraphChiContext;
 import edu.cmu.graphchi.engine.VertexInterval;
-import edu.cmu.graphchi.preprocessing.EdgeProcessor;
-import edu.cmu.graphchi.preprocessing.FastSharder;
-import edu.cmu.graphchi.preprocessing.VertexProcessor;
 
-public class LabelPropagation implements GraphChiProgram<Integer, BidirectionalLabel> {
+public class LabelPropagationDirected implements UpdateBehaviour<Integer, BidirectionalLabel> {
 
+	@Override
+	public boolean hasScheduler() {
+		return true;
+	}
+	
+	@Override
 	public void update(ChiVertex<Integer, BidirectionalLabel> vertex, GraphChiContext context) {
 		int newLabel;
 		if (context.getIteration() == 0) {
@@ -124,56 +117,7 @@ public class LabelPropagation implements GraphChiProgram<Integer, BidirectionalL
 			vertex.inEdge(i).setValue(bi);
 		}
 	}
-
-	protected FastSharder createSharder(String graphName, int numShards) throws IOException {
-		return new FastSharder<Integer, BidirectionalLabel>(graphName, numShards, new VertexProcessor<Integer>() {
-			public Integer receiveVertexValue(int vertexId, String token) {
-				return 0;
-			}
-		}, new EdgeProcessor<BidirectionalLabel>() {
-			public BidirectionalLabel receiveEdge(int from, int to, String token) {
-				return new BidirectionalLabel(0, 0);
-			}
-		}, new IntConverter(), new BidirectionalLabelConverter());
-	}
 	
-	//private static Logger logger = ChiLogger.getLogger("labelpropagation");
-
-	/**
-	 * Usage: java edu.cmu.graphchi.demo.ConnectedComponents graph-name num-shards filetype(edgelist|adjlist)
-	 * For specifying the number of shards, 20-50 million edges/shard is often a good configuration.
-	 */
-	public static GraphChiEngine run(String baseFilename, int nShards, String fileType) throws  Exception {
-		LabelPropagation program = new LabelPropagation();
-
-		FastSharder sharder = program.createSharder(baseFilename, nShards);
-		sharder.shard(new FileInputStream(new File(baseFilename)), fileType);
-
-		GraphChiEngine<Integer, BidirectionalLabel> engine = new GraphChiEngine<Integer, BidirectionalLabel>(baseFilename, nShards);
-		engine.setEdataConverter(new BidirectionalLabelConverter());
-		engine.setVertexDataConverter(new IntConverter());
-		engine.setEnableScheduler(true);
-		engine.run(program, 8);
-		
-		//logger.info("Ready. Going to output...");
-		return engine;
-	}
-	
-	public static void main(String[] args) throws Exception {
-		GraphChiEngine engine = LabelPropagation.run("sampledata/karateclub_edg.txt", 1, "edgelist");
-		JsonObject responseJson = new JsonObject();
-		//JSONConverterEdge  edgeConverter = new JSONConverterEdgelistUnweighted();
-        //JSONConverterNode nodeConverter = new JSONConverterNodeInt();
-        FileInputStream edgeStream = new FileInputStream(new File("sampledata/karateclub_edg.txt"));
-        FileInputStream nodeStream = new FileInputStream(new File("sampledata/karateclub_edg.txt" + ".4Bj.vout"));
-        //responseJson.add("edges", edgeConverter.getEdgesJson(edgeStream));
-        //responseJson.add("nodes", nodeConverter.getNodesJson(nodeStream));
-		JsonParser parser = new JsonParser(engine, "sampledata/karateclub_edg.txt");
-		responseJson.add("graphs", parser.parseGraph(nodeStream, edgeStream));
-        FileUtils.cleanDirectory(new File("sampledata/"));
-        System.out.println(responseJson);
-	}
-
 	public void beginIteration(GraphChiContext ctx) {}
 	public void endIteration(GraphChiContext ctx) {}
 	public void beginInterval(GraphChiContext ctx, VertexInterval interval) {}
