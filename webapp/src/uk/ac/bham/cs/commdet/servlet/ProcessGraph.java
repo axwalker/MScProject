@@ -13,10 +13,9 @@ import org.apache.commons.io.FileUtils;
 
 import edu.cmu.graphchi.engine.GraphChiEngine;
 
-import uk.ac.bham.cs.commdet.graphchi.behaviours.LabelPropagationDirected;
-import uk.ac.bham.cs.commdet.graphchi.json2.JsonParser;
+import uk.ac.bham.cs.commdet.graphchi.behaviours.LabelPropagation;
+import uk.ac.bham.cs.commdet.graphchi.json.JsonParser;
 import uk.ac.bham.cs.commdet.graphchi.program.GCProgram;
-import uk.ac.bham.cs.commdet.graphchi.program.GCProgramFactory;
 
 import com.google.gson.JsonObject;
 
@@ -43,7 +42,7 @@ public class ProcessGraph extends HttpServlet {
 	}
 	
 	public void initialiseGraphChiProgram(HttpServletRequest request) {
-		this.GCprogram = GCProgramFactory.getGCProgram("Unweighted", "Directed", new LabelPropagationDirected());
+		this.GCprogram = new GCProgram( new LabelPropagation());
 	}
 	
 	private void parseFileContents(Part filePart) throws IOException {
@@ -72,8 +71,7 @@ public class ProcessGraph extends HttpServlet {
 	private void processGraph() {
 		try {
 			GraphChiEngine engine = GCprogram.run(tempFolderPath + filename, 1);
-			FileInputStream edgeStream = new FileInputStream(new File(tempFolderPath + filename));
-			JsonObject graphs = new JsonParser(engine, edgeStream, tempFolderPath + filename).parseGraph();
+			JsonObject graphs = new JsonParser(engine, tempFolderPath + filename).parseGraph();
 			responseJson.add("graphs", graphs);
 			responseJson.addProperty("success", true);
 		} catch (Exception e) {

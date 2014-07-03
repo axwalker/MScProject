@@ -9,7 +9,7 @@ import edu.cmu.graphchi.ChiVertex;
 import edu.cmu.graphchi.GraphChiContext;
 import edu.cmu.graphchi.engine.VertexInterval;
 
-public class LabelPropagationDirected implements UpdateBehaviour<Integer, BidirectionalLabel> {
+public class LabelPropagation implements UpdateBehaviour<Integer, BidirectionalLabel> {
 
 	@Override
 	public boolean hasScheduler() {

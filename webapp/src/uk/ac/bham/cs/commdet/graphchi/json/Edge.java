@@ -1,4 +1,4 @@
-package uk.ac.bham.cs.commdet.graphchi.json2;
+package uk.ac.bham.cs.commdet.graphchi.json;
 
 class Edge {
 	private int id;
