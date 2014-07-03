@@ -8,6 +8,7 @@
         <title>Community Detection</title>
 
         <link rel="stylesheet" href="css/main.css">
+        <link rel="stylesheet" href="css/cytoscape.js-navigator.css">
 
         <script src="js/jquery.min.js"></script>
         <script src="js/arbor.js"></script>
@@ -44,23 +45,29 @@
                     </select> <br>
                     
                     <label for="arborTime"><b>Max time for layout (seconds):</b></label> <br>
-                    <input type="number" min="0.5" max="60" step="0.5" value="0.5" name="arborTime" id="arborTime"> <br>           
+                    <input type="number" min="0.5" max="300" step="0.5" value="0.5" name="arborTime" id="arborTime"> <br>           
 
                     <input id="uploadButton" type="button" value="Process Graph" /> <br>
                 </fieldset>
             </form>  
+            <div id="progress">
+                <div id="ajaxResponse"></div>
+            </div>
         </div>
         <div class="right col">
             <div class="body row">
-                <div id="cy"></div>
+                <div id="cy" class="high"></div>
+                <div id="cy" class="low"></div>
             </div>
-            <div class="footer row scroll-y">
-                <div id="progress">
-                    <div id="ajaxResponse"></div>
-                </div>
-            </div>
+            <!--<div class="cytoscape-navigator">
+                <canvas></canvas>
+                <div class="cytoscape-navigatorView"></div>
+                <dib class="cytoscape-navigatorOverlay"></dib>
+            </div>-->
         </div>
+        
         <script src="js/cytoscape.min.js"></script>
+        <script src="js/cytoscape.js-navigator.js"></script>
         <script src="js/uploadfile.js"></script>
     </body>
 </html>
