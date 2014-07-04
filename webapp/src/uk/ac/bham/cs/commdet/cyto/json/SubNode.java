@@ -1,8 +1,8 @@
-package uk.ac.bham.cs.commdet.graphchi.json;
+package uk.ac.bham.cs.commdet.cyto.json;
 
 import com.google.gson.annotations.Expose;
 
-public class SubNodeData {
+public class SubNode {
 	
 	@Expose
 	private String id;
@@ -10,7 +10,7 @@ public class SubNodeData {
 	@Expose
 	private String label;
 
-	public SubNodeData(String id, String label) {
+	public SubNode(String id, String label) {
 		this.id = id;
 		this.label = label;
 	}

@@ -1,4 +1,4 @@
-package uk.ac.bham.cs.commdet.graphchi.json;
+package uk.ac.bham.cs.commdet.cyto.json;
 
 import com.google.gson.annotations.Expose;
 

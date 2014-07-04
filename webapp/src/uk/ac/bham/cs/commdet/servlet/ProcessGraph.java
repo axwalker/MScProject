@@ -13,8 +13,14 @@ import org.apache.commons.io.FileUtils;
 
 import edu.cmu.graphchi.engine.GraphChiEngine;
 
+import uk.ac.bham.cs.commdet.cyto.json.CommunityGraph;
+import uk.ac.bham.cs.commdet.cyto.json.CompoundNode;
+import uk.ac.bham.cs.commdet.cyto.json.SubNode;
+import uk.ac.bham.cs.commdet.cyto.json.UndirectedEdge;
+import uk.ac.bham.cs.commdet.cyto.json.serializer.CompoundNodeSerializer;
+import uk.ac.bham.cs.commdet.cyto.json.serializer.EdgeSerializer;
+import uk.ac.bham.cs.commdet.cyto.json.serializer.SubNodeSerializer;
 import uk.ac.bham.cs.commdet.graphchi.behaviours.LabelPropagation;
-import uk.ac.bham.cs.commdet.graphchi.json.CommunityGraph;
 import uk.ac.bham.cs.commdet.graphchi.program.GCProgram;
 
 import com.google.gson.Gson;
@@ -75,7 +81,12 @@ public class ProcessGraph extends HttpServlet {
 			GraphChiEngine engine = GCprogram.run(tempFolderPath + filename, 3);
 			CommunityGraph graphs = new CommunityGraph(engine, tempFolderPath + filename);
 			graphs.parseGraphs();
-			Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
+			GsonBuilder builder = new GsonBuilder();
+			builder.excludeFieldsWithoutExposeAnnotation();
+			builder.registerTypeAdapter(UndirectedEdge.class, new EdgeSerializer());
+			builder.registerTypeAdapter(CompoundNode.class, new CompoundNodeSerializer());
+			builder.registerTypeAdapter(SubNode.class, new SubNodeSerializer());
+			Gson gson = builder.create();
 			JsonObject graphsJson = (JsonObject) gson.toJsonTree(graphs);
 			responseJson.add("graphs", graphsJson);
 			responseJson.addProperty("success", true);

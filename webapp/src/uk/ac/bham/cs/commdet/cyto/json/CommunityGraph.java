@@ -1,4 +1,4 @@
-package uk.ac.bham.cs.commdet.graphchi.json;
+package uk.ac.bham.cs.commdet.cyto.json;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -53,7 +53,7 @@ public class CommunityGraph {
             			subGraphs.put("" + label, new SubGraph());
                 	}
             		String nodeID = "" + trans.backward(id);
-            		subGraphs.get("" + label).getNodes().add(SubNode.makeNode(nodeID, "" + label));            		
+            		subGraphs.get("" + label).getNodes().add(new SubNode(nodeID, "" + label));            		
                     nodeLabels.put(nodeID, "" + label);
             	}
             }
@@ -64,7 +64,7 @@ public class CommunityGraph {
 		Set<CompoundNode> nodes = compoundGraph.get("HighLevel").getNodes();
 		for (Map.Entry<String, SubGraph> entry : subGraphs.entrySet()) {			
 			int size = entry.getValue().getSize();
-			nodes.add(CompoundNode.makeCompoundNode(entry.getKey(), size));
+			nodes.add(new CompoundNode(entry.getKey(), size));
 		}
 	}
 	
@@ -78,7 +78,7 @@ public class CommunityGraph {
 			int weight = edge.getWeight();			
 			if (nodeLabels.get("" + source).equals(nodeLabels.get("" + target))) {
 				SubGraph subGraph = subGraphs.get(nodeLabels.get("" + source));
-				subGraph.getEdges().add(Edge.makeEdge(source, target, weight));
+				subGraph.getEdges().add(new UndirectedEdge(source, target, weight));
 			} else {
 				source = Integer.parseInt(nodeLabels.get("" + source));
 				target = Integer.parseInt(nodeLabels.get("" + target));
@@ -91,11 +91,11 @@ public class CommunityGraph {
 	public void generateCompoundMetadata() {
 		int minSize = 1, maxSize = 1, maxEdge = 1;
 		for(CompoundNode node : compoundGraph.get("HighLevel").getNodes()) {
-			minSize = Math.min(minSize, node.getData().getSize());
-			maxSize = Math.max(maxSize, node.getData().getSize());
+			minSize = Math.min(minSize, node.getSize());
+			maxSize = Math.max(maxSize, node.getSize());
 		}
-		for (Edge edge : compoundGraph.get("HighLevel").getEdges()) {
-			maxEdge = Math.max(maxEdge, edge.getData().getWeight());
+		for (UndirectedEdge edge : compoundGraph.get("HighLevel").getEdges()) {
+			maxEdge = Math.max(maxEdge, edge.getWeight());
 		}
 		Metadata metadata = compoundGraph.get("HighLevel").getMetadata();
 		metadata.setNoOfCommunities(compoundGraph.get("HighLevel").getNodes().size());

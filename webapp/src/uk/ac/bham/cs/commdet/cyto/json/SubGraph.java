@@ -1,4 +1,4 @@
-package uk.ac.bham.cs.commdet.graphchi.json;
+package uk.ac.bham.cs.commdet.cyto.json;
 
 import java.util.*;
 
@@ -10,11 +10,11 @@ public class SubGraph {
 	private Set<SubNode> nodes = new HashSet<SubNode>();
 	
 	@Expose
-	private Set<Edge> edges = new HashSet<Edge>(); 
+	private Set<UndirectedEdge> edges = new HashSet<UndirectedEdge>(); 
 	
 	public SubGraph() {}
 	
-	public SubGraph(Set<SubNode> nodes, Set<Edge> edges) {
+	public SubGraph(Set<SubNode> nodes, Set<UndirectedEdge> edges) {
 		this.nodes = nodes;
 		this.edges = edges;
 	}
@@ -27,11 +27,11 @@ public class SubGraph {
 		this.nodes = nodes;
 	}
 
-	public Set<Edge> getEdges() {
+	public Set<UndirectedEdge> getEdges() {
 		return edges;
 	}
 
-	public void setEdges(Set<Edge> edges) {
+	public void setEdges(Set<UndirectedEdge> edges) {
 		this.edges = edges;
 	}
 	

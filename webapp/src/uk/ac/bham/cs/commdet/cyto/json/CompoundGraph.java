@@ -1,4 +1,4 @@
-package uk.ac.bham.cs.commdet.graphchi.json;
+package uk.ac.bham.cs.commdet.cyto.json;
 
 import java.util.*;
 
@@ -10,7 +10,7 @@ public class CompoundGraph {
 	private Set<CompoundNode> nodes = new HashSet<CompoundNode>();
 	
 	@Expose
-	private List<Edge> edges = new ArrayList<Edge>();
+	private List<UndirectedEdge> edges = new ArrayList<UndirectedEdge>();
 	
 	@Expose
 	private Metadata metadata = new Metadata();
@@ -25,11 +25,11 @@ public class CompoundGraph {
 		this.nodes = nodes;
 	}
 
-	public List<Edge> getEdges() {
+	public List<UndirectedEdge> getEdges() {
 		return edges;
 	}
 
-	public void setEdges(List<Edge> edges) {
+	public void setEdges(List<UndirectedEdge> edges) {
 		this.edges = edges;
 	}
 
@@ -46,11 +46,11 @@ public class CompoundGraph {
 	}
 	
 	public void addEdge(UndirectedEdge edge) {
-		if (edges.contains(new Edge(edge))) {
-			Edge oldEdge = edges.get(edges.indexOf(new Edge(edge)));
-			oldEdge.incrementWeight(edge.getWeight());
+		if (edges.contains(edge)) {
+			UndirectedEdge oldEdge = edges.get(edges.indexOf(edge));
+			oldEdge.increaseWeightBy(edge.getWeight());
 		} else {
-			edges.add(new Edge(edge));
+			edges.add(edge);
 		}
 	}
 	

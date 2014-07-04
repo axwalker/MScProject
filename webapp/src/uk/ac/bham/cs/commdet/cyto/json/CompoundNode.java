@@ -1,8 +1,8 @@
-package uk.ac.bham.cs.commdet.graphchi.json;
+package uk.ac.bham.cs.commdet.cyto.json;
 
 import com.google.gson.annotations.Expose;
 
-public class CompoundNodeData {
+public class CompoundNode {
 
 	@Expose
 	private String id;
@@ -16,7 +16,7 @@ public class CompoundNodeData {
 	@Expose
 	private int interClusterDensity = -1;
 
-	public CompoundNodeData(String id, int size) {
+	public CompoundNode(String id, int size) {
 		this.id = id;
 		this.size = size;
 	}
