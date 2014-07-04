@@ -1,46 +1,47 @@
-package uk.ac.bham.cs.commdet.graphchi.program;
+package uk.ac.bham.cs.commdet.graphchi.json;
 
-public class BidirectionalLabel {
-	int edgeID;
-	int smallerOne;
-	int largerOne;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
+
+public class UndirectedEdge {
+	
+	@Expose
+	@SerializedName("source")
+	int smallerNode;
+	
+	@Expose
+	@SerializedName("target")
+	int largerNode;
+	
+	@Expose
 	int weight;
-
-	public BidirectionalLabel(int smallerOne, int largerOne, int weight) {
-		this.smallerOne = smallerOne;
-		this.largerOne = largerOne;
+	 
+	public UndirectedEdge(int node1, int node2, int weight) {
+		this.smallerNode = Math.min(node1, node2);
+		this.largerNode = Math.max(node1, node2);
 		this.weight = weight;
 	}
 	
-	public BidirectionalLabel(int edgeID, int smallerOne, int largerOne, int weight) {
-		this.edgeID = edgeID;
-		this.smallerOne = smallerOne;
-		this.largerOne = largerOne;
-		this.weight = weight;
-	}
-	
-	public int getEdgeID() {
-		return edgeID;
+	public static UndirectedEdge getEdge(String line) {
+		String[] edgeInfo = line.split(" ");
+		int weight = edgeInfo.length == 3 ? Integer.parseInt(edgeInfo[2]) : 1;
+		return new UndirectedEdge(Integer.parseInt(edgeInfo[0]), Integer.parseInt(edgeInfo[1]), weight);
 	}
 
-	public void setEdgeID(int edgeID) {
-		this.edgeID = edgeID;
+	public int getSmallerNode() {
+		return smallerNode;
 	}
 
-	public int getSmallerOne() {
-		return smallerOne;
+	public void setSmallerNode(int smallerNode) {
+		this.smallerNode = smallerNode;
 	}
 
-	public void setSmallerOne(int smallerOne) {
-		this.smallerOne = smallerOne;
+	public int getLargerNode() {
+		return largerNode;
 	}
 
-	public int getLargerOne() {
-		return largerOne;
-	}
-
-	public void setLargerOne(int largerOne) {
-		this.largerOne = largerOne;
+	public void setLargerNode(int largerNode) {
+		this.largerNode = largerNode;
 	}	
 	
 	public int getWeight() {
@@ -51,12 +52,16 @@ public class BidirectionalLabel {
 		this.weight = weight;
 	}
 	
+	public void increaseWeightBy(int weight) {
+		this.weight += weight;
+	}
+	
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + largerOne;
-		result = prime * result + smallerOne;
+		result = prime * result + largerNode;
+		result = prime * result + smallerNode;
 		return result;
 	}
 
@@ -68,16 +73,16 @@ public class BidirectionalLabel {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		BidirectionalLabel other = (BidirectionalLabel) obj;
-		if (largerOne != other.largerOne)
+		UndirectedEdge other = (UndirectedEdge) obj;
+		if (largerNode != other.largerNode)
 			return false;
-		if (smallerOne != other.smallerOne)
+		if (smallerNode != other.smallerNode)
 			return false;
 		return true;
 	}
 
 	@Override
 	public String toString() {
-		return "id: " + edgeID + ", smaller: " + smallerOne + ", larger: " + largerOne + ", weight: " + weight;
+		return "Smaller: " + smallerNode + ", larger: " + largerNode + ", weight: " + weight;
 	}
 }

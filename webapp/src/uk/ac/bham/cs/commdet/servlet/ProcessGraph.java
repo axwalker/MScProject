@@ -14,9 +14,11 @@ import org.apache.commons.io.FileUtils;
 import edu.cmu.graphchi.engine.GraphChiEngine;
 
 import uk.ac.bham.cs.commdet.graphchi.behaviours.LabelPropagation;
-import uk.ac.bham.cs.commdet.graphchi.json.JsonParser;
+import uk.ac.bham.cs.commdet.graphchi.json.CommunityGraph;
 import uk.ac.bham.cs.commdet.graphchi.program.GCProgram;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
 @MultipartConfig
@@ -70,9 +72,12 @@ public class ProcessGraph extends HttpServlet {
 	
 	private void processGraph() {
 		try {
-			GraphChiEngine engine = GCprogram.run(tempFolderPath + filename, 1);
-			JsonObject graphs = new JsonParser(engine, tempFolderPath + filename).parseGraph();
-			responseJson.add("graphs", graphs);
+			GraphChiEngine engine = GCprogram.run(tempFolderPath + filename, 3);
+			CommunityGraph graphs = new CommunityGraph(engine, tempFolderPath + filename);
+			graphs.parseGraphs();
+			Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
+			JsonObject graphsJson = (JsonObject) gson.toJsonTree(graphs);
+			responseJson.add("graphs", graphsJson);
 			responseJson.addProperty("success", true);
 		} catch (Exception e) {
 			responseJson.addProperty("success", false);
