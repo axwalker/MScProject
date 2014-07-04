@@ -1,4 +1,6 @@
 $('#uploadButton').click(function(){
+    $("#cy.low").hide();
+    $("#cy.high").show();
     window.location.hash = "Status";
     var formData = new FormData($('form')[0]);
     $.ajax({
@@ -12,8 +14,8 @@ $('#uploadButton').click(function(){
                 $("#ajaxResponse").append("<li>>: Graph processed.</li>");
                 graphs = data.graphs;
                 console.log("in success: " + JSON.stringify(graphs, undefined, 2));
-                var metadata = graphs.HighLevel.metadata;
-                initHigh(graphs.HighLevel, metadata.MinCommunitySize, metadata.MaxCommunitySize);
+                var metadata = graphs.compoundGraph.HighLevel.metadata;
+                initHigh(graphs.compoundGraph.HighLevel, metadata.minCommunitySize, metadata.maxCommunitySize, metadata.maxEdgeConnection);
             } else {
                 console.log(data.error);
                 $("#ajaxResponse").append("<li><b>>: Exception: failed to process graph</b></li>");

@@ -8,89 +8,81 @@
         <title>Community Detection</title>
 
         <link rel="stylesheet" href="css/main.css">
-        <link rel="stylesheet" href="css/cytoscape.js-navigator.css">
+        <link rel="stylesheet" href="css/plugins/jquery.qtip.css">
 
-        <script src="js/jquery.min.js"></script>
-        <script src="js/arbor.js"></script>
+        <script src="js/plugins/jquery.min.js"></script>
+        <script src="js/plugins/arbor.js"></script>
+        <script src="js/plugins/cytoscape.min.js"></script>
+
+        <script src="js/plugins/jquery.qtip.js"></script>
+        <script src="js/plugins/cytoscape.js-qtip.js"></script>
     </head>
 
     <body>
         <div class="left col scroll-y">
-
             <div id="accordion">
-              <ul>
-                <li>
-                  <a href="#Instructions">Instructions</a>
-                  <div id="Instructions" class="accordion">
-                    Currently supports weighted and unweighted graphs. Works best with directed graphs.
-                  </div>
-                </li>
-                <li>
-                  <a href="#Upload">Upload</a>
-                  <div id="Upload" class="accordion">
-                    <form action="upload" method="post" enctype="multipart/form-data">
-                        <fieldset>
-                            <label for="file">Graph file:</label> <br>
-                            <input type="file" name="file"> <br>
-                            
-                            <label for="algorithm">Detection Algorithm:</label> <br>
-                            <select id="algorithm" name="algorithm">
-                                <option>Label Propagation</option>
-                                <option>Louvain Method</option>
-                                <option>ORCA</option>
-                            </select> <br>          
+                <ul>
+                    <li>
+                        <a href="#Instructions">Instructions</a>
+                        <div id="Instructions" class="accordion">
+                        Currently supports weighted and unweighted graphs. Works best with directed graphs.
+                        </div>
+                    </li>
+                    <li>
+                        <a href="#Upload">Upload</a>
+                        <div id="Upload" class="accordion">
+                            <form action="upload" method="post" enctype="multipart/form-data">
+                                <fieldset>
+                                    <label for="file">Graph file:</label> <br>
+                                    <input type="file" name="file"> <br>
 
-                            <input id="uploadButton" type="button" value="Process Graph" /> <br>
-                        </fieldset>
-                    </form>  
-                  </div>
-                </li>    
-                <li>
-                  <a href="#DisplayOptions">Display Options</a>
-                  <div id="DisplayOptions" class="accordion">
-                    <label for="arborTimeHigh">Max time for high level layout (seconds):</label> <br>
-                    <input type="number" min="1" max="300" step="1" value="10" name="arborTimeHigh" id="arborTimeHigh"> <br> 
+                                    <label for="algorithm">Detection Algorithm:</label> <br>
+                                    <select id="algorithm" name="algorithm">
+                                        <option>Label Propagation</option>
+                                        <option>Louvain Method</option>
+                                        <option>ORCA</option>
+                                    </select> <br>          
 
-                    <label for="arborTimeLow">Max time for low level layout (seconds):</label> <br>
-                    <input type="number" min="1" max="60" step="1" value="10" name="arborTimeLow" id="arborTimeLow"> <br> 
+                                    <input id="uploadButton" type="button" value="Process Graph" /> <br>
+                                </fieldset>
+                            </form>  
+                        </div>
+                    </li>    
+                    <li>
+                        <a href="#DisplayOptions">Display Options</a>
+                            <div id="DisplayOptions" class="accordion">
+                                <label for="arborTimeHigh">Max time for high level layout (seconds):</label> <br>
+                                <input type="number" min="1" max="300" step="1" value="10" name="arborTimeHigh" id="arborTimeHigh"> <br> 
 
-                    More display options will display here:
-                        <ul>
-                            <li>Option 1</li>
-                            <li>Option 2</li>
-                            <li>Option 3</li>
-                            <li>Option 4</li>
-                        </ul>
-                  </div>
-                </li>
-                <li>
-                  <a href="#Status">Status</a>
-                  <div id="Status" class="accordion scroll-y">
-                    Ready for upload...
-                    <div id="progress">
-                        <div id="ajaxResponse"></div>
-                    </div>
-                  </div>
-                </li>
-              </ul>
+                                <label for="arborTimeLow">Max time for low level layout (seconds):</label> <br>
+                                <input type="number" min="1" max="60" step="1" value="10" name="arborTimeLow" id="arborTimeLow"> <br> 
+
+                                More display options will display here:
+                                <ul>
+                                    <li>Option 1</li>
+                                    <li>Option 2</li>
+                                    <li>Option 3</li>
+                                    <li>Option 4</li>
+                                </ul>
+                        </div>
+                    </li>
+                    <li>
+                        <a href="#Status">Status</a>
+                        <div id="Status" class="accordion scroll-y">
+                            Ready for upload...
+                            <div id="progress">
+                                <div id="ajaxResponse"></div>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
             </div>
         </div>
         <div class="right col">
-            <div class="body row">
-                
-                    <div id="cy" class="high"></div>
-                
-                <div id="cy" class="low"></div>
-            </div>
-            <!--<div class="cytoscape-navigator">
-                <canvas></canvas>
-                <div class="cytoscape-navigatorView"></div>
-                <dib class="cytoscape-navigatorOverlay"></dib>
-            </div>-->
+            <div id="cy" class="high"></div>
+            <div id="cy" class="low"></div>
         </div>
         
-        <script src="js/cytoscape.min.js"></script>
-        <script src="js/cytoscape.js-navigator.js"></script>
         <script src="js/init-graphs.js"></script>
         <script src="js/uploadfile.js"></script>
     </body>

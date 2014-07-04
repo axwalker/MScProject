@@ -1,15 +1,15 @@
 $("#cy.high, #cy.low").hide();
 $("#cy.high").show();
 
-function initHigh(data, minSize, maxSize) {
+function initHigh(data, minSize, maxSize, maxEdge) {
     var maxTime = document.getElementById('arborTimeHigh').value * 1000;
     var styleOptions = [
             {
                 selector: 'node',
                 css: {
                     'background-color': 'blue',
-                    'height': 'mapData(size, ' + minSize + ', ' + maxSize + ', 1, 20)',
-                    'width': 'mapData(size, ' + minSize + ', ' + maxSize + ', 1, 20)'
+                    'height': 'mapData(size, ' + minSize + ', ' + maxSize + ', 1, 30)',
+                    'width': 'mapData(size, ' + minSize + ', ' + maxSize + ', 1, 30)'
                 }
             },
             {
@@ -23,7 +23,7 @@ function initHigh(data, minSize, maxSize) {
                 selector: 'edge',
                 css: {
                     'line-color': '#53433F',
-                    'width': 'mapData(weight, 0, 20, 0, 5)'
+                    'width': 'mapData(weight, 0, ' + maxEdge + ', 0, 5)'
                 }
             }
     ];
@@ -38,15 +38,55 @@ function initHigh(data, minSize, maxSize) {
 
         ready: function(){
             window.cy = this;
-            console.log('ready');
-            //$('#cy').cytoscapeNavigator()
 
             cy.on('click', 'node', function(){
                 $("#cy.high").hide();
                 $("#cy.low").show();
                 label = this.data('id');
-                initLow(graphs[label]);
+                initLow(graphs.subGraphs[label]);
             });
+            
+            cy.nodes().qtip({
+				content: function(){ return 'Size: ' + this.data('size') },
+				position: {
+					my: 'top center',
+					at: 'bottom center'
+				},
+				style: {
+					classes: 'qtip-bootstrap',
+					tip: {
+						width: 16,
+						height: 8
+					}
+				},
+                show: {
+                    event: 'mouseover'
+                },
+                hide: {
+                    event: 'mouseout'
+                }
+			});
+            
+            cy.edges().qtip({
+				content: function(){ return 'Connections: ' + this.data('weight') },
+				position: {
+					my: 'top center',
+					at: 'bottom center'
+				},
+				style: {
+					classes: 'qtip-bootstrap',
+					tip: {
+						width: 16,
+						height: 8
+					}
+				},
+                show: {
+                    event: 'mouseover'
+                },
+                hide: {
+                    event: 'mouseout'
+                }
+			});
         }
     });
     cyHigh = $('#cy.high').cytoscape('get');
@@ -87,8 +127,6 @@ function initLow(data) {
 
         ready: function(){
             window.cy = this;
-            console.log('ready');
-            //$('#cy').cytoscapeNavigator()
 
             cy.on('click', 'node', function(){
                 $("#cy.low").hide();
