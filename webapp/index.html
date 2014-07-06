@@ -13,7 +13,6 @@
         <script src="js/plugins/jquery.min.js"></script>
         <script src="js/plugins/arbor.js"></script>
         <script src="js/plugins/cytoscape.min.js"></script>
-
         <script src="js/plugins/jquery.qtip.js"></script>
         <script src="js/plugins/cytoscape.js-qtip.js"></script>
     </head>
@@ -49,21 +48,28 @@
                         </div>
                     </li>    
                     <li>
-                        <a href="#DisplayOptions">Display Options</a>
-                            <div id="DisplayOptions" class="accordion">
+                        <a href="#Display">Display Options</a>
+                            <div id="Display" class="accordion">
                                 <label for="arborTimeHigh">Max time for high level layout (seconds):</label> <br>
                                 <input type="number" min="1" max="300" step="1" value="10" name="arborTimeHigh" id="arborTimeHigh"> <br> 
 
                                 <label for="arborTimeLow">Max time for low level layout (seconds):</label> <br>
                                 <input type="number" min="1" max="60" step="1" value="10" name="arborTimeLow" id="arborTimeLow"> <br> 
 
-                                More display options will display here:
-                                <ul>
-                                    <li>Option 1</li>
-                                    <li>Option 2</li>
-                                    <li>Option 3</li>
-                                    <li>Option 4</li>
-                                </ul>
+                                <label for="minCommunitySize">Minimum community size to display:</label> <br>
+                                <input type="number" min="1" max="60" step="1" value="1" name="minCommunitySize" id="minCommunitySize"> <br> 
+
+                                <input id="refreshButton" type="button" value="Refresh Display" /> <br>
+                        </div>
+                    </li>
+                    <li>
+                        <a href="#Results">Results</a>
+                        <div id="Results" class="accordion">
+                            <ul id="ResultList">
+                                <li id="Modularity"><b>Modularity: </b><span></span></li>
+                                <li id="MinCommSize"><b>Minimum community size: </b><span></span></li>
+                                <li id="MaxCommSize"><b>Maximum community size: </b><span></span></li>
+                            </ul>
                         </div>
                     </li>
                     <li>
@@ -83,7 +89,7 @@
             <div id="cy" class="low"></div>
         </div>
         
-        <script src="js/init-graphs.js"></script>
-        <script src="js/uploadfile.js"></script>
+        <script src="js/cytoscape-commdet.js"></script>
+        <script src="js/scripts.js"></script>
     </body>
 </html>

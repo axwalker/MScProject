@@ -1,3 +1,5 @@
+var graphs;
+
 $('#uploadButton').click(function(){
     $("#cy.low").hide();
     $("#cy.high").show();
@@ -13,9 +15,12 @@ $('#uploadButton').click(function(){
             if(data.success) {
                 $("#ajaxResponse").append("<li>>: Graph processed.</li>");
                 graphs = data.graphs;
-                console.log("in success: " + JSON.stringify(graphs, undefined, 2));
-                var metadata = graphs.compoundGraph.HighLevel.metadata;
-                initHigh(graphs.compoundGraph.HighLevel);
+                console.log("in success: " + JSON.stringify(data, undefined, 2));
+                //var metadata = graphs.compoundGraph.HighLevel.metadata;
+                //initHigh(graphs.compoundGraph.HighLevel);
+                //$("#Modularity span").html(metadata.modularity);
+                //$("#MinCommSize span").html(metadata.minCommunitySize);
+                //$("#MaxCommSize span").html(metadata.maxCommunitySize);
             } else {
                 console.log(data.error);
                 $("#ajaxResponse").append("<li><b>>: Exception: failed to process graph</b></li>");
@@ -40,4 +45,17 @@ $('#uploadButton').click(function(){
         contentType: false,
         processData: false
     });
+});
+
+$('#refreshButton').click(function(){
+    if (graphs) {
+        if ($('#cy.high').is(':visible')) {
+            var minCommunitySize = document.getElementById('minCommunitySize').value;
+            options = { name: 'null' };
+            cyHigh.layout(options);
+            cyHigh.load(graphs.compoundGraph.HighLevel);
+            cyHigh.$('node[size < ' + minCommunitySize + ']').remove();
+            cyHigh.layout(highArborLayout());
+        }
+    }
 });

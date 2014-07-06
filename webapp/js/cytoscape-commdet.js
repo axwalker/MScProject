@@ -1,8 +1,17 @@
 $("#cy.high, #cy.low").hide();
 $("#cy.high").show();
 
+var displayOptions = {
+    highLayout: highArborLayout()
+}
+
+function updateDisplayOptions() {
+    displayOptions.highLayout = highLayout = highArborLayout();
+}
+
 function initHigh(data) {
-    var metadata = graphs.compoundGraph.HighLevel.metadata;
+    updateDisplayOptions();
+    var metadata = data.metadata;
     var minSize = metadata.minCommunitySize;
     var maxSize = metadata.maxCommunitySize;
     var maxEdge = metadata.maxEdgeConnection;
@@ -35,7 +44,7 @@ function initHigh(data) {
 
         style: styleOptions,
     
-        layout: getHighLayout(),
+        layout: displayOptions.highLayout,
 
         elements: data,
 
@@ -104,7 +113,6 @@ function initHigh(data) {
 }
 
 function initLow(data) {
-    var maxTime = document.getElementById('arborTimeLow').value * 1000;
     $('#cy.low').cytoscape({
 
         style: [
@@ -132,7 +140,7 @@ function initLow(data) {
             }
         ],
 
-        layout: getHighLayout(maxTime),
+        layout: lowArborLayout(),
         
         elements: data,
 
@@ -148,52 +156,60 @@ function initLow(data) {
     cyLow = $('#cy.low').cytoscape('get');
 }
 
-function getHighLayout() {
+function highArborLayout() {
     var maxTime = document.getElementById('arborTimeHigh').value * 1000;
     return {
         name: 'arbor',
+        liveUpdate: true,
+        maxSimulationTime: maxTime,
+        fit: true, // reset viewport to fit default simulationBounds
+        padding: [ 50, 50, 50, 50 ], // top, right, bottom, left
+        ungrabifyWhileSimulating: true,
+        stepSize: 0.1,
 
-            liveUpdate: true,
-            maxSimulationTime: maxTime,
-            fit: true, // reset viewport to fit default simulationBounds
-            padding: [ 50, 50, 50, 50 ], // top, right, bottom, left
-            ungrabifyWhileSimulating: true,
+        edgeLength: function( edge ) {
+            return 0.01/(edge.weight);
+        },
 
-            edgeLength: function( edge ) {
-                return 0.01/(edge.weight);
-            },
+        stableEnergy: function( energy ){
+          var e = energy; 
+          return (e.max <= 0.5) || (e.mean <= 0.3);
+        },
 
-            stepSize: 0.1,
-
-            stableEnergy: function( energy ){
-              var e = energy; 
-              return (e.max <= 0.5) || (e.mean <= 0.3);
-            },
-
-            ready: function() {
-                $("#ajaxResponse").append("<li>>: Laying out elements...</li>");
-            },
-            stop: function() {
-                $("#ajaxResponse").append("<li>>: Layout complete.</li>");
-            }
+        ready: function() {
+            $('#refreshButton').attr("disabled", true);
+            $("#ajaxResponse").append("<li>>: Laying out elements...</li>");
+        },
+        stop: function() {
+            $('#refreshButton').attr("disabled", false);
+            $("#ajaxResponse").append("<li>>: Layout complete.</li>");
+        }
     };
 }
 
-function getLowLayout(maxTime) {
+function lowArborLayout() {
+    var maxTime = document.getElementById('arborTimeLow').value * 1000;
     return {
         name: 'arbor',
+        liveUpdate: true, // whether to show the layout as it's running
+        maxSimulationTime: maxTime, //arborSeconds, // max length in ms to run the layout
+        fit: true, // reset viewport to fit default simulationBounds
+        padding: [ 50, 50, 50, 50 ], // top, right, bottom, left
+        ungrabifyWhileSimulating: true, // so you can't drag nodes during layout
+        stepSize: 0.1,
 
-            liveUpdate: true, // whether to show the layout as it's running
-            maxSimulationTime: 10000, //arborSeconds, // max length in ms to run the layout
-            fit: true, // reset viewport to fit default simulationBounds
-            padding: [ 50, 50, 50, 50 ], // top, right, bottom, left
-            ungrabifyWhileSimulating: true, // so you can't drag nodes during layout
+        ready: function() {
+            $('#refreshButton').attr("disabled", true);
+            $("#ajaxResponse").append("<li>>: Laying out elements...</li>");
+        },
+        stop: function() {
+            $('#refreshButton').attr("disabled", false);
+            $("#ajaxResponse").append("<li>>: Layout complete.</li>");
+        },
 
-            stepSize: 0.1,
-
-            stableEnergy: function( energy ){
-              var e = energy; 
-              return (e.max <= 0.5) || (e.mean <= 0.3);
-            }
+        stableEnergy: function( energy ){
+          var e = energy; 
+          return (e.max <= 0.5) || (e.mean <= 0.3);
+        }
     };
 }
