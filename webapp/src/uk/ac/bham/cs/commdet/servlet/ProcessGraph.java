@@ -14,6 +14,7 @@ import org.apache.commons.io.FileUtils;
 import edu.cmu.graphchi.engine.GraphChiEngine;
 
 import uk.ac.bham.cs.commdet.cyto.json.CommunityGraph;
+import uk.ac.bham.cs.commdet.cyto.json.CommunityGraphGenerator;
 import uk.ac.bham.cs.commdet.cyto.json.CompoundNode;
 import uk.ac.bham.cs.commdet.cyto.json.SubNode;
 import uk.ac.bham.cs.commdet.cyto.json.UndirectedEdge;
@@ -37,6 +38,7 @@ public class ProcessGraph extends HttpServlet {
 	private File tempFolder;
 	private JsonObject responseJson = new JsonObject();
 	private GCProgram GCprogram;
+	private String responseString;
 	
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		initialiseGraphChiProgram(request);
@@ -45,7 +47,8 @@ public class ProcessGraph extends HttpServlet {
 		writeGraphFileToTempFolder();
         processGraph();
         response.setContentType("text/html");
-        response.getWriter().println(responseJson.toString());
+        //response.getWriter().println(responseJson.toString());
+        response.getWriter().println(responseString);
         FileUtils.deleteDirectory(tempFolder);
 	}
 	
@@ -78,21 +81,17 @@ public class ProcessGraph extends HttpServlet {
 	
 	private void processGraph() {
 		try {
-			GraphChiEngine engine = GCprogram.run(tempFolderPath + filename, 3);
-			CommunityGraph graphs = new CommunityGraph(engine, tempFolderPath + filename);
-			graphs.parseGraphs();
-			GsonBuilder builder = new GsonBuilder();
-			builder.excludeFieldsWithoutExposeAnnotation();
-			builder.registerTypeAdapter(UndirectedEdge.class, new EdgeSerializer());
-			builder.registerTypeAdapter(CompoundNode.class, new CompoundNodeSerializer());
-			builder.registerTypeAdapter(SubNode.class, new SubNodeSerializer());
-			Gson gson = builder.create();
-			JsonObject graphsJson = (JsonObject) gson.toJsonTree(graphs);
-			responseJson.add("graphs", graphsJson);
-			responseJson.addProperty("success", true);
+			GraphChiEngine engine = GCprogram.run(tempFolderPath + filename, 1);
+			CommunityGraphGenerator generator = new CommunityGraphGenerator(engine, tempFolderPath + filename);
+			generator.parseGraphs();
+			responseString = generator.getJsonBoon();
+			//JsonObject graphsJson = generator.getJson();
+			//JsonObject graphsJson = new JsonObject();
+			//responseJson.add("graphs", graphsJson);
+			//responseJson.addProperty("success", true);
 		} catch (Exception e) {
-			responseJson.addProperty("success", false);
-			responseJson.addProperty("error", "label propagation failed: " + e.toString() + "\n" + Arrays.asList(e.getStackTrace()));
+			//responseJson.addProperty("success", false);
+			//responseJson.addProperty("error", "label propagation failed: " + e.toString() + "\n" + Arrays.asList(e.getStackTrace()));
 		}
 	}
 	

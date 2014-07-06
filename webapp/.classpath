@@ -9,5 +9,6 @@
 	<classpathentry kind="lib" path="/home/andrew/Development/git/MScProject/webapp/WEB-INF/lib/commons-io-2.4.jar"/>
 	<classpathentry kind="lib" path="/usr/share/java/tomcat-servlet-api-3.0.jar"/>
 	<classpathentry kind="lib" path="/home/andrew/Development/git/MScProject/webapp/WEB-INF/lib/graphchi-java-0.2-jar-with-dependencies-minus-servlet.jar"/>
+	<classpathentry kind="lib" path="/home/andrew/Development/git/MScProject/webapp/WEB-INF/lib/boon.jar"/>
 	<classpathentry kind="output" path="WEB-INF/classes"/>
 </classpath>

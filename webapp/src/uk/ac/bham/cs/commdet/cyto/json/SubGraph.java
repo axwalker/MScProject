@@ -38,4 +38,10 @@ public class SubGraph {
 	public int getSize() {
 		return nodes.size();
 	}
+	
+	public double getIntraClusterDensity() {
+		double internalEdges = edges.size();
+		double possibleEdges = (nodes.size() * (nodes.size()-1)) / 2.0;
+		return possibleEdges == 0 ? 1 : internalEdges/possibleEdges;
+	}
 }

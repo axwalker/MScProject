@@ -7,7 +7,7 @@ import com.google.gson.annotations.Expose;
 public class CompoundGraph {
 
 	@Expose
-	private Set<CompoundNode> nodes = new HashSet<CompoundNode>();
+	private List<CompoundNode> nodes = new ArrayList<CompoundNode>();
 	
 	@Expose
 	private List<UndirectedEdge> edges = new ArrayList<UndirectedEdge>();
@@ -17,11 +17,11 @@ public class CompoundGraph {
 	
 	public CompoundGraph() {}
 
-	public Set<CompoundNode> getNodes() {
+	public List<CompoundNode> getNodes() {
 		return nodes;
 	}
 
-	public void setNodes(Set<CompoundNode> nodes) {
+	public void setNodes(List<CompoundNode> nodes) {
 		this.nodes = nodes;
 	}
 
