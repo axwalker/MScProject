@@ -14,13 +14,13 @@ $('#uploadButton').click(function(){
         success: function( data, textStatus, jqXHR) {
             if(data.success) {
                 $("#ajaxResponse").append("<li>>: Graph processed.</li>");
-                graphs = data.graphs;
-                console.log("in success: " + JSON.stringify(data, undefined, 2));
-                //var metadata = graphs.compoundGraph.HighLevel.metadata;
-                //initHigh(graphs.compoundGraph.HighLevel);
-                //$("#Modularity span").html(metadata.modularity);
-                //$("#MinCommSize span").html(metadata.minCommunitySize);
-                //$("#MaxCommSize span").html(metadata.maxCommunitySize);
+                graphs = data;
+                //console.log("in success: " + JSON.stringify(data, undefined, 2));
+                var metadata = graphs.compoundGraph.HighLevel.metadata;
+                initHigh(graphs.compoundGraph.HighLevel);
+                $("#Modularity span").html(metadata.modularity);
+                $("#MinCommSize span").html(metadata.minCommunitySize);
+                $("#MaxCommSize span").html(metadata.maxCommunitySize);
             } else {
                 console.log(data.error);
                 $("#ajaxResponse").append("<li><b>>: Exception: failed to process graph</b></li>");

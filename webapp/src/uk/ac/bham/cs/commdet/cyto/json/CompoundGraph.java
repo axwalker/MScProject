@@ -2,17 +2,10 @@ package uk.ac.bham.cs.commdet.cyto.json;
 
 import java.util.*;
 
-import com.google.gson.annotations.Expose;
-
 public class CompoundGraph {
 
-	@Expose
 	private List<CompoundNode> nodes = new ArrayList<CompoundNode>();
-	
-	@Expose
 	private List<UndirectedEdge> edges = new ArrayList<UndirectedEdge>();
-	
-	@Expose
 	private Metadata metadata = new Metadata();
 	
 	public CompoundGraph() {}

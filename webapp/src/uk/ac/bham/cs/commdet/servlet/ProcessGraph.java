@@ -84,7 +84,7 @@ public class ProcessGraph extends HttpServlet {
 			GraphChiEngine engine = GCprogram.run(tempFolderPath + filename, 1);
 			CommunityGraphGenerator generator = new CommunityGraphGenerator(engine, tempFolderPath + filename);
 			generator.parseGraphs();
-			responseString = generator.getJsonBoon();
+			responseString = generator.getJacksonJson();
 			//JsonObject graphsJson = generator.getJson();
 			//JsonObject graphsJson = new JsonObject();
 			//responseJson.add("graphs", graphsJson);

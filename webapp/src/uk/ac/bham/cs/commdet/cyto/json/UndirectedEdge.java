@@ -1,24 +1,24 @@
 package uk.ac.bham.cs.commdet.cyto.json;
 
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
+import java.io.IOException;
 
+import org.codehaus.jackson.JsonGenerator;
+import org.codehaus.jackson.map.JsonSerializer;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.SerializerProvider;
+import org.codehaus.jackson.map.SerializationConfig.Feature;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
+
+@JsonSerialize(using = UndirectedEdgeSerializer.class)
 public class UndirectedEdge {
 	
-	@Expose
-	@SerializedName("source")
-	int smallerNode;
-	
-	@Expose
-	@SerializedName("target")
-	int largerNode;
-	
-	@Expose
+	int source;
+	int target;
 	int weight;
 	 
 	public UndirectedEdge(int node1, int node2, int weight) {
-		this.smallerNode = Math.min(node1, node2);
-		this.largerNode = Math.max(node1, node2);
+		this.source = Math.min(node1, node2);
+		this.target = Math.max(node1, node2);
 		this.weight = weight;
 	}
 	
@@ -28,20 +28,20 @@ public class UndirectedEdge {
 		return new UndirectedEdge(Integer.parseInt(edgeInfo[0]), Integer.parseInt(edgeInfo[1]), weight);
 	}
 
-	public int getSmallerNode() {
-		return smallerNode;
+	public int getSource() {
+		return source;
 	}
 
-	public void setSmallerNode(int smallerNode) {
-		this.smallerNode = smallerNode;
+	public void setSource(int source) {
+		this.source = source;
 	}
 
-	public int getLargerNode() {
-		return largerNode;
+	public int getTarget() {
+		return target;
 	}
 
-	public void setLargerNode(int largerNode) {
-		this.largerNode = largerNode;
+	public void setTarget(int target) {
+		this.target = target;
 	}	
 	
 	public int getWeight() {
@@ -60,8 +60,8 @@ public class UndirectedEdge {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + largerNode;
-		result = prime * result + smallerNode;
+		result = prime * result + target;
+		result = prime * result + source;
 		return result;
 	}
 
@@ -74,15 +74,29 @@ public class UndirectedEdge {
 		if (getClass() != obj.getClass())
 			return false;
 		UndirectedEdge other = (UndirectedEdge) obj;
-		if (largerNode != other.largerNode)
+		if (target != other.target)
 			return false;
-		if (smallerNode != other.smallerNode)
+		if (source != other.source)
 			return false;
 		return true;
 	}
 
 	@Override
 	public String toString() {
-		return "Smaller: " + smallerNode + ", larger: " + largerNode + ", weight: " + weight;
+		return "Smaller: " + source + ", larger: " + target + ", weight: " + weight;
 	}
+}
+
+class UndirectedEdgeSerializer extends JsonSerializer<UndirectedEdge> {
+    @Override
+    public void serialize(UndirectedEdge edge, JsonGenerator jsonGenerator, 
+            SerializerProvider serializerProvider) throws IOException {    	
+    	
+    	ObjectMapper mapper = new ObjectMapper();
+    	mapper.getSerializationConfig().disable(Feature.USE_ANNOTATIONS);
+    	jsonGenerator.writeStartObject();
+    	jsonGenerator.writeFieldName("data");
+    	jsonGenerator.writeRawValue(mapper.writeValueAsString(edge));
+    	jsonGenerator.writeEndObject();
+    }
 }

@@ -4,24 +4,12 @@ import com.google.gson.annotations.Expose;
 
 public class Metadata {
 	
-	@Expose
 	private int NoOfCommunities;
-	
-	@Expose
 	private int maxCommunitySize;
-	
-	@Expose
 	private int avgCommunitySize;
-	
-	@Expose
 	private int minCommunitySize;
-	
-	@Expose
 	private int modularity = -1;
-	
-	@Expose
 	private int maxEdgeConnection;
-	
 	private int test = -1;
 	
 	

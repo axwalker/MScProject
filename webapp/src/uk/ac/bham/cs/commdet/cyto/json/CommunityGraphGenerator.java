@@ -5,8 +5,9 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
 
-import org.boon.json.JsonFactory;
-import org.boon.json.ObjectMapper;
+import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
 
 import uk.ac.bham.cs.commdet.cyto.json.serializer.CompoundNodeSerializer;
 import uk.ac.bham.cs.commdet.cyto.json.serializer.EdgeSerializer;
@@ -46,16 +47,21 @@ public class CommunityGraphGenerator {
 		return (JsonObject) gson.toJsonTree(cg);
 	}
 	
-	public String getJsonBoon() {
-		ObjectMapper mapper =  JsonFactory.create();
-	    return mapper.toJson(cg); 
+	public String getJacksonJson() {
+		ObjectMapper mapper = new ObjectMapper();
+		try {
+			return mapper.writeValueAsString(cg);
+		} catch (Exception e) {
+			return "{\"success\" : false, \"reason\" : " +
+					e.toString() + "\n" + Arrays.asList(e.getStackTrace()) + " }";
+		}
 	}
 	
 	public void parseGraphs() throws IOException {
 		parseAllNodesFromEngine();
 		generateCompoundNodes();
 		parseEdgesFromEngine();
-		//generateSubNodeMetadata();
+		generateSubNodeMetadata();
 		generateCompoundMetadata();
 	}
 	
@@ -88,18 +94,18 @@ public class CommunityGraphGenerator {
 		String line = null;
 		while ((line = br.readLine()) != null) {
 			UndirectedEdge edge = UndirectedEdge.getEdge(line);
-			int source = edge.getSmallerNode();
-			int target = edge.getLargerNode();
+			int source = edge.getSource();
+			int target = edge.getTarget();
 			int weight = edge.getWeight();			
 			if (nodeLabels.get("" + source).equals(nodeLabels.get("" + target))) {
-				//SubGraph subGraph = cg.getSubGraphs().get(nodeLabels.get("" + source));
-				//subGraph.getEdges().add(new UndirectedEdge(source, target, weight));
+				SubGraph subGraph = cg.getSubGraphs().get(nodeLabels.get("" + source));
+				subGraph.getEdges().add(new UndirectedEdge(source, target, weight));
 			} else {
 				source = Integer.parseInt(nodeLabels.get("" + source));
 				target = Integer.parseInt(nodeLabels.get("" + target));
 				cg.getCompoundGraph().get("HighLevel").addEdge(new UndirectedEdge(source, target, weight));
 
-				//incrementCompoundNodeDegree("" + source, "" + target);
+				incrementCompoundNodeDegree("" + source, "" + target);
 			}
 		}
 		br.close();

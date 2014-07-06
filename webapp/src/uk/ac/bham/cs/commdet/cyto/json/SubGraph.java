@@ -2,14 +2,9 @@ package uk.ac.bham.cs.commdet.cyto.json;
 
 import java.util.*;
 
-import com.google.gson.annotations.Expose;
-
 public class SubGraph {
 
-	@Expose
 	private Set<SubNode> nodes = new HashSet<SubNode>();
-	
-	@Expose
 	private Set<UndirectedEdge> edges = new HashSet<UndirectedEdge>(); 
 	
 	public SubGraph() {}

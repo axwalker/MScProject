@@ -1,24 +1,22 @@
 package uk.ac.bham.cs.commdet.cyto.json;
 
-import com.google.gson.annotations.Expose;
+import java.io.IOException;
 
+import org.codehaus.jackson.JsonGenerator;
+import org.codehaus.jackson.map.JsonSerializer;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.SerializerProvider;
+import org.codehaus.jackson.map.SerializationConfig.Feature;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
+
+@JsonSerialize(using = CompoundNodeSerializer.class)
 public class CompoundNode {
 
-	@Expose
 	private String id;
-	
-	@Expose
 	private int size;
-	
-	@Expose
 	private double intraClusterDensity = -1;
-	
-	@Expose
 	private double interClusterDensity = -1;
-	
-	@Expose
 	private double clusterRating = -1;
-	
 	private int degree;
 
 	public CompoundNode(String id, int size) {
@@ -96,4 +94,18 @@ public class CompoundNode {
 		return true;
 	}
 	
+}
+
+class CompoundNodeSerializer extends JsonSerializer<CompoundNode> {
+    @Override
+    public void serialize(CompoundNode node, JsonGenerator jsonGenerator, 
+            SerializerProvider serializerProvider) throws IOException {    	
+    	
+    	ObjectMapper mapper = new ObjectMapper();
+    	mapper.getSerializationConfig().disable(Feature.USE_ANNOTATIONS);
+    	jsonGenerator.writeStartObject();
+    	jsonGenerator.writeFieldName("data");
+    	jsonGenerator.writeRawValue(mapper.writeValueAsString(node));
+    	jsonGenerator.writeEndObject();
+    }
 }

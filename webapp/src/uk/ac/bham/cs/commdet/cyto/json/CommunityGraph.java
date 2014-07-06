@@ -2,13 +2,11 @@ package uk.ac.bham.cs.commdet.cyto.json;
 
 import java.util.*;
 
-import com.google.gson.annotations.Expose;
-
 public class CommunityGraph {
 	
-	@Expose	private Map<String, CompoundGraph> compoundGraph = new HashMap<String, CompoundGraph>();
-	@Expose	private Map<String, SubGraph> subGraphs = new HashMap<String, SubGraph>();
-	@Expose private boolean success = true;
+	private Map<String, CompoundGraph> compoundGraph = new HashMap<String, CompoundGraph>();
+	private Map<String, SubGraph> subGraphs = new HashMap<String, SubGraph>();
+	private boolean success = true;
 	
 	public CommunityGraph() {
 		compoundGraph.put("HighLevel", new CompoundGraph());
@@ -28,6 +26,10 @@ public class CommunityGraph {
 
 	public void setSubGraphs(Map<String, SubGraph> subGraphs) {
 		this.subGraphs = subGraphs;
+	}
+	
+	public boolean getSuccess() {
+		return success;
 	}
 
 }
