@@ -1,8 +1,13 @@
 package uk.ac.bham.cs.commdet.graphchi.program;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -13,6 +18,7 @@ import org.apache.commons.io.FileUtils;
 import uk.ac.bham.cs.commdet.cyto.json.CommunityGraphGenerator;
 import uk.ac.bham.cs.commdet.cyto.json.CompoundNode;
 import uk.ac.bham.cs.commdet.cyto.json.SubGraph;
+import uk.ac.bham.cs.commdet.cyto.json.UndirectedEdge;
 
 import edu.cmu.graphchi.*;
 import edu.cmu.graphchi.datablocks.IntConverter;
@@ -31,25 +37,27 @@ public class LouvainProgram implements GraphChiProgram<Integer, Integer>  {
 	private int passIndex;
 	private boolean improvedOnPass;
 	private boolean modularityImproved;
+	private boolean finalUpdate;
 	private int[] nodeToCommunity;
 	private int[] communityInternalEdges;
 	private int[] communityTotalEdges;
 	private int[] nodeWeightedDegree;
 	private int[] nodeSelfLoops;
 	private long totalGraphWeight;
-	
+	private ArrayList<UndirectedEdge> contractedGraph = new ArrayList<UndirectedEdge>();
+
 	public void remove(int node, int community, int noNodeLinksToComm) {
 		communityTotalEdges[community] -= nodeWeightedDegree[node];
 		communityInternalEdges[community] -= 2*noNodeLinksToComm + nodeSelfLoops[node];
 		nodeToCommunity[node] = -1;
 	}
-	
+
 	public void insert(int node, int community, int noNodeLinksToComm) {
 		communityTotalEdges[community] += nodeWeightedDegree[node];
 		communityInternalEdges[community] += 2*noNodeLinksToComm + nodeSelfLoops[node];
 		nodeToCommunity[node] = community;
 	}
-	
+
 	/*
 	 * Can remove outer division by m2 and will still work
 	 */
@@ -58,10 +66,10 @@ public class LouvainProgram implements GraphChiProgram<Integer, Integer>  {
 		double degc = (double)nodeWeightedDegree[node];
 		double m2 = (double)totalGraphWeight;
 		double dnc = (double)noNodeLinksToComm;
-		
+
 		return (dnc - (totc*degc)/m2) / m2; 
 	}
-	
+
 	public synchronized void update(ChiVertex<Integer, Integer> vertex, GraphChiContext context) {
 		int node = vertex.getId();
 		if (context.getIteration() == 0) {
@@ -71,45 +79,71 @@ public class LouvainProgram implements GraphChiProgram<Integer, Integer>  {
 				nodeWeightedDegree[node] += edgeWeight;
 			}
 			nodeSelfLoops[node] += vertex.getValue();
+			communityTotalEdges[node] += vertex.getValue();
 			communityTotalEdges[node] += nodeWeightedDegree[node];
 			if (vertex.numEdges() == 0) {
 				vertex.setValue(-1);
 			} else {
-				vertex.setValue(node);	
+				vertex.setValue(node);
 				nodeToCommunity[node] = node;
+			}
+		} else if (finalUpdate && vertex.numEdges() != 0) {
+			//final run through to build edges for next pass
+			System.out.println("IN FINAL-------------------------------------------------------------");
+			VertexIdTranslate trans = context.getVertexIdTranslate();
+			int actualNode = trans.backward(node);
+			if (node == nodeToCommunity[node]) {
+				UndirectedEdge selfLoop = new UndirectedEdge(actualNode, actualNode, communityInternalEdges[node]);
+				contractedGraph.add(selfLoop);
+			}
+			for (int i = 0; i < vertex.numOutEdges(); i++) {
+				int target = vertex.outEdge(i).getVertexId();
+				int sourceCommunity = nodeToCommunity[node];
+				int targetCommunity = nodeToCommunity[target];
+				if (sourceCommunity != targetCommunity) {
+					int actualSourceCommunity = trans.backward(sourceCommunity);
+					int actualTargetCommunity = trans.backward(targetCommunity);
+					int weight = vertex.outEdge(i).getValue();
+					UndirectedEdge edge = new UndirectedEdge(actualSourceCommunity, actualTargetCommunity, weight);
+					if (contractedGraph.contains(edge)) {
+						int edgeIndex = contractedGraph.indexOf(edge);
+						contractedGraph.get(edgeIndex).increaseWeightBy(weight);
+					} else {
+						contractedGraph.add(edge);
+					}
+				}
 			}
 		} else if (vertex.numEdges() != 0){
 			Map<Integer, Integer> neighbourCommunities = getNeighbourCommunities(vertex);
-			
+
 			int nodeCommunity = nodeToCommunity[node];
-			
+
 			remove(node, nodeCommunity, neighbourCommunities.get(nodeCommunity)); //
-			
+
 			int bestCommunity = nodeCommunity;
 			int bestNoOfLinks = 0;
 			double bestModularityGain = 0.;
-			
+
 			for (Map.Entry<Integer, Integer> entry : neighbourCommunities.entrySet()) {	
 				double gain = modularityGain(node, entry.getKey(), entry.getValue());
-				System.out.println("!!!Node: " + node + ", oldCommunity: " + nodeCommunity + ", potentialNew: " 
-						+ entry.getKey() + ", connectionsTo: " + entry.getValue() + ", gain: " + gain);
 				if (gain > bestModularityGain) {
 					bestCommunity = entry.getKey();
 					bestNoOfLinks = entry.getValue();
 					bestModularityGain = gain;
 				}
 			}
-			
+
 			insert(node, bestCommunity, bestNoOfLinks);
-			
+
 			if (bestCommunity != nodeCommunity) {
 				improvedOnPass = true;
 				modularityImproved = true;
 				vertex.setValue(bestCommunity);
 			}	
 		}
+
 	}
-	
+
 	public double getModularity() {
 		double q = 0.;
 		for (int i = 0; i < nodeToCommunity.length; i++) {
@@ -120,12 +154,12 @@ public class LouvainProgram implements GraphChiProgram<Integer, Integer>  {
 		}
 		return q;
 	}
-	
+
 	private Map<Integer, Integer> getNeighbourCommunities(ChiVertex<Integer, Integer> vertex) {
 		int node = vertex.getId();
 		Map<Integer, Integer> result = new HashMap<Integer, Integer>();
 		result.put(nodeToCommunity[node], 0);
-		
+
 		for (int i = 0; i < vertex.numEdges(); i++) {
 			int neighbour = vertex.edge(i).getVertexId();
 			int neighbourCommunity = nodeToCommunity[neighbour];
@@ -137,7 +171,7 @@ public class LouvainProgram implements GraphChiProgram<Integer, Integer>  {
 				result.put(neighbourCommunity, edgeWeight);
 			}
 		}
-		
+
 		return result;
 	}
 
@@ -153,13 +187,17 @@ public class LouvainProgram implements GraphChiProgram<Integer, Integer>  {
 		}
 		modularityImproved = false;
 	}
-	
+
 	public void endIteration(GraphChiContext ctx) {
 		if (ctx.getIteration() == 0 || modularityImproved) {
 			ctx.getScheduler().addAllTasks();
+		} else  if (!finalUpdate && improvedOnPass) {
+			System.out.println("IN END ITERATION ============================" + modularityImproved + " " + improvedOnPass);
+			ctx.getScheduler().addAllTasks();
+			finalUpdate = true;
 		}
 	}
-	
+
 	public void beginInterval(GraphChiContext ctx, VertexInterval interval) {}
 	public void endInterval(GraphChiContext ctx, VertexInterval interval) {}
 	public void beginSubInterval(GraphChiContext ctx, VertexInterval interval) {}
@@ -185,43 +223,60 @@ public class LouvainProgram implements GraphChiProgram<Integer, Integer>  {
 		engine.setVertexDataConverter(new IntConverter());
 		engine.setEnableScheduler(true);
 		engine.run(this, 10);	
-		
-		do {
+
+		while (improvedOnPass && contractedGraph.size() > 1) {
+			finalUpdate = false;
 			passIndex++;
 			improvedOnPass = false;
-			
-			String baseFilename = writeNewEdgelist(passIndex, baseFilename);
-			
+			System.out.println(passIndex + "##############################################");
+
+			baseFilename = writeNewEdgeList(passIndex, baseFilename, engine);
+			System.out.println(baseFilename + " ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+
 			sharder = this.createSharder(baseFilename, nShards);
 			sharder.shard(new FileInputStream(new File(baseFilename)), "edgelist");
 			engine = new GraphChiEngine<Integer, Integer>(baseFilename, nShards);
 			engine.setEdataConverter(new IntConverter());
 			engine.setVertexDataConverter(new IntConverter());
 			engine.setEnableScheduler(true);
-			engine.run(this, 10);
-		} while (improvedOnPass);
-		
+			engine.run(this, 20);
+		}
+
 		return engine;
 	}
 
-	public String writeNewEdgeList(int passIndex, String baseFilename) {
-		String filename = baseFilename + "_pass_" + passIndex;
-		File newEdgeList = new File()
+	public String writeNewEdgeList(int passIndex, String baseFilename, GraphChiEngine oldEngine) throws IOException {
+		String base;
+		if (passIndex > 1) {
+			base = baseFilename.substring(0, baseFilename.indexOf("_pass_"));
+		} else {
+			base = baseFilename;
+		}
+		String newFilename = base + "_pass_" + passIndex;
+
+		BufferedWriter bw = new BufferedWriter(new FileWriter(newFilename));
+		for (UndirectedEdge edge : contractedGraph) {
+			bw.write(edge.toString());
+		}
+
+		bw.close();
+		contractedGraph = new ArrayList<UndirectedEdge>();
+		return newFilename;
 	}
-	
+
 	public static void main(String[] args) throws Exception {
 		String folder = "sampledata/"; 
-		String file = "sample_label.txt";
+		String file = "dolphinsedge.txt";
 		LouvainProgram program = new LouvainProgram();
 		GraphChiEngine engine = program.run(folder + file, 1);
-		CommunityGraphGenerator generator = new CommunityGraphGenerator(engine, folder + file);
+		CommunityGraphGenerator generator = new CommunityGraphGenerator(engine, folder + file + "_pass_" + program.passIndex);
 		generator.parseGraphs();
 		System.out.println("FINAL MODULARITY: " + program.getModularity());
 		System.out.println(generator.getJacksonJson());
-		
-		FileUtils.moveFile(new File(folder + file), new File(file));
-		FileUtils.cleanDirectory(new File(folder));
-		FileUtils.moveFile(new File(file), new File(folder + file));
+
+		//FileUtils.moveFile(new File(folder + file), new File(file));
+		//FileUtils.cleanDirectory(new File(folder));
+		//FileUtils.moveFile(new File(file), new File(folder + file));
 	}
 
 }
