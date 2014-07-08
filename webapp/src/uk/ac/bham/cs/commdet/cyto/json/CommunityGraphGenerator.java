@@ -146,6 +146,7 @@ public class CommunityGraphGenerator {
 		metadata.setMinCommunitySize(minSize);
 		metadata.setMaxCommunitySize(maxSize);
 		metadata.setMaxEdgeConnection(maxEdge);
+		//metadata.setModularity()
 	}
 	
 }
