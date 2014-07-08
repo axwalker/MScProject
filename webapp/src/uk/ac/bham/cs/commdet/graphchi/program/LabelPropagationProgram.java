@@ -1,21 +1,21 @@
-package uk.ac.bham.cs.commdet.graphchi.behaviours;
+package uk.ac.bham.cs.commdet.graphchi.program;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import uk.ac.bham.cs.commdet.graphchi.program.BidirectionalLabel;
-
-import edu.cmu.graphchi.ChiVertex;
-import edu.cmu.graphchi.GraphChiContext;
+import edu.cmu.graphchi.*;
+import edu.cmu.graphchi.datablocks.IntConverter;
+import edu.cmu.graphchi.engine.GraphChiEngine;
 import edu.cmu.graphchi.engine.VertexInterval;
+import edu.cmu.graphchi.preprocessing.EdgeProcessor;
+import edu.cmu.graphchi.preprocessing.FastSharder;
+import edu.cmu.graphchi.preprocessing.VertexProcessor;
 
-public class LabelPropagation implements UpdateBehaviour<Integer, BidirectionalLabel> {
+public class LabelPropagationProgram implements GraphChiProgram<Integer, BidirectionalLabel>  {
 
-	@Override
-	public boolean hasScheduler() {
-		return true;
-	}
-	
 	@Override
 	public void update(ChiVertex<Integer, BidirectionalLabel> vertex, GraphChiContext context) {
 		int newLabel;
@@ -124,5 +124,31 @@ public class LabelPropagation implements UpdateBehaviour<Integer, BidirectionalL
 	public void endInterval(GraphChiContext ctx, VertexInterval interval) {}
 	public void beginSubInterval(GraphChiContext ctx, VertexInterval interval) {}
 	public void endSubInterval(GraphChiContext ctx, VertexInterval interval) {}
+
+	protected FastSharder createSharder(String graphName, int numShards) throws IOException {
+		return new FastSharder<Integer, BidirectionalLabel>(graphName, numShards, new VertexProcessor<Integer>() {
+			public Integer receiveVertexValue(int vertexId, String token) {
+				return token != null ? Integer.parseInt(token) : 0;
+			}
+		}, new EdgeProcessor<BidirectionalLabel>() {
+			public BidirectionalLabel receiveEdge(int from, int to, String token) {
+				return new BidirectionalLabel(0, 0, (token != null ? Integer.parseInt(token) : 0));
+			}
+		}, new IntConverter(), new BidirectionalLabelConverter());
+	}
+
+	public GraphChiEngine run(String baseFilename, int nShards) throws  Exception {
+		
+		FastSharder sharder = this.createSharder(baseFilename, nShards);
+		sharder.shard(new FileInputStream(new File(baseFilename)), "edgelist");
+		GraphChiEngine<Integer, BidirectionalLabel> engine = new GraphChiEngine<Integer, BidirectionalLabel>(baseFilename, nShards);
+		engine.setEdataConverter(new BidirectionalLabelConverter());
+		engine.setVertexDataConverter(new IntConverter());
+		
+		engine.setEnableScheduler(true);
+		engine.run(this, 10);
+		
+		return engine;
+	}
 
 }

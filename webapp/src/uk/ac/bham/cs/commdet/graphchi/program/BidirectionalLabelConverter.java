@@ -9,7 +9,7 @@ public class BidirectionalLabelConverter implements BytesToValueConverter<Bidire
 		return new BidirectionalLabel(
 				((array[3]  & 0xff) << 24) + ((array[2] & 0xff) << 16) + ((array[1] & 0xff) << 8) + (array[0] & 0xff),
 				((array[7]  & 0xff) << 24) + ((array[6] & 0xff) << 16) + ((array[5] & 0xff) << 8) + (array[4] & 0xff),
-				((array[8]  & 0xff) << 24) + ((array[9] & 0xff) << 16) + ((array[10] & 0xff) << 8) + (array[11] & 0xff));
+				((array[11]  & 0xff) << 24) + ((array[10] & 0xff) << 16) + ((array[9] & 0xff) << 8) + (array[8] & 0xff));
 	}
 
 	@Override

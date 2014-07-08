@@ -8,11 +8,13 @@ import java.util.*;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.SerializationConfig.Feature;
 
 import uk.ac.bham.cs.commdet.cyto.json.serializer.CompoundNodeSerializer;
 import uk.ac.bham.cs.commdet.cyto.json.serializer.EdgeSerializer;
 import uk.ac.bham.cs.commdet.cyto.json.serializer.SubNodeSerializer;
 
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
@@ -49,6 +51,7 @@ public class CommunityGraphGenerator {
 	
 	public String getJacksonJson() {
 		ObjectMapper mapper = new ObjectMapper();
+		mapper.getSerializationConfig().enable(Feature.INDENT_OUTPUT);
 		try {
 			return mapper.writeValueAsString(cg);
 		} catch (Exception e) {

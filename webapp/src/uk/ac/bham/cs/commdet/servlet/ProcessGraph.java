@@ -21,8 +21,8 @@ import uk.ac.bham.cs.commdet.cyto.json.UndirectedEdge;
 import uk.ac.bham.cs.commdet.cyto.json.serializer.CompoundNodeSerializer;
 import uk.ac.bham.cs.commdet.cyto.json.serializer.EdgeSerializer;
 import uk.ac.bham.cs.commdet.cyto.json.serializer.SubNodeSerializer;
-import uk.ac.bham.cs.commdet.graphchi.behaviours.LabelPropagation;
-import uk.ac.bham.cs.commdet.graphchi.program.GCProgram;
+import uk.ac.bham.cs.commdet.graphchi.program.LabelPropagationProgram;
+import uk.ac.bham.cs.commdet.graphchi.program.LouvainProgram;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -37,7 +37,7 @@ public class ProcessGraph extends HttpServlet {
 	private String tempFolderPath;
 	private File tempFolder;
 	private JsonObject responseJson = new JsonObject();
-	private GCProgram GCprogram;
+	private LouvainProgram GCprogram;
 	private String responseString;
 	
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -53,7 +53,8 @@ public class ProcessGraph extends HttpServlet {
 	}
 	
 	public void initialiseGraphChiProgram(HttpServletRequest request) {
-		this.GCprogram = new GCProgram( new LabelPropagation());
+		//this.GCprogram = new LabelPropagationProgram();
+		this.GCprogram = new LouvainProgram();
 	}
 	
 	private void parseFileContents(Part filePart) throws IOException {
