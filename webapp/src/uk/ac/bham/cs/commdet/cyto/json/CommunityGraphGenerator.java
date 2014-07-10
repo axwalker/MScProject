@@ -72,7 +72,7 @@ public class CommunityGraphGenerator {
 		final VertexIdTranslate trans = engine.getVertexIdTranslate();
 		VertexAggregator.foreach(engine.numVertices(), filepath, new IntConverter(), new ForeachCallback<Integer>() {
             public void callback(int id, Integer label) {
-            	if (label >= 0) {
+            	if (label > 0) {
             		if (!cg.getSubGraphs().containsKey("" + label)) {
             			cg.getSubGraphs().put("" + label, new SubGraph());
                 	}
