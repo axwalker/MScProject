@@ -83,7 +83,7 @@ public class UndirectedEdge {
 
 	@Override
 	public String toString() {
-		return source + " " + target + (weight != 1 ? " " + weight : " 1") + "\n";
+		return source + " " + target + " " + weight + "\n";
 	}
 }
 

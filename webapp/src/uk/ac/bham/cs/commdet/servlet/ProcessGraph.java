@@ -21,8 +21,8 @@ import uk.ac.bham.cs.commdet.cyto.json.UndirectedEdge;
 import uk.ac.bham.cs.commdet.cyto.json.serializer.CompoundNodeSerializer;
 import uk.ac.bham.cs.commdet.cyto.json.serializer.EdgeSerializer;
 import uk.ac.bham.cs.commdet.cyto.json.serializer.SubNodeSerializer;
+import uk.ac.bham.cs.commdet.graphchi.louvain.LouvainProgram;
 import uk.ac.bham.cs.commdet.graphchi.program.LabelPropagationProgram;
-import uk.ac.bham.cs.commdet.graphchi.program.LouvainProgram;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

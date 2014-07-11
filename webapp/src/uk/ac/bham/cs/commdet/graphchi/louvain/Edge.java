@@ -1,4 +1,4 @@
-package uk.ac.bham.cs.commdet.graphchi.program;
+package uk.ac.bham.cs.commdet.graphchi.louvain;
 
 class Edge {
 	private int node1;
