@@ -28,30 +28,35 @@ public class GraphJsonGenerator {
 		parseGraph(result.getHeight() - 1);
 		return serializeGraph();
 	}
+
+	public String getBottomGraphJson() {
+		parseGraph(0);
+		return serializeGraph();
+	}
 	
 	public String getGraphJson(int level) {
 		parseGraph(level);
 		return serializeGraph();
 	}
-	
+
 	private void parseGraph(int level) {
 		String baseFilename = result.getFilename();
 		parseCompoundEdgeFile(baseFilename, level);
 		for (NodeData nodeData : graph.getNodes()) {
 			Node node = nodeData.getData();
 			int nodeId = Integer.parseInt(node.getId());
-			int parentId = result.getHierarchy().get(nodeId).get(level);
+			int parentId = result.getHierarchy().get(nodeId).get(result.getHeight()-1);
 			node.setColour(getColour(parentId + ""));
 		}
-		double modularity = result.getModularities().get(level);
+		double modularity = (level == 0 ? 0 : result.getModularities().get(level));
 		Metadata metadata = graph.getMetadata();
 		metadata.setModularity(modularity);
 		metadata.setNoOfCommunities(graph.getNodes().size());
 		metadata.setAvgCommunitySize(result.getHierarchy().size() / graph.getNodes().size());
 	}
-
+	
 	private void parseCompoundEdgeFile(String baseFilename, int level) {
-		String edgeFilename = baseFilename + "_pass_" + (level + 1);
+		String edgeFilename = baseFilename + (level == 0 ? "" : "_pass_" + (level + 1));
 		Set<Integer> nodesAdded = new HashSet<Integer>();
 		int maxCommunitySize = 0;
 		int minCommunitySize = Integer.MAX_VALUE;
@@ -67,14 +72,14 @@ public class GraphJsonGenerator {
 					maxEdgeConnection = Math.max(maxEdgeConnection, weight);
 				}
 				if (!nodesAdded.contains(source)) {
-					int size = result.getSizes().get(new Community(source, level));
+					int size = (level == 0 ? 1 : result.getSizes().get(new Community(source, level)));
 					graph.getNodes().add(new NodeData(new Node("" + source, size)));
 					nodesAdded.add(source);
 					maxCommunitySize = Math.max(maxCommunitySize, size);
 					minCommunitySize = Math.min(minCommunitySize, size);
 				}
 				if (!nodesAdded.contains(target)) {
-					int size = result.getSizes().get(new Community(target, level));
+					int size = (level == 0 ? 1 : result.getSizes().get(new Community(target, level)));
 					graph.getNodes().add(new NodeData(new Node("" + target, size)));
 					nodesAdded.add(target);
 					maxCommunitySize = Math.max(maxCommunitySize, size);
@@ -101,7 +106,17 @@ public class GraphJsonGenerator {
 		}
 	}
 	
+	//http://stackoverflow.com/questions/3816466/evenly-distributed-hash-function
 	private static String getColour(String id) {
-		return String.format("#%06X", 0xFFFFFF & id.hashCode());
+		char[] chars = id.toCharArray();
+		int Q = 433494437;
+		int result = 0;
+		for (int i = 0; i < chars.length; i++) {
+			result = result * Q + (chars[i] + 12345) * chars[i];
+		}
+		result *= Q;
+		result = Math.abs(result % (Integer.MAX_VALUE));
+
+		return String.format("#%06X", 0xFFFFFF & result);
 	}
 }

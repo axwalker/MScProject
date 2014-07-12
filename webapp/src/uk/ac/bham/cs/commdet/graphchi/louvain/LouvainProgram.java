@@ -252,7 +252,6 @@ public class LouvainProgram implements GraphChiProgram<Integer, Integer>  {
 			improvedOnPass = false;
 			
 			newFilename = writeNewEdgeList(newFilename);
-			System.out.println(newFilename + " ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
 			sharder = createSharder(newFilename, 1);
 			sharder.shard(new FileInputStream(new File(newFilename)), "edgelist");
@@ -289,13 +288,14 @@ public class LouvainProgram implements GraphChiProgram<Integer, Integer>  {
 
 	public static void main(String[] args) throws Exception {
 		String folder = "sampledata/"; 
-		String file = "sample_label.txt";
+		String file = "karateclub_edg.txt";
 		LouvainProgram program = new LouvainProgram();
 		GraphResult result = program.run(folder + file, 1);
 		System.out.println("FINAL MODULARITY: " + program.getModularity());
 		//result.writeSortedEdgeList();
 		GraphJsonGenerator generator = new GraphJsonGenerator(result);
 		System.out.println(result.getSizes());
+		System.out.println(result.getHeight());
 		System.out.println(program.status.getModularities());
 		System.out.println(generator.getParentGraphJson());
 		//System.out.println(generator.getGraphJson(3));
