@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
 
-import uk.ac.bham.cs.commdet.cyto.json.CommunityGraphGenerator;
+import uk.ac.bham.cs.commdet.cyto.json.GraphJsonGenerator;
 
 import edu.cmu.graphchi.*;
 import edu.cmu.graphchi.datablocks.IntConverter;
@@ -205,7 +205,7 @@ public class LouvainProgram implements GraphChiProgram<Integer, Integer>  {
 			status.setOriginalVertexTrans(ctx.getVertexIdTranslate());
 			status.initialiseCommunitiesMap();
 		}
-		if (ctx.getIteration() == 0 || iterationModularityImprovement > 0.0001) {
+		if (ctx.getIteration() == 0 || iterationModularityImprovement > 0.00001) {
 			status.setUpdatedVertexTrans(ctx.getVertexIdTranslate());
 			ctx.getScheduler().addAllTasks();
 		} else  if (!finalUpdate && improvedOnPass) {
@@ -264,7 +264,8 @@ public class LouvainProgram implements GraphChiProgram<Integer, Integer>  {
 			engine.run(this, 1000);
 		}
 
-		return new GraphResult(baseFilename, status.getCommunityHierarchy(), status.getCommunitySizes());
+		return new GraphResult(baseFilename, status.getCommunityHierarchy(), 
+				status.getCommunitySizes(), passIndex, status.getModularities());
 	}
 
 	public String writeNewEdgeList(String baseFilename) throws IOException {
@@ -288,15 +289,20 @@ public class LouvainProgram implements GraphChiProgram<Integer, Integer>  {
 
 	public static void main(String[] args) throws Exception {
 		String folder = "sampledata/"; 
-		String file = "amazon.txt";
+		String file = "sample_label.txt";
 		LouvainProgram program = new LouvainProgram();
 		GraphResult result = program.run(folder + file, 1);
 		System.out.println("FINAL MODULARITY: " + program.getModularity());
-		result.writeSortedEdgeList();
+		//result.writeSortedEdgeList();
+		GraphJsonGenerator generator = new GraphJsonGenerator(result);
+		System.out.println(result.getSizes());
+		System.out.println(program.status.getModularities());
+		System.out.println(generator.getParentGraphJson());
+		//System.out.println(generator.getGraphJson(3));
 
 		//System.out.println(Arrays.toString(program.status.getCommunitySize()));
-		System.out.println(program.status.getModularities());
-		//System.out.println(result.getSizes());
+		//System.out.println(result.getEdgePositions());
+		
 		//System.out.println(result.getHierarchy());
 		//FileUtils.moveFile(new File(folder + file), new File(file));
 		//FileUtils.cleanDirectory(new File(folder));

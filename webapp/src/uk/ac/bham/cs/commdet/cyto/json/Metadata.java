@@ -1,16 +1,13 @@
 package uk.ac.bham.cs.commdet.cyto.json;
 
-import com.google.gson.annotations.Expose;
-
 public class Metadata {
 	
 	private int NoOfCommunities;
 	private int maxCommunitySize;
 	private int avgCommunitySize;
 	private int minCommunitySize;
-	private int modularity = -1;
+	private double modularity;
 	private int maxEdgeConnection;
-	private int test = -1;
 	
 	
 	public int getNoOfCommunities() {
@@ -45,11 +42,11 @@ public class Metadata {
 		this.minCommunitySize = minCommunitySize;
 	}
 
-	public int getModularity() {
+	public double getModularity() {
 		return modularity;
 	}
 
-	public void setModularity(int modularity) {
+	public void setModularity(double modularity) {
 		this.modularity = modularity;
 	}
 
@@ -60,13 +57,5 @@ public class Metadata {
 	public void setMaxEdgeConnection(int maxEdgeConnection) {
 		this.maxEdgeConnection = maxEdgeConnection;
 	}
-
-	public int getTest() {
-		return test;
-	}
-
-	public void setTest(int test) {
-		this.test = test;
-	}	
 
 }

@@ -1,9 +1,7 @@
 package uk.ac.bham.cs.commdet.graphchi.louvain;
 
-import java.util.Comparator;
 import java.util.*;
 
-import uk.ac.bham.cs.commdet.cyto.json.UndirectedEdge;
 
 public class EdgeComparator implements Comparator<UndirectedEdge> {
 
@@ -130,46 +128,6 @@ public class EdgeComparator implements Comparator<UndirectedEdge> {
 		edges.add(e15);
 		
 		System.out.println(edges);
-		
-		//getting community positions in sorted edge list
-		Map<String, CommunityEdgePositions> communityPositions = new HashMap<String, CommunityEdgePositions>();
-		
-		List<Integer> firstEdgeCommunities = lists.get(edges.first().getSource());
-
-		int previousBottomComm = firstEdgeCommunities.get(0);
-		int previousTopComm = firstEdgeCommunities.get(1);
-		int index = 0;
-		Set<Integer> bottomSeen = new HashSet<Integer>();
-		Set<Integer> topSeen = new HashSet<Integer>();
-		
-		communityPositions.put(previousTopComm + "." + previousBottomComm, new CommunityEdgePositions(0, 0));
-		communityPositions.put("" + previousTopComm, new CommunityEdgePositions(0, 0));
-		
-		/*
-		 * doesn't work, need to check edge source and target belong to same community...
-		 */
-		for (UndirectedEdge edge : edges) {
-			List<Integer> communitiesAtLevels = lists.get(edge.getSource());
-			int bottomCommunity = communitiesAtLevels.get(0);
-			int topCommunity = communitiesAtLevels.get(1);
-			
-			if (bottomCommunity != previousBottomComm && !bottomSeen.contains(bottomCommunity)) {
-				communityPositions.put(topCommunity + "." + bottomCommunity, new CommunityEdgePositions(index, index));
-				communityPositions.get(previousTopComm + "." + previousBottomComm).setEndIndex(index);
-				bottomSeen.add(previousBottomComm);
-				previousBottomComm = bottomCommunity;
-			}
-			if (topCommunity != previousTopComm && !topSeen.contains(topCommunity)) {
-				communityPositions.put("" + topCommunity, new CommunityEdgePositions(index, index));
-				communityPositions.get("" + previousTopComm).setEndIndex(index);
-				topSeen.add(previousTopComm);
-				previousTopComm = topCommunity;
-			}
-
-			index++;
-		}
-		
-		System.out.println(communityPositions);
 		
 	}
 }

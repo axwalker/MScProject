@@ -2,9 +2,6 @@ package uk.ac.bham.cs.commdet.graphchi.louvain;
 
 import java.util.*;
 
-import uk.ac.bham.cs.commdet.cyto.json.CompoundNode;
-import uk.ac.bham.cs.commdet.cyto.json.SubGraph;
-
 import edu.cmu.graphchi.preprocessing.VertexIdTranslate;
 
 public class GraphStatus {
@@ -15,7 +12,6 @@ public class GraphStatus {
 	private int[] nodeWeightedDegree;
 	private int[] nodeSelfLoops;
 	private int[] communitySize;
-	private int totalNodeCount;
 	private long totalGraphWeight;
 	private int hierarchyHeight = 0;
 	private VertexIdTranslate originalVertexTrans;
@@ -33,7 +29,6 @@ public class GraphStatus {
 				communityHierarchy.put(originalVertexTrans.backward(nodeToCommunity[i]), new ArrayList<Integer>());
 			}
 		}
-		totalNodeCount = nodeToCommunity.length;
 	}
 
 	public void updateCommunitiesMap() {
@@ -51,9 +46,6 @@ public class GraphStatus {
 				int currentGcId = updatedVertexTrans.forward(nodeId);
 				if (nodeId < nodeToCommunity.length && nodeToCommunity[currentGcId] != -1) {
 					int latestCommunity = updatedVertexTrans.backward(nodeToCommunity[currentGcId]);
-					if (latestCommunity == -1) {
-						System.out.println("-1 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-					}
 					communities.add(latestCommunity);
 				} else {
 					int previousCommunity = communities.get(hierarchyHeight - 1);

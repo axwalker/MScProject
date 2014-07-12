@@ -11,22 +11,9 @@ import javax.servlet.http.*;
 
 import org.apache.commons.io.FileUtils;
 
-import edu.cmu.graphchi.engine.GraphChiEngine;
-
-import uk.ac.bham.cs.commdet.cyto.json.CommunityGraph;
-import uk.ac.bham.cs.commdet.cyto.json.CommunityGraphGenerator;
-import uk.ac.bham.cs.commdet.cyto.json.CompoundNode;
-import uk.ac.bham.cs.commdet.cyto.json.SubNode;
-import uk.ac.bham.cs.commdet.cyto.json.UndirectedEdge;
-import uk.ac.bham.cs.commdet.cyto.json.serializer.CompoundNodeSerializer;
-import uk.ac.bham.cs.commdet.cyto.json.serializer.EdgeSerializer;
-import uk.ac.bham.cs.commdet.cyto.json.serializer.SubNodeSerializer;
+import uk.ac.bham.cs.commdet.cyto.json.GraphJsonGenerator;
+import uk.ac.bham.cs.commdet.graphchi.louvain.GraphResult;
 import uk.ac.bham.cs.commdet.graphchi.louvain.LouvainProgram;
-import uk.ac.bham.cs.commdet.graphchi.program.LabelPropagationProgram;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
 
 @MultipartConfig
 public class ProcessGraph extends HttpServlet {
@@ -36,7 +23,6 @@ public class ProcessGraph extends HttpServlet {
 	private String filename;
 	private String tempFolderPath;
 	private File tempFolder;
-	private JsonObject responseJson = new JsonObject();
 	private LouvainProgram GCprogram;
 	private String responseString;
 	
@@ -47,7 +33,6 @@ public class ProcessGraph extends HttpServlet {
 		writeGraphFileToTempFolder();
         processGraph();
         response.setContentType("text/html");
-        //response.getWriter().println(responseJson.toString());
         response.getWriter().println(responseString);
         FileUtils.deleteDirectory(tempFolder);
 	}
@@ -82,15 +67,12 @@ public class ProcessGraph extends HttpServlet {
 	
 	private void processGraph() {
 		try {
-			GraphChiEngine engine = GCprogram.run(tempFolderPath + filename, 1);
-			CommunityGraphGenerator generator = new CommunityGraphGenerator(engine, tempFolderPath + filename);
-			generator.parseGraphs();
-			responseString = generator.getJacksonJson();
-			//JsonObject graphsJson = generator.getJson();
-			//JsonObject graphsJson = new JsonObject();
-			//responseJson.add("graphs", graphsJson);
-			//responseJson.addProperty("success", true);
+			GraphResult result = GCprogram.run(tempFolderPath + filename, 1);
+			result.writeSortedEdgeList();
+			GraphJsonGenerator generator = new GraphJsonGenerator(result);
+			responseString = generator.getParentGraphJson();
 		} catch (Exception e) {
+			//responseString = "{ \"success\" : false, \"error\" : " + e.toString() + Arrays.asList(e.getStackTrace()) + " }";
 			//responseJson.addProperty("success", false);
 			//responseJson.addProperty("error", "label propagation failed: " + e.toString() + "\n" + Arrays.asList(e.getStackTrace()));
 		}

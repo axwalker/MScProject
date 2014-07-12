@@ -1,4 +1,4 @@
-package uk.ac.bham.cs.commdet.cyto.json;
+package uk.ac.bham.cs.commdet.graphchi.louvain;
 
 import java.io.IOException;
 

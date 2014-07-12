@@ -9,7 +9,7 @@ public class CommunityEdgePositions {
 		this.startIndex = startIndex;
 		this.endIndex = endIndex;
 	}
-
+	
 	public int getStartIndex() {
 		return startIndex;
 	}

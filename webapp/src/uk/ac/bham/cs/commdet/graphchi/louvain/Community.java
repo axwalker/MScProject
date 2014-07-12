@@ -10,6 +10,14 @@ public class Community {
 		this.level = level;
 	}
 
+	public int getId() {
+		return id;
+	}
+	
+	public int getLevel() {
+		return level;
+	}
+
 	@Override
 	public String toString() {
 		return "[id=" + id + ", level=" + level + "]";

@@ -6,23 +6,29 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
-import uk.ac.bham.cs.commdet.cyto.json.UndirectedEdge;
+
 
 public class GraphResult {
 
 	private String filename;
 	private Map<Integer, List<Integer>> hierarchy;
-	private Map<Integer, CommunityEdgePositions> edgePositions;
+	private Map<Community, CommunityEdgePositions> edgePositions;
 	private Map<Community, Integer> sizes;
+	private Map<Integer, Double> modularities = new HashMap<Integer, Double>();
+	private int height;
 	
-	public GraphResult(String filename, Map<Integer, List<Integer>> hierarchy, Map<Community, Integer> sizes) {
+	public GraphResult(String filename, Map<Integer, List<Integer>> hierarchy, Map<Community, Integer> sizes, int height,
+			Map<Integer, Double> modularities) {
 		this.filename = filename;
 		this.hierarchy = hierarchy;
 		this.sizes = sizes;
+		this.height = height;
+		this.modularities = modularities;
 	}
 	
 	public void writeSortedEdgeList() throws IOException {
-		Set<UndirectedEdge> edges = readInUnsortedEdgeList();
+		TreeSet<UndirectedEdge> edges = readInUnsortedEdgeList();
+		generateCommunityPositions(edges);
 		BufferedWriter bw = new BufferedWriter(new FileWriter(filename + "_sorted"));
 		for (UndirectedEdge edge : edges) {
 			bw.write(edge.toString());
@@ -30,8 +36,8 @@ public class GraphResult {
 		bw.close();
 	}
 	
-	private Set<UndirectedEdge> readInUnsortedEdgeList() throws IOException {
-		Set<UndirectedEdge> edges = new TreeSet<UndirectedEdge>(new EdgeComparator(hierarchy));
+	private TreeSet<UndirectedEdge> readInUnsortedEdgeList() throws IOException {
+		TreeSet<UndirectedEdge> edges = new TreeSet<UndirectedEdge>(new EdgeComparator(hierarchy));
 		BufferedReader br = new BufferedReader(new FileReader(filename));
 		String line = null;
 		while ((line = br.readLine()) != null) {
@@ -40,6 +46,52 @@ public class GraphResult {
 		}
 		br.close();
 		return edges;
+	}
+	
+	private void generateCommunityPositions(TreeSet<UndirectedEdge> edges) throws IOException {
+		edgePositions = new HashMap<Community, CommunityEdgePositions>();
+		Community[] previousCommunities = new Community[height];
+		UndirectedEdge firstEdge = edges.first();
+		for (int level = 0; level < height; level++) {
+			Community communityAtLevel = getCommunityAtLevel(firstEdge, level);
+			previousCommunities[level] = communityAtLevel;
+			edgePositions.put(communityAtLevel, new CommunityEdgePositions(0, 0));
+		}
+		int setIndex = 0;
+		for (UndirectedEdge edge : edges) {
+			for (int level = 0; level < height; level++) {
+				Community communityAtLevel = getCommunityAtLevel(edge, level);
+				Community previousCommunity = previousCommunities[level];
+				if (communityAtLevel.equals(previousCommunity)) {
+					if (previousCommunity.getId() != -1) {
+						break;
+					}
+				} else {
+					if (previousCommunity.getId() != -1) {
+						edgePositions.get(previousCommunity).setEndIndex(setIndex);
+					}
+					previousCommunities[level] = communityAtLevel;
+					if (communityAtLevel.getId() == -1) {
+						continue;
+					} else {
+						edgePositions.put(communityAtLevel, new CommunityEdgePositions(setIndex, setIndex));
+					}
+				}
+			}
+			setIndex++;
+		}
+	}
+	
+	private Community getCommunityAtLevel(UndirectedEdge edge, int level) {
+		int source = edge.getSource();
+		int target = edge.getTarget();
+		int sourceCommunity = hierarchy.get(source).get(level);
+		int targetCommunity = hierarchy.get(target).get(level);
+		if (sourceCommunity == targetCommunity) {
+			return new Community(sourceCommunity, level);
+		} else {
+			return new Community(-1, level);
+		}
 	}
 
 	public String getFilename() {
@@ -58,11 +110,11 @@ public class GraphResult {
 		this.hierarchy = hierarchy;
 	}
 
-	public Map<Integer, CommunityEdgePositions> getEdgePositions() {
+	public Map<Community, CommunityEdgePositions> getEdgePositions() {
 		return edgePositions;
 	}
 
-	public void setEdgePositions(Map<Integer, CommunityEdgePositions> edgePositions) {
+	public void setEdgePositions(Map<Community, CommunityEdgePositions> edgePositions) {
 		this.edgePositions = edgePositions;
 	}
 
@@ -72,6 +124,18 @@ public class GraphResult {
 
 	public void setSizes(Map<Community, Integer> sizes) {
 		this.sizes = sizes;
+	}
+	
+	public int getHeight() {
+		return height;
+	}
+
+	public Map<Integer, Double> getModularities() {
+		return modularities;
+	}
+
+	public void setModularities(Map<Integer, Double> modularities) {
+		this.modularities = modularities;
 	}
 	
 }
