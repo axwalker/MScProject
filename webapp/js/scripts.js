@@ -16,9 +16,9 @@ $('#uploadButton').click(function(){
                 $("#ajaxResponse").append("<li>>: Graph processed.</li>");
                 graphs = data;
                 //console.log("in success: " + JSON.stringify(data, undefined, 2));
-                var metadata = graphs.compoundGraph.HighLevel.metadata;
-                initHigh(graphs.compoundGraph.HighLevel);
-                $("#Modularity span").html(metadata.modularity);
+                var metadata = graphs.metadata;
+                initHigh(graphs);
+                $("#Modularity span").html(metadata.modularity.toFixed(2));
                 $("#MinCommSize span").html(metadata.minCommunitySize);
                 $("#MaxCommSize span").html(metadata.maxCommunitySize);
             } else {
@@ -53,7 +53,7 @@ $('#refreshButton').click(function(){
             var minCommunitySize = document.getElementById('minCommunitySize').value;
             options = { name: 'null' };
             cyHigh.layout(options);
-            cyHigh.load(graphs.compoundGraph.HighLevel);
+            cyHigh.load(graphs);
             cyHigh.$('node[size < ' + minCommunitySize + ']').remove();
             cyHigh.layout(highArborLayout());
         }

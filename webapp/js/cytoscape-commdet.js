@@ -19,7 +19,7 @@ function initHigh(data) {
             {
                 selector: 'node',
                 css: {
-                    'background-color': 'mapData(clusterRating, 0, 1, darkgrey, green)',
+                    'background-color': 'data(colour)',
                     'height': 'mapData(size, ' + minSize + ', ' + maxSize + ', 2, 30)',
                     'width': 'mapData(size, ' + minSize + ', ' + maxSize + ', 2, 30)'
                 }
@@ -35,7 +35,7 @@ function initHigh(data) {
                 selector: 'edge',
                 css: {
                     'line-color': '#53433F',
-                    'width': 'mapData(weight, 0, ' + maxEdge + ', 0.2, 5)'
+                    'width': 'mapData(weight, 1, ' + maxEdge + ', 0.2, 5)'
                 }
             }
     ];
@@ -61,9 +61,7 @@ function initHigh(data) {
             cy.nodes().qtip({
 				content: {
                     text: function(){ 
-                        return '<b>Size:</b> ' + this.data('size') + '<br>' + 
-                            '<b>Intra-cluster density:</b> ' + this.data('intraClusterDensity').toFixed(2) + '<br>' +
-                            '<b>Inter-cluster density:</b> ' + this.data('interClusterDensity').toFixed(2);
+                        return '<b>Size:</b> ' + this.data('size') + '<br>';
                     }
                 },
 				position: {
