@@ -13,7 +13,8 @@ public class GraphResult implements Serializable {
 
 	private String filename;
 	private Map<Integer, List<Integer>> hierarchy;
-	private Map<Community, CommunityEdgePositions> edgePositions = new HashMap<Community, CommunityEdgePositions>();
+	private List<Map<Community, CommunityEdgePositions>> allEdgePositions = new ArrayList<Map<Community, CommunityEdgePositions>>();
+	//private Map<Community, CommunityEdgePositions> edgePositions = new HashMap<Community, CommunityEdgePositions>();
 	private Map<Community, Integer> sizes;
 	private Map<Integer, Double> modularities = new HashMap<Integer, Double>();
 	private int height;
@@ -54,6 +55,7 @@ public class GraphResult implements Serializable {
 	}
 
 	private void generateCommunityPositions(TreeSet<UndirectedEdge> edges, int fromLevel) throws IOException {
+		Map<Community, CommunityEdgePositions> edgePositions = new HashMap<Community, CommunityEdgePositions>();
 		Community[] previousCommunities = new Community[height];
 		UndirectedEdge firstEdge = edges.first();
 		for (int level = fromLevel; level < height; level++) {
@@ -84,6 +86,7 @@ public class GraphResult implements Serializable {
 			}
 			setIndex++;
 		}
+		allEdgePositions.add(edgePositions);
 	}
 
 	private Community getCommunityAtLevel(UndirectedEdge edge, int level) {
@@ -114,12 +117,12 @@ public class GraphResult implements Serializable {
 		this.hierarchy = hierarchy;
 	}
 
-	public Map<Community, CommunityEdgePositions> getEdgePositions() {
-		return edgePositions;
+	public List<Map<Community, CommunityEdgePositions>> getAllEdgePositions() {
+		return allEdgePositions;
 	}
 
-	public void setEdgePositions(Map<Community, CommunityEdgePositions> edgePositions) {
-		this.edgePositions = edgePositions;
+	public void setAllEdgePositions(List<Map<Community, CommunityEdgePositions>> edgePositions) {
+		this.allEdgePositions = edgePositions;
 	}
 
 	public Map<Community, Integer> getSizes() {

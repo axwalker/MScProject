@@ -22,12 +22,6 @@
             <div id="accordion">
                 <ul>
                     <li>
-                        <a href="#Instructions">Instructions</a>
-                        <div id="Instructions" class="accordion">
-                        Currently supports weighted and unweighted graphs. Works best with directed graphs.
-                        </div>
-                    </li>
-                    <li>
                         <a href="#Upload">Upload</a>
                         <div id="Upload" class="accordion">
                             <form id="uploadForm" action="upload" method="post" enctype="multipart/form-data">
@@ -39,27 +33,13 @@
                                     <select id="algorithm" name="algorithm">
                                         <option>Label Propagation</option>
                                         <option>Louvain Method</option>
-                                        <option>ORCA</option>
                                     </select> <br>          
 
                                     <input id="uploadButton" type="button" value="Process Graph" /> <br>
                                 </fieldset>
                             </form>  
                         </div>
-                    </li>
-                    <li>
-                        <a href="#LiveOptions">Live Options</a>
-                        <div id="LiveOptions" class="accordion">
-                            <form id="updateForm" method="post">
-                                <fieldset>
-                                    <label for="graphLevel">Drill down to level: </label> <br>
-                                    <input type="number" min="0" max="5" step="1" value="5" name="graphLevel" id="graphLevel"> <br>
-
-                                    <input id="updateButton" type="button" value="Update Graph" /> <br>
-                                </fieldset>
-                            </form>  
-                        </div>
-                    </li>   
+                    </li>  
                     <li>
                         <a href="#Display">Display Options</a>
                             <div id="Display" class="accordion">
@@ -82,7 +62,16 @@
                                 <li id="Modularity"><b>Modularity: </b><span></span></li>
                                 <li id="MinCommSize"><b>Minimum community size: </b><span></span></li>
                                 <li id="MaxCommSize"><b>Maximum community size: </b><span></span></li>
+                                <li id="HierarchyHeight"><b>Height of hierarchy: </b><span></span></li>
                             </ul>
+                            <form id="updateForm" method="post">
+                                <fieldset>
+                                    <label for="graphLevel">Drill down to level: </label> <br>
+                                    <input type="number" min="0" max="5" step="1" value="5" name="graphLevel" id="graphLevel"> <br>
+
+                                    <input id="updateButton" type="button" value="Update Graph" /> <br>
+                                </fieldset>
+                            </form> 
                         </div>
                     </li>
                     <li>

@@ -10,6 +10,7 @@ public class Metadata implements Serializable {
 	private int minCommunitySize;
 	private double modularity;
 	private int maxEdgeConnection;
+	private int hierarchyHeight;
 	
 	
 	public int getNoOfCommunities() {
@@ -58,6 +59,14 @@ public class Metadata implements Serializable {
 
 	public void setMaxEdgeConnection(int maxEdgeConnection) {
 		this.maxEdgeConnection = maxEdgeConnection;
+	}
+
+	public int getHierarchyHeight() {
+		return hierarchyHeight;
+	}
+
+	public void setHierarchyHeight(int hierarchyHeight) {
+		this.hierarchyHeight = hierarchyHeight;
 	}
 
 }

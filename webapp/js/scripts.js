@@ -22,7 +22,8 @@ $('#uploadButton').click(function(){
                 initHigh(graphs);
                 $("#Modularity span").html(metadata.modularity.toFixed(2));
                 $("#MinCommSize span").html(metadata.minCommunitySize);
-                $("#MaxCommSize span").html(metadata.maxCommunitySize);
+                $("#MaxCommSize span").html(metadata.maxCommunitySize); 
+                $("#HierarchyHeight span").html(metadata.hierarchyHeight); 
             } else {
                 console.log(data.error);
                 $("#ajaxResponse").append("<li><b>>: Exception: failed to process graph</b></li>");
@@ -47,11 +48,6 @@ $('#uploadButton').click(function(){
         contentType: false,
         processData: false
     });
-});
-
-//Stops the submit request
-$("#updateForm").submit(function(e){
-       e.preventDefault();
 });
 
 $('#updateButton').click(function(){
@@ -97,8 +93,6 @@ $('#updateButton').click(function(){
         },
         
         cache: false
-        //contentType: false,
-        //processData: false
     });
 });
 

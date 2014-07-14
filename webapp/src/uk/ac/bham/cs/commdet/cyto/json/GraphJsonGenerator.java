@@ -28,7 +28,7 @@ public class GraphJsonGenerator {
 	}
 
 	public String getParentGraphJson() {
-		parseGraph(result.getHeight() - 1);
+		parseGraph(result.getHeight());
 		return serializeGraph();
 	}
 
@@ -42,25 +42,26 @@ public class GraphJsonGenerator {
 		return serializeGraph();
 	}
 	
-	public String getCommunityJson(int community, int level) {
-		parseEdgeFile(result.getFilename(), community, level);
+	public String getCommunityJson(int community, int communityLevel, int fileLevel) {
+		parseEdgeFile(result.getFilename(), community, communityLevel, fileLevel);
 		for (NodeData nodeData : graph.getNodes()) {
 			Node node = nodeData.getData();
 			int nodeId = Integer.parseInt(node.getId());
 			int parentId = result.getHierarchy().get(nodeId).get(result.getHeight()-1);
 			node.setColour(getColour(parentId + ""));
 		}
-		double modularity = (level == 0 ? 0 : result.getModularities().get(level));
+		double modularity = (fileLevel == 0 ? 0 : result.getModularities().get(fileLevel));
 		Metadata metadata = graph.getMetadata();
 		metadata.setModularity(modularity);
 		metadata.setNoOfCommunities(graph.getNodes().size());
 		metadata.setAvgCommunitySize(result.getHierarchy().size() / graph.getNodes().size());
+		metadata.setHierarchyHeight(result.getHeight());
 		return serializeGraph();
 	}
 	
-	private void parseEdgeFile(String baseFilename, int community, int level) {
-		String edgeFilename = baseFilename + (level == 0 ? "" : "_pass_" + (level)) + "_sorted";
-		CommunityEdgePositions positions = result.getEdgePositions().get(new Community(community, level));
+	private void parseEdgeFile(String baseFilename, int community, int communityLevel, int fileLevel) {
+		String edgeFilename = baseFilename + (fileLevel == 0 ? "" : "_pass_" + (fileLevel)) + "_sorted";
+		CommunityEdgePositions positions = result.getAllEdgePositions().get(fileLevel).get(new Community(community, communityLevel));
 		int startIndex = positions.getStartIndex();
 		int endIndex = positions.getEndIndex();
 		Set<Integer> nodesAdded = new HashSet<Integer>();
@@ -86,14 +87,15 @@ public class GraphJsonGenerator {
 					maxEdgeConnection = Math.max(maxEdgeConnection, weight);
 				}
 				if (!nodesAdded.contains(source)) {
-					int size = (level == 0 ? 1 : result.getSizes().get(new Community(source, level - 1)));
+					System.out.println("src: " + source + ", commLevel: " + fileLevel);
+					int size = (fileLevel == 0 ? 1 : result.getSizes().get(new Community(source, fileLevel - 1)));
 					graph.getNodes().add(new NodeData(new Node("" + source, size)));
 					nodesAdded.add(source);
 					maxCommunitySize = Math.max(maxCommunitySize, size);
 					minCommunitySize = Math.min(minCommunitySize, size);
 				}
 				if (!nodesAdded.contains(target)) {
-					int size = (level == 0 ? 1 : result.getSizes().get(new Community(target, level - 1)));
+					int size = (fileLevel == 0 ? 1 : result.getSizes().get(new Community(target, fileLevel - 1)));
 					graph.getNodes().add(new NodeData(new Node("" + target, size)));
 					nodesAdded.add(target);
 					maxCommunitySize = Math.max(maxCommunitySize, size);
@@ -110,7 +112,6 @@ public class GraphJsonGenerator {
 		metadata.setMinCommunitySize(minCommunitySize);
 	}
 	
-	
 
 	private void parseGraph(int level) {
 		String baseFilename = result.getFilename();
@@ -121,15 +122,16 @@ public class GraphJsonGenerator {
 			int parentId = result.getHierarchy().get(nodeId).get(result.getHeight()-1);
 			node.setColour(getColour(parentId + ""));
 		}
-		double modularity = (level == 0 ? 0 : result.getModularities().get(level));
+		double modularity = (level == 0 ? 0 : result.getModularities().get(level - 1));
 		Metadata metadata = graph.getMetadata();
 		metadata.setModularity(modularity);
 		metadata.setNoOfCommunities(graph.getNodes().size());
 		metadata.setAvgCommunitySize(result.getHierarchy().size() / graph.getNodes().size());
+		metadata.setHierarchyHeight(result.getHeight());
 	}
 	
 	private void parseCompoundEdgeFile(String baseFilename, int level) {
-		String edgeFilename = baseFilename + (level == 0 ? "" : "_pass_" + (level + 1));
+		String edgeFilename = baseFilename + (level == 0 ? "" : "_pass_" + (level));
 		Set<Integer> nodesAdded = new HashSet<Integer>();
 		int maxCommunitySize = 0;
 		int minCommunitySize = Integer.MAX_VALUE;
@@ -145,14 +147,14 @@ public class GraphJsonGenerator {
 					maxEdgeConnection = Math.max(maxEdgeConnection, weight);
 				}
 				if (!nodesAdded.contains(source)) {
-					int size = (level == 0 ? 1 : result.getSizes().get(new Community(source, level)));
+					int size = (level == 0 ? 1 : result.getSizes().get(new Community(source, level - 1)));
 					graph.getNodes().add(new NodeData(new Node("" + source, size)));
 					nodesAdded.add(source);
 					maxCommunitySize = Math.max(maxCommunitySize, size);
 					minCommunitySize = Math.min(minCommunitySize, size);
 				}
 				if (!nodesAdded.contains(target)) {
-					int size = (level == 0 ? 1 : result.getSizes().get(new Community(target, level)));
+					int size = (level == 0 ? 1 : result.getSizes().get(new Community(target, level - 1)));
 					graph.getNodes().add(new NodeData(new Node("" + target, size)));
 					nodesAdded.add(target);
 					maxCommunitySize = Math.max(maxCommunitySize, size);
