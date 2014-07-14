@@ -1,4 +1,4 @@
-package uk.ac.bham.cs.commdet.graphchi.program;
+package uk.ac.bham.cs.commdet.graphchi.labelprop;
 
 public class BidirectionalLabel {
 	int edgeID;

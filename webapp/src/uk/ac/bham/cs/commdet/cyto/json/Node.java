@@ -1,6 +1,8 @@
 package uk.ac.bham.cs.commdet.cyto.json;
 
-public class Node {
+import java.io.Serializable;
+
+public class Node implements Serializable {
 
 	private String id;
 	private int size;

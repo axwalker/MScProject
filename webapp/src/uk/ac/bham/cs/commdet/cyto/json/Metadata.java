@@ -1,6 +1,8 @@
 package uk.ac.bham.cs.commdet.cyto.json;
 
-public class Metadata {
+import java.io.Serializable;
+
+public class Metadata implements Serializable {
 	
 	private int NoOfCommunities;
 	private int maxCommunitySize;

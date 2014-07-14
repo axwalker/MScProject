@@ -1,9 +1,9 @@
 package uk.ac.bham.cs.commdet.cyto.json;
 
-import uk.ac.bham.cs.commdet.graphchi.louvain.UndirectedEdge;
+import java.io.Serializable;
 
 
-public class EdgeData {
+public class EdgeData implements Serializable {
 
 	private Edge data;
 	

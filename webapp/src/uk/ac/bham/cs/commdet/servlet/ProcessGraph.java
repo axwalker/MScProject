@@ -22,10 +22,22 @@ import uk.ac.bham.cs.commdet.graphchi.louvain.LouvainProgram;
 @MultipartConfig
 @WebServlet("/ProcessGraph")
 public class ProcessGraph extends HttpServlet {
-	
+
 	private static final Logger logger = ChiLogger.getLogger("servlet");
 
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+		//create session
+		HttpSession session = request.getSession(true);
+
+		if (!session.isNew()) {
+			logger.info("removing previous session");
+			File tempFolderToDelete = new File((String)session.getAttribute("folder"));
+			FileUtils.deleteDirectory(tempFolderToDelete);
+			session.removeAttribute("folder");
+			session.removeAttribute("result");
+			logger.info("previous session data removed");
+		}
 
 		//parse file contents
 		String filename = getFilename(request.getPart("file"));
@@ -33,7 +45,7 @@ public class ProcessGraph extends HttpServlet {
 
 		//initialise program
 		LouvainProgram GCprogram = new LouvainProgram();
-		
+
 		//make temporary folder
 		String currentTime = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss").format(new Date());
 		String tempFolderPath = getServletConfig().getServletContext().getRealPath("WEB-INF") + "/tmp/";
@@ -49,26 +61,33 @@ public class ProcessGraph extends HttpServlet {
 			outputStream.write(bytes, 0, read);
 		}
 		outputStream.close();
-		
+
 		//process graph
 		String responseString;
+		GraphResult result = null;
 		try {
-			GraphResult result = GCprogram.run(tempFolderPath + filename, 1);
-			result.writeSortedEdgeList();
+			result = GCprogram.run(tempFolderPath + filename, 1);
+			result.writeSortedEdgeLists();
 			GraphJsonGenerator generator = new GraphJsonGenerator(result);
 			responseString = generator.getParentGraphJson();
 			logger.info("Response written succesfully for " + filename);
 		} catch (Exception e) {
 			responseString = "{ \"success\" : false }";
-			logger.info(e.getMessage());
+			logger.info(e.getMessage() + "\n" + Arrays.asList(e.getStackTrace()));
 		}
-		
+
+		//set session attributes
+		try {
+			session.setAttribute("folder", tempFolderPath);
+			session.setAttribute("result", result);
+		} catch (Exception e) {
+			logger.info(e.getMessage() + "\n" + Arrays.asList(e.getStackTrace()));
+		}
+
 		//send response
 		response.setContentType("application/json");
 		response.getWriter().println(responseString);
-		
-		//clearndirectory
-		FileUtils.deleteDirectory(tempFolder);
+
 	}
 
 	//add source

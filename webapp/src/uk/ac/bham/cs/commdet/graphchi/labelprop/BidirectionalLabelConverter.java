@@ -1,4 +1,4 @@
-package uk.ac.bham.cs.commdet.graphchi.program;
+package uk.ac.bham.cs.commdet.graphchi.labelprop;
 
 import edu.cmu.graphchi.datablocks.BytesToValueConverter;
 

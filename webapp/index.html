@@ -30,7 +30,7 @@
                     <li>
                         <a href="#Upload">Upload</a>
                         <div id="Upload" class="accordion">
-                            <form action="upload" method="post" enctype="multipart/form-data">
+                            <form id="uploadForm" action="upload" method="post" enctype="multipart/form-data">
                                 <fieldset>
                                     <label for="file">Graph file:</label> <br>
                                     <input type="file" name="file"> <br>
@@ -46,7 +46,20 @@
                                 </fieldset>
                             </form>  
                         </div>
-                    </li>    
+                    </li>
+                    <li>
+                        <a href="#LiveOptions">Live Options</a>
+                        <div id="LiveOptions" class="accordion">
+                            <form id="updateForm" method="post">
+                                <fieldset>
+                                    <label for="graphLevel">Drill down to level: </label> <br>
+                                    <input type="number" min="0" max="5" step="1" value="5" name="graphLevel" id="graphLevel"> <br>
+
+                                    <input id="updateButton" type="button" value="Update Graph" /> <br>
+                                </fieldset>
+                            </form>  
+                        </div>
+                    </li>   
                     <li>
                         <a href="#Display">Display Options</a>
                             <div id="Display" class="accordion">

@@ -9,6 +9,8 @@ $('#uploadButton').click(function(){
         type: 'POST',
         url: 'ProcessGraph',
         data: formData,
+        processData: false,
+        contentType: false,
         dataType: "json",
 
         success: function( data, textStatus, jqXHR) {
@@ -44,6 +46,59 @@ $('#uploadButton').click(function(){
         cache: false,
         contentType: false,
         processData: false
+    });
+});
+
+//Stops the submit request
+$("#updateForm").submit(function(e){
+       e.preventDefault();
+});
+
+$('#updateButton').click(function(){
+    $("#cy.low").hide();
+    $("#cy.high").show();
+    window.location.hash = "Status";
+    var formData = $("#updateForm").serialize();
+    console.log(formData);
+    $.ajax({
+        type: 'POST',
+        url: 'UpdateGraph',
+        data: formData,
+        dataType: "json",
+
+        success: function( data, textStatus, jqXHR) {
+            if(data.success) {
+                $("#ajaxResponse").append("<li>>: Graph processed.</li>");
+                graphs = data;
+                //console.log("in success: " + JSON.stringify(data, undefined, 2));
+                var metadata = graphs.metadata;
+                initHigh(graphs);
+                $("#Modularity span").html(metadata.modularity.toFixed(2));
+                $("#MinCommSize span").html(metadata.minCommunitySize);
+                $("#MaxCommSize span").html(metadata.maxCommunitySize);
+            } else {
+                console.log(data.error);
+                $("#ajaxResponse").append("<li><b>>: Exception: failed to process graph</b></li>");
+            }
+        },
+
+        beforeSend: function(jqXHR, settings) {
+            $('#updateButton').attr("disabled", true);
+            $("#ajaxResponse").append("<li>>: Uploading graph...</li>");
+        },
+
+        complete: function(jqXHR, textStatus){
+            $('#updateButton').attr("disabled", false);
+        },
+
+        error: function(jqXHR, textStatus, errorThrown){
+            console.log("Something really bad happened " + textStatus);
+            $("#ajaxResponse").append("<li><b>>: Failed to process graph: POST error</b></li>");
+        },
+        
+        cache: false
+        //contentType: false,
+        //processData: false
     });
 });
 

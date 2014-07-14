@@ -292,12 +292,14 @@ public class LouvainProgram implements GraphChiProgram<Integer, Integer>  {
 		LouvainProgram program = new LouvainProgram();
 		GraphResult result = program.run(folder + file, 1);
 		System.out.println("FINAL MODULARITY: " + program.getModularity());
-		//result.writeSortedEdgeList();
+		result.writeSortedEdgeLists();
 		GraphJsonGenerator generator = new GraphJsonGenerator(result);
 		System.out.println(result.getSizes());
 		System.out.println(result.getHeight());
+		System.out.println(result.getEdgePositions());
 		System.out.println(program.status.getModularities());
-		System.out.println(generator.getParentGraphJson());
+		System.out.println(generator.getCommunityJson(33, 0));
+		//System.out.println(generator.getParentGraphJson());
 		//System.out.println(generator.getGraphJson(3));
 
 		//System.out.println(Arrays.toString(program.status.getCommunitySize()));

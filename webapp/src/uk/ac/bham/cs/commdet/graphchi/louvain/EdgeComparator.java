@@ -6,9 +6,11 @@ import java.util.*;
 public class EdgeComparator implements Comparator<UndirectedEdge> {
 
 	private Map<Integer, List<Integer>> nodeToCommunities;
+	private int level;
 	
-	public EdgeComparator(Map<Integer, List<Integer>> nodeToCommunities) {
+	public EdgeComparator(Map<Integer, List<Integer>> nodeToCommunities, int level) {
 		this.nodeToCommunities = nodeToCommunities;
+		this.level = level;
 	}
 	
 	@Override
@@ -18,7 +20,7 @@ public class EdgeComparator implements Comparator<UndirectedEdge> {
 		List<Integer> communitiesTarget1 = nodeToCommunities.get(e1.getTarget());
 		List<Integer> communitiesTarget2 = nodeToCommunities.get(e2.getTarget());
 		
-		for (int i = communitiesSource1.size() - 1; i >= 0 ; i--) {		
+		for (int i = communitiesSource1.size() - 1; i >= level ; i--) {		
 			int srcComm1 = communitiesSource1.get(i);
 			int srcComm2 = communitiesSource2.get(i);
 			int tgtComm1 = communitiesTarget1.get(i);
@@ -109,7 +111,7 @@ public class EdgeComparator implements Comparator<UndirectedEdge> {
 		UndirectedEdge e14 = new UndirectedEdge(6, 7, 1);
 		UndirectedEdge e15 = new UndirectedEdge(7, 9, 1);
 		
-		TreeSet<UndirectedEdge> edges = new TreeSet<UndirectedEdge>(new EdgeComparator(lists));
+		TreeSet<UndirectedEdge> edges = new TreeSet<UndirectedEdge>(new EdgeComparator(lists, 0));
 		
 		edges.add(e1);
 		edges.add(e2);

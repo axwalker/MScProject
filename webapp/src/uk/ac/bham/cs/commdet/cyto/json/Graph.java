@@ -1,8 +1,9 @@
 package uk.ac.bham.cs.commdet.cyto.json;
 
+import java.io.Serializable;
 import java.util.*;
 
-public class Graph {
+public class Graph implements Serializable {
 
 	private List<NodeData> nodes = new ArrayList<NodeData>();
 	private List<EdgeData> edges = new ArrayList<EdgeData>();

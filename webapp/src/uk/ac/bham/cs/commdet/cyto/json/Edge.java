@@ -1,6 +1,8 @@
 package uk.ac.bham.cs.commdet.cyto.json;
 
-public class Edge {
+import java.io.Serializable;
+
+public class Edge implements Serializable {
 
 	String source;
 	String target;

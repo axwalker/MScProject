@@ -1,6 +1,8 @@
 package uk.ac.bham.cs.commdet.cyto.json;
 
-public class NodeData {
+import java.io.Serializable;
+
+public class NodeData implements Serializable {
 
 	private Node data;
 
