@@ -8,13 +8,11 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
 
-
 public class GraphResult implements Serializable {
 
 	private String filename;
 	private Map<Integer, List<Integer>> hierarchy;
 	private List<Map<Community, CommunityEdgePositions>> allEdgePositions = new ArrayList<Map<Community, CommunityEdgePositions>>();
-	//private Map<Community, CommunityEdgePositions> edgePositions = new HashMap<Community, CommunityEdgePositions>();
 	private Map<Community, Integer> sizes;
 	private Map<Integer, Double> modularities = new HashMap<Integer, Double>();
 	private int height;

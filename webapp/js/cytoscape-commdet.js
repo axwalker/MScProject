@@ -1,33 +1,20 @@
-$("#cy.high, #cy.low").hide();
-$("#cy.high").show();
-
-var displayOptions = {
-    highLayout: highArborLayout()
-}
-
-function updateDisplayOptions() {
-    displayOptions.highLayout = highLayout = highArborLayout();
-}
-
-function initHigh(data) {
-    updateDisplayOptions();
-    var metadata = data.metadata;
-    var minSize = metadata.minCommunitySize;
-    var maxSize = metadata.maxCommunitySize;
-    var maxEdge = metadata.maxEdgeConnection;
+function initCy() {
+    var maxSize = viewModel.maxCommunitySize();
+    var maxEdge = viewModel.maxEdgeConnection();
     var styleOptions = [
             {
                 selector: 'node',
                 css: {
                     'background-color': 'data(colour)',
-                    'height': 'mapData(size, ' + minSize + ', ' + maxSize + ', 2, 30)',
-                    'width': 'mapData(size, ' + minSize + ', ' + maxSize + ', 2, 30)'
+                    'height': 'mapData(size, ' + 1 + ', ' + maxSize + ', 2, 30)',
+                    'width': 'mapData(size, ' + 1 + ', ' + maxSize + ', 2, 30)'
                 }
             },
             {
                 selector: ':selected',
                 css: {
-                    'border-color': '#fff',
+                    'border-color': 'black',
+                    'border-width': '4',
                     'line-color': '#000'                                
                 }
             },
@@ -40,22 +27,24 @@ function initHigh(data) {
             }
     ];
 
-    $('#cy.high').cytoscape({
+    $('#cy').cytoscape({
 
         style: styleOptions,
     
-        layout: displayOptions.highLayout,
+        layout: viewModel.layoutChoiceComputed(),
 
-        elements: data,
+        elements: viewModel.graph(),
 
         ready: function(){
             window.cy = this;
 
-            cy.on('click', 'node', function(){
-                $("#cy.high").hide();
-                $("#cy.low").show();
-                label = this.data('id');
-                initLow(graphs.subGraphs[label]);
+            cy.on('click', 'node', function(evt){
+                if (this.selected) {
+                    this.select();
+                    viewModel.selectedCommunity(this.data('id'));
+                } else {
+                }  
+
             });
             
             cy.nodes().qtip({
@@ -107,59 +96,14 @@ function initHigh(data) {
 			});
         }
     });
-    cyHigh = $('#cy.high').cytoscape('get');
+    viewModel.cy($('#cy').cytoscape('get'));
 }
 
-function initLow(data) {
-    $('#cy.low').cytoscape({
-
-        style: [
-            {
-                selector: 'node',
-                css: {
-                    'content': 'data(id)',
-                    'background-color': 'data(colour)',
-                    'text-valign': 'center',
-                    'text-halign': 'center' 
-                }
-            },
-            {
-                selector: ':selected',
-                css: {
-                    'border-color': '#fff',
-                    'line-color': '#000'                                
-                }
-            }, 
-            {
-                selector: 'edge',
-                css: {
-                    'line-color': '#53433F'
-                }
-            }
-        ],
-
-        layout: lowArborLayout(),
-        
-        elements: data,
-
-        ready: function(){
-            window.cy = this;
-
-            cy.on('click', 'node', function(){
-                $("#cy.low").hide();
-                $("#cy.high").show();
-            });
-        }
-    });
-    cyLow = $('#cy.low').cytoscape('get');
-}
-
-function highArborLayout() {
-    var maxTime = document.getElementById('arborTimeHigh').value * 1000;
+function arborLayout(maxTime) {
     return {
         name: 'arbor',
         liveUpdate: true,
-        maxSimulationTime: maxTime,
+        maxSimulationTime: maxTime * 1000,
         fit: true, // reset viewport to fit default simulationBounds
         padding: [ 50, 50, 50, 50 ], // top, right, bottom, left
         ungrabifyWhileSimulating: true,
@@ -171,43 +115,65 @@ function highArborLayout() {
 
         stableEnergy: function( energy ){
           var e = energy; 
-          return (e.max <= 0.5) || (e.mean <= 0.3);
+          return (e.max <= 0.5) || (e.mean <= 0.3) || viewModel.cancelLayoutStatus();
         },
 
         ready: function() {
+            viewModel.isArborRunning(true);
             $('#refreshButton').attr("disabled", true);
-            $("#ajaxResponse").append("<li>>: Laying out elements...</li>");
+            viewModel.status('Layout complete');
         },
         stop: function() {
+            viewModel.isArborRunning(false);
             $('#refreshButton').attr("disabled", false);
-            $("#ajaxResponse").append("<li>>: Layout complete.</li>");
+            viewModel.status('Layout complete');
+            //hack to fix graph not refreshing if time remains unchanged:
+            var previousTime = viewModel.layoutTime();
+            viewModel.layoutTime(-1);
+            viewModel.layoutTime(previousTime);
         }
     };
 }
 
-function lowArborLayout() {
-    var maxTime = document.getElementById('arborTimeLow').value * 1000;
+function gridLayout() {
     return {
-        name: 'arbor',
-        liveUpdate: true, // whether to show the layout as it's running
-        maxSimulationTime: maxTime, //arborSeconds, // max length in ms to run the layout
-        fit: true, // reset viewport to fit default simulationBounds
-        padding: [ 50, 50, 50, 50 ], // top, right, bottom, left
-        ungrabifyWhileSimulating: true, // so you can't drag nodes during layout
-        stepSize: 0.1,
+        name: 'grid',
 
-        ready: function() {
-            $('#refreshButton').attr("disabled", true);
-            $("#ajaxResponse").append("<li>>: Laying out elements...</li>");
-        },
-        stop: function() {
-            $('#refreshButton').attr("disabled", false);
-            $("#ajaxResponse").append("<li>>: Layout complete.</li>");
-        },
+        fit: true, // whether to fit the viewport to the graph
+        padding: 30, // padding used on fit
+        rows: undefined, // force num of rows in the grid
+        columns: undefined, // force num of cols in the grid
+        position: function( node ){}, // returns { row, col } for element
+        ready: undefined, // callback on layoutready
+        stop: undefined // callback on layoutstop
+    };
+}
 
-        stableEnergy: function( energy ){
-          var e = energy; 
-          return (e.max <= 0.5) || (e.mean <= 0.3);
-        }
+function circleLayout() {
+    return {
+        name: 'circle',
+
+        fit: true, // whether to fit the viewport to the graph
+        ready: undefined, // callback on layoutready
+        stop: undefined, // callback on layoutstop
+        rStepSize: 10, // the step size for increasing the radius if the nodes don't fit on screen
+        padding: 30, // the padding on fit
+        startAngle: 3/2 * Math.PI, // the position of the first node
+        counterclockwise: false // whether the layout should go counterclockwise (true) or clockwise (false)
+    };
+}
+
+function breadthfirstLayout() {
+    return {
+        name: 'breadthfirst',
+
+        fit: true, // whether to fit the viewport to the graph
+        ready: undefined, // callback on layoutready
+        stop: undefined, // callback on layoutstop
+        directed: false, // whether the tree is directed downwards (or edges can point in any direction if false)
+        padding: 30, // padding on fit
+        circle: false, // put depths in concentric circles if true, put depths top down if false
+        roots: undefined, // the roots of the trees
+        maximalAdjustments: 0 // how many times to try to position the nodes in a maximal way (i.e. no backtracking)
     };
 }

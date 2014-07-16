@@ -20,7 +20,7 @@ public class UpdateGraph extends HttpServlet {
 
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
-		String level = request.getParameter("graphLevel");
+		int fileLevel = Integer.parseInt(request.getParameter("graphLevel"));
 		
 		HttpSession session = request.getSession(false);
 		GraphResult result = (GraphResult)session.getAttribute("result");
@@ -28,7 +28,13 @@ public class UpdateGraph extends HttpServlet {
 		String responseString;
 		try {
 			GraphJsonGenerator generator = new GraphJsonGenerator(result);
-			responseString = generator.getGraphJson(Integer.parseInt(level));
+			if (request.getParameter("selectedNode") != null) {
+				int community = Integer.parseInt(request.getParameter("selectedNode"));
+				int communityLevel = Integer.parseInt(request.getParameter("currentLevel"));
+				responseString = generator.getCommunityJson(community, communityLevel - 1, fileLevel);
+			} else {
+				responseString = generator.getGraphJson(fileLevel);
+			}
 			logger.info("Response written succesfully");
 		} catch (Exception e) {
 			responseString = "{ \"success\" : false }";

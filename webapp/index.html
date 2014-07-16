@@ -15,83 +15,104 @@
         <script src="js/plugins/cytoscape.min.js"></script>
         <script src="js/plugins/jquery.qtip.js"></script>
         <script src="js/plugins/cytoscape.js-qtip.js"></script>
+        <script src="js/plugins/knockout-3.1.0.js"></script>
     </head>
 
-    <body>
+    <body>    
+
         <div class="left col scroll-y">
             <div id="accordion">
                 <ul>
+
                     <li>
-                        <a href="#Upload">Upload</a>
+                        <a>Upload</a>
                         <div id="Upload" class="accordion">
                             <form id="uploadForm" action="upload" method="post" enctype="multipart/form-data">
                                 <fieldset>
-                                    <label for="file">Graph file:</label> <br>
-                                    <input type="file" name="file"> <br>
 
-                                    <label for="algorithm">Detection Algorithm:</label> <br>
+                                    <input data-bind="event: { change: addedFile }" type="file" name="file"> <br>
+
+                                    <label for="algorithm">Detection Algorithm:</label>
                                     <select id="algorithm" name="algorithm">
-                                        <option>Label Propagation</option>
                                         <option>Louvain Method</option>
-                                    </select> <br>          
+                                        <option>Label Propagation</option>
+                                    </select> <br>
 
-                                    <input id="uploadButton" type="button" value="Process Graph" /> <br>
+                                    <HR>
+
+                                    <input data-bind="click: uploadGraph, enable: hasAddedFile" type="button" value="Process Graph" /> <br>
+
                                 </fieldset>
                             </form>  
                         </div>
                     </li>  
+
                     <li>
-                        <a href="#Display">Display Options</a>
+                        <a>Display Settings</a>
                             <div id="Display" class="accordion">
-                                <label for="arborTimeHigh">Max time for high level layout (seconds):</label> <br>
-                                <input type="number" min="1" max="300" step="1" value="10" name="arborTimeHigh" id="arborTimeHigh"> <br> 
 
-                                <label for="arborTimeLow">Max time for low level layout (seconds):</label> <br>
-                                <input type="number" min="1" max="60" step="1" value="10" name="arborTimeLow" id="arborTimeLow"> <br> 
+                                Layout style: <select id="layoutStyle" data-bind="options: layoutOptions, value: layoutChoice"></select> <br>
 
-                                <label for="minCommunitySize">Minimum community size to display:</label> <br>
-                                <input type="number" min="1" max="60" step="1" value="1" name="minCommunitySize" id="minCommunitySize"> <br> 
+                                <div data-bind="visible: usesArborLayout">
+                                    <label for="arborTimeHigh">Time for layout (seconds):</label>
+                                    <input data-bind="value: layoutTime" type="number" min="1" max="300" step="1" value="10" name="arborTimeHigh" id="arborTimeHigh"> <br> 
+                                </div>
 
-                                <input id="refreshButton" type="button" value="Refresh Display" /> <br>
+                                <HR data-bind="visible: graph">
+
+                                <input data-bind="visible: graph, value: labelButton, click: toggleLabels" type="button" />
+                                
+                                <HR>
+
+                                <input data-bind="enable: graph, click: refreshLayout" id="refreshButton" type="button" value="Refresh Display" /> 
+                                <input id="cancelLayout" data-bind="visible: isArborRunning, click: cancelLayout" type="button" value="Cancel layout" /><br>
                         </div>
                     </li>
-                    <li>
-                        <a href="#Results">Results</a>
-                        <div id="Results" class="accordion">
-                            <ul id="ResultList">
-                                <li id="Modularity"><b>Modularity: </b><span></span></li>
-                                <li id="MinCommSize"><b>Minimum community size: </b><span></span></li>
-                                <li id="MaxCommSize"><b>Maximum community size: </b><span></span></li>
-                                <li id="HierarchyHeight"><b>Height of hierarchy: </b><span></span></li>
-                            </ul>
-                            <form id="updateForm" method="post">
-                                <fieldset>
-                                    <label for="graphLevel">Drill down to level: </label> <br>
-                                    <input type="number" min="0" max="5" step="1" value="5" name="graphLevel" id="graphLevel"> <br>
 
-                                    <input id="updateButton" type="button" value="Update Graph" /> <br>
-                                </fieldset>
-                            </form> 
+                    <li>
+                        <a>Results</a>
+                        <div data-bind="visible: graph" id="Results" class="accordion">
+                            <div class="resultTable">
+                                <table>
+                                    <tr><th></th><th></th></tr>
+                                    <tr><td>Modularity </td><td data-bind="text: modularity"></td></tr>
+                                    <tr><td>Min community size </td><td data-bind="text: minCommunitySize"></td></tr>
+                                    <tr><td>Max community size </td><td data-bind="text: maxCommunitySize"></td></tr>
+                                    <tr><td>Hierarchy height </td><td data-bind="text: hierarchyHeight"></td></tr>
+                                    <tr><td>Current level </td><td data-bind="text: currentLevel"></td></tr>
+                                </table>
+                            </div>
+
+                            <HR>
+
+                            Show hierarchy level: <select id="drillLevel" data-bind="options: availableLevels"></select> <br>
+                            Show only selected community: <input type="checkbox" data-bind="checked: onlySelectedCommunity, disable: isBottomLevel" /> <br>
+                            
+                            <HR>
+
+                            <input data-bind="click: updateGraph" type="button" value="Update Graph" /> <br>
+
                         </div>
                     </li>
+
                     <li>
-                        <a href="#Status">Status</a>
+                        <a>Status</a>
                         <div id="Status" class="accordion scroll-y">
-                            Ready for upload...
                             <div id="progress">
-                                <div id="ajaxResponse"></div>
+                                <span data-bind="text: status"></span>
                             </div>
                         </div>
                     </li>
+
                 </ul>
             </div>
         </div>
         <div class="right col">
-            <div id="cy" class="high"></div>
-            <div id="cy" class="low"></div>
+            <div id="cy"></div>
         </div>
         
         <script src="js/cytoscape-commdet.js"></script>
         <script src="js/scripts.js"></script>
+        
     </body>
 </html>

@@ -56,6 +56,7 @@ public class GraphJsonGenerator {
 		metadata.setNoOfCommunities(graph.getNodes().size());
 		metadata.setAvgCommunitySize(result.getHierarchy().size() / graph.getNodes().size());
 		metadata.setHierarchyHeight(result.getHeight());
+		metadata.setCurrentLevel(fileLevel);
 		return serializeGraph();
 	}
 	
@@ -88,7 +89,7 @@ public class GraphJsonGenerator {
 				}
 				if (!nodesAdded.contains(source)) {
 					System.out.println("src: " + source + ", commLevel: " + fileLevel);
-					int size = (fileLevel == 0 ? 1 : result.getSizes().get(new Community(source, fileLevel - 1)));
+					int size = (fileLevel == 0 ? 1 : result.getSizes().get(new Community(source, fileLevel - 1))); //
 					graph.getNodes().add(new NodeData(new Node("" + source, size)));
 					nodesAdded.add(source);
 					maxCommunitySize = Math.max(maxCommunitySize, size);
@@ -128,6 +129,7 @@ public class GraphJsonGenerator {
 		metadata.setNoOfCommunities(graph.getNodes().size());
 		metadata.setAvgCommunitySize(result.getHierarchy().size() / graph.getNodes().size());
 		metadata.setHierarchyHeight(result.getHeight());
+		metadata.setCurrentLevel(level);
 	}
 	
 	private void parseCompoundEdgeFile(String baseFilename, int level) {
