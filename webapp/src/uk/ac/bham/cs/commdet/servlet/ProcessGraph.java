@@ -46,14 +46,13 @@ public class ProcessGraph extends HttpServlet {
 		InputStream filecontent = request.getPart("file").getInputStream();		
 
 		//initialise program
-		/*String detectionAlgorithm = request.getParameter("algorithm");
+		String detectionAlgorithm = request.getParameter("algorithm");
 		DetectionProgram GCprogram; 
-		if (detectionAlgorithm.equals("louvain")){
-			GCprogram = new LabelPropagationProgram();
-		} else {
+		if (detectionAlgorithm.equals("Louvain Method")){
 			GCprogram = new LouvainProgram();
-		}*/
-		DetectionProgram GCprogram = new LabelPropagationProgram();
+		} else {
+			GCprogram = new LabelPropagationProgram();
+		}
 
 		//make temporary folder
 		String currentTime = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss").format(new Date());
