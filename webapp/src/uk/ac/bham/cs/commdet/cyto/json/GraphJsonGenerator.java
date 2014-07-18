@@ -9,10 +9,10 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig.Feature;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
-import uk.ac.bham.cs.commdet.graphchi.louvain.Community;
-import uk.ac.bham.cs.commdet.graphchi.louvain.CommunityEdgePositions;
-import uk.ac.bham.cs.commdet.graphchi.louvain.GraphResult;
-import uk.ac.bham.cs.commdet.graphchi.louvain.UndirectedEdge;
+import uk.ac.bham.cs.commdet.graphchi.all.Community;
+import uk.ac.bham.cs.commdet.graphchi.all.CommunityEdgePositions;
+import uk.ac.bham.cs.commdet.graphchi.all.GraphResult;
+import uk.ac.bham.cs.commdet.graphchi.all.UndirectedEdge;
 
 public class GraphJsonGenerator {
 

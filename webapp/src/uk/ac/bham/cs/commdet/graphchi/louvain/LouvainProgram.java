@@ -9,6 +9,10 @@ import java.util.*;
 import java.util.Map.Entry;
 
 import uk.ac.bham.cs.commdet.cyto.json.GraphJsonGenerator;
+import uk.ac.bham.cs.commdet.graphchi.all.Community;
+import uk.ac.bham.cs.commdet.graphchi.all.DetectionProgram;
+import uk.ac.bham.cs.commdet.graphchi.all.Edge;
+import uk.ac.bham.cs.commdet.graphchi.all.GraphResult;
 
 import edu.cmu.graphchi.*;
 import edu.cmu.graphchi.datablocks.IntConverter;
@@ -22,13 +26,13 @@ import edu.cmu.graphchi.preprocessing.VertexProcessor;
 /*
  * Note that links are considered half links, ie. one half in each direction.
  */
-public class LouvainProgram implements GraphChiProgram<Integer, Integer>  {
+public class LouvainProgram implements GraphChiProgram<Integer, Integer>, DetectionProgram  {
 
 	private int passIndex;
 	private boolean improvedOnPass;
 	private double iterationModularityImprovement;
 	private boolean finalUpdate;
-	private GraphStatus status = new GraphStatus();
+	private LouvainGraphStatus status = new LouvainGraphStatus();
 	private HashMap<Edge, Integer> contractedGraph = new HashMap<Edge, Integer>();
 	private VertexIdTranslate trans;
 
@@ -65,7 +69,7 @@ public class LouvainProgram implements GraphChiProgram<Integer, Integer>  {
 				iterationModularityImprovement += bestModularityGain;
 			}
 		} else {
-			addToContractedGraph(vertex, context);
+			addToContractedGraph(vertex);
 		}
 	}
 
@@ -157,7 +161,7 @@ public class LouvainProgram implements GraphChiProgram<Integer, Integer>  {
 		status.getNodeToCommunity()[node] = node;
 	}
 
-	private void addToContractedGraph(ChiVertex<Integer, Integer> vertex, GraphChiContext ctx) {
+	private void addToContractedGraph(ChiVertex<Integer, Integer> vertex) {
 		int node = vertex.getId();
 		if (status.getCommunityInternalEdges()[node] > 0) {
 			int actualNode = trans.backward(node);

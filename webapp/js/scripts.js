@@ -48,6 +48,8 @@ var viewModel = function() {
 
     self.selectedCommunity = ko.observable();
 
+    self.drillLevel = ko.observable();
+
     self.availableLevels = ko.computed(function() {
         var levels = [];
         if (self.onlySelectedCommunity()) {
@@ -141,13 +143,20 @@ var viewModel = function() {
     };
 
     self.updateGraph = function() {
-        var formData = 'graphLevel=' + encodeURIComponent($('#drillLevel').val());
+        var formData = 'graphLevel=' + encodeURIComponent(self.drillLevel());
         if (self.onlySelectedCommunity()) {
-            formData += '&currentLevel=' + encodeURIComponent(self.currentLevel());
-            formData += '&selectedNode=' + encodeURIComponent(self.selectedCommunity());
-            self.onlySelectedCommunity(false);
+            var selectedNodes = cy.$('node:selected');
+            if (selectedNodes.length === 1) {
+                formData += '&currentLevel=' + encodeURIComponent(self.currentLevel());
+                formData += '&selectedNode=' + encodeURIComponent(selectedNodes[0].id());
+                graphRequest('UpdateGraph', formData, true, 'application/x-www-form-urlencoded');
+                self.onlySelectedCommunity(false);
+            } else {
+                viewModel.status('Error: must select a single node');
+            }
+        } else {
+            graphRequest('UpdateGraph', formData, true, 'application/x-www-form-urlencoded');
         }
-        graphRequest('UpdateGraph', formData, true, 'application/x-www-form-urlencoded');
     };
 };
 

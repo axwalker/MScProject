@@ -16,7 +16,9 @@ import org.apache.commons.io.FileUtils;
 import edu.cmu.graphchi.ChiLogger;
 
 import uk.ac.bham.cs.commdet.cyto.json.GraphJsonGenerator;
-import uk.ac.bham.cs.commdet.graphchi.louvain.GraphResult;
+import uk.ac.bham.cs.commdet.graphchi.all.DetectionProgram;
+import uk.ac.bham.cs.commdet.graphchi.all.GraphResult;
+import uk.ac.bham.cs.commdet.graphchi.labelprop.LabelPropagationProgram;
 import uk.ac.bham.cs.commdet.graphchi.louvain.LouvainProgram;
 
 @MultipartConfig
@@ -44,7 +46,14 @@ public class ProcessGraph extends HttpServlet {
 		InputStream filecontent = request.getPart("file").getInputStream();		
 
 		//initialise program
-		LouvainProgram GCprogram = new LouvainProgram();
+		/*String detectionAlgorithm = request.getParameter("algorithm");
+		DetectionProgram GCprogram; 
+		if (detectionAlgorithm.equals("louvain")){
+			GCprogram = new LabelPropagationProgram();
+		} else {
+			GCprogram = new LouvainProgram();
+		}*/
+		DetectionProgram GCprogram = new LabelPropagationProgram();
 
 		//make temporary folder
 		String currentTime = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss").format(new Date());

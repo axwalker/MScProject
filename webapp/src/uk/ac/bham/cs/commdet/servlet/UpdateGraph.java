@@ -11,7 +11,7 @@ import javax.servlet.http.*;
 import edu.cmu.graphchi.ChiLogger;
 
 import uk.ac.bham.cs.commdet.cyto.json.GraphJsonGenerator;
-import uk.ac.bham.cs.commdet.graphchi.louvain.GraphResult;
+import uk.ac.bham.cs.commdet.graphchi.all.GraphResult;
 
 @WebServlet("/UpdateGraph")
 public class UpdateGraph extends HttpServlet {

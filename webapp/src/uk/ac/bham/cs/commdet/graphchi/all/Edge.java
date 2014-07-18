@@ -1,6 +1,6 @@
-package uk.ac.bham.cs.commdet.graphchi.louvain;
+package uk.ac.bham.cs.commdet.graphchi.all;
 
-class Edge {
+public class Edge {
 	private int node1;
 	private int node2;
 	

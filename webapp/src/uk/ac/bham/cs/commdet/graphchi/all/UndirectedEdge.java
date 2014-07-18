@@ -1,4 +1,4 @@
-package uk.ac.bham.cs.commdet.graphchi.louvain;
+package uk.ac.bham.cs.commdet.graphchi.all;
 
 import java.io.IOException;
 

@@ -1,4 +1,4 @@
-package uk.ac.bham.cs.commdet.graphchi.louvain;
+package uk.ac.bham.cs.commdet.graphchi.all;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -7,6 +7,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
+
 
 public class GraphResult implements Serializable {
 

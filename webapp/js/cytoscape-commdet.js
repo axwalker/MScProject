@@ -39,12 +39,8 @@ function initCy() {
             window.cy = this;
 
             cy.on('click', 'node', function(evt){
-                if (this.selected) {
-                    this.select();
-                    viewModel.selectedCommunity(this.data('id'));
-                } else {
-                }  
-
+                this.select();
+                viewModel.selectedCommunity(this.data('id'));
             });
             
             cy.nodes().qtip({
@@ -123,10 +119,12 @@ function arborLayout(maxTime) {
             $('#refreshButton').attr("disabled", true);
             viewModel.status('Layout complete');
         },
+        
         stop: function() {
             viewModel.isArborRunning(false);
             $('#refreshButton').attr("disabled", false);
             viewModel.status('Layout complete');
+
             //hack to fix graph not refreshing if time remains unchanged:
             var previousTime = viewModel.layoutTime();
             viewModel.layoutTime(-1);

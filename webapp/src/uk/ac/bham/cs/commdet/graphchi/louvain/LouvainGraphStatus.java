@@ -2,9 +2,11 @@ package uk.ac.bham.cs.commdet.graphchi.louvain;
 
 import java.util.*;
 
+import uk.ac.bham.cs.commdet.graphchi.all.Community;
+
 import edu.cmu.graphchi.preprocessing.VertexIdTranslate;
 
-public class GraphStatus {
+public class LouvainGraphStatus {
 
 	private int[] nodeToCommunity;
 	private int[] communityInternalEdges;
