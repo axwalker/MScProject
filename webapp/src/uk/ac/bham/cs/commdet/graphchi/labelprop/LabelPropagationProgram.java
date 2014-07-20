@@ -47,15 +47,19 @@ public class LabelPropagationProgram implements GraphChiProgram<Integer, Integer
 					}
 				}
 				int oldLabel = vertex.getValue();
-				status.getCommunitySize()[oldLabel]--;
-				status.getCommunitySize()[newLabel]++;
+				synchronized(status) {
+					status.getCommunitySize()[oldLabel]--;
+					status.getCommunitySize()[newLabel]++;
+				}
 				status.getNodeToCommunity()[vertex.getId()] = newLabel;
 				vertex.setValue(newLabel);
 				
 			}
 		}
 		if (finalUpdate) {
-			addToContractedGraph(vertex);
+			synchronized (contractedGraph) {
+				addToContractedGraph(vertex);
+			}
 		}
 	}
 	
