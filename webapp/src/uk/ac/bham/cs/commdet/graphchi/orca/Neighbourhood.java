@@ -12,7 +12,22 @@ public class Neighbourhood {
 		this.seedNode = seedNode;
 		this.membersSeenCount = new HashMap<Integer, Integer>();
 	}
+	
+	public void addMember(int member) {
+		membersSeenCount.put(member, 1);
+	}
+	
+	public void incrementMembersSeenCount(int member) {
+		if (membersSeenCount.containsKey(member)) {
+			int count = membersSeenCount.get(member);
+			membersSeenCount.put(member, count + 1);
+		}
+	}
 
+	public int getRankValue() {
+		return totalEdgeWeight / membersSeenCount.size();
+	}
+	
 	public int getSeedNode() {
 		return seedNode;
 	}
@@ -36,6 +51,12 @@ public class Neighbourhood {
 	public void setTotalEdgeWeight(int totalEdgeWeight) {
 		this.totalEdgeWeight = totalEdgeWeight;
 	}
-	
+
+	@Override
+	public String toString() {
+		return "Neighbourhood [seedNode=" + seedNode + ", membersSeenCount="
+				+ membersSeenCount + ", totalEdgeWeight=" + totalEdgeWeight
+				+ "]";
+	}
 	
 }

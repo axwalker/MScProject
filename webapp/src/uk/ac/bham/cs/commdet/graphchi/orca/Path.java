@@ -4,13 +4,12 @@ public class Path {
 
 	private int from;
 	private int to;
-	private int via;
 	private int weight;
+	private boolean adjacent;
 	
-	public Path(int from, int to, int via, int weight) {
+	public Path(int from, int to, int weight) {
 		this.from = from;
 		this.to = to;
-		this.via = via;
 		this.weight = weight;
 	}
 
@@ -30,20 +29,18 @@ public class Path {
 		this.to = to;
 	}
 
-	public int getVia() {
-		return via;
-	}
-
-	public void setVia(int via) {
-		this.via = via;
-	}
-
 	public int getWeight() {
 		return weight;
 	}
 
 	public void setWeight(int weight) {
 		this.weight = weight;
+	}
+	
+
+	@Override
+	public String toString() {
+		return "[from=" + from + ", to=" + to + ", weight=" + weight + "]";
 	}
 
 	@Override
@@ -52,7 +49,6 @@ public class Path {
 		int result = 1;
 		result = prime * result + from;
 		result = prime * result + to;
-		result = prime * result + via;
 		result = prime * result + weight;
 		return result;
 	}
@@ -70,11 +66,17 @@ public class Path {
 			return false;
 		if (to != other.to)
 			return false;
-		if (via != other.via)
-			return false;
 		if (weight != other.weight)
 			return false;
 		return true;
+	}
+
+	public boolean isAdjacent() {
+		return adjacent;
+	}
+
+	public void setAdjacent(boolean adjacent) {
+		this.adjacent = adjacent;
 	}
 	
 	
