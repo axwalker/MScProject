@@ -8,23 +8,37 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
 
-
 public class GraphResult implements Serializable {
 
 	private String filename;
 	private Map<Integer, List<Integer>> hierarchy;
-	private List<Map<Community, CommunityEdgePositions>> allEdgePositions = new ArrayList<Map<Community, CommunityEdgePositions>>();
 	private Map<Community, Integer> sizes;
 	private Map<Integer, Double> modularities = new HashMap<Integer, Double>();
 	private int height;
+	private List<Map<Community, CommunityEdgePositions>> allEdgePositions;
+	private Map<Integer, Integer> levelNodeCounts;
 
-	public GraphResult(String filename, Map<Integer, List<Integer>> hierarchy, Map<Community, Integer> sizes, int height,
-			Map<Integer, Double> modularities) {
+	public GraphResult(String filename, 
+					   Map<Integer, List<Integer>> hierarchy, 
+					   Map<Community, Integer> sizes, 
+					   Map<Integer, Double> modularities,
+					   int height) {
 		this.filename = filename;
 		this.hierarchy = hierarchy;
 		this.sizes = sizes;
-		this.height = height;
 		this.modularities = modularities;
+		this.height = height;
+		allEdgePositions = new ArrayList<Map<Community, CommunityEdgePositions>>();
+		levelNodeCounts = new HashMap<Integer, Integer>();
+	}
+	
+	public int getLevelNodeCount(int level) {
+		return levelNodeCounts.get(level);
+	}
+	
+	public int getCommunityEdgeCount(int community, int communityLevel, int fileLevel) {
+		CommunityEdgePositions positions = allEdgePositions.get(fileLevel).get(new Community(community, communityLevel));
+		return positions.getEndIndex() - positions.getStartIndex();
 	}
 
 	public void writeSortedEdgeLists() throws IOException {
@@ -33,10 +47,14 @@ public class GraphResult implements Serializable {
 			generateCommunityPositions(edges, i);
 			String sortedFilename = filename + (i != 0 ? "_pass_" + i : "") + "_sorted";
 			BufferedWriter bw = new BufferedWriter(new FileWriter(sortedFilename));
+			Set<Integer> uniqueNodes = new HashSet<Integer>();
 			for (UndirectedEdge edge : edges) {
 				bw.write(edge.toString());
+				uniqueNodes.add(edge.getSource());
+				uniqueNodes.add(edge.getTarget());
 			}
 			bw.close();
+			levelNodeCounts.put(i, uniqueNodes.size());
 		}
 	}
 
@@ -104,32 +122,16 @@ public class GraphResult implements Serializable {
 		return filename;
 	}
 
-	public void setFilename(String filename) {
-		this.filename = filename;
-	}
-
 	public Map<Integer, List<Integer>> getHierarchy() {
 		return hierarchy;
-	}
-
-	public void setHierarchy(Map<Integer, List<Integer>> hierarchy) {
-		this.hierarchy = hierarchy;
 	}
 
 	public List<Map<Community, CommunityEdgePositions>> getAllEdgePositions() {
 		return allEdgePositions;
 	}
 
-	public void setAllEdgePositions(List<Map<Community, CommunityEdgePositions>> edgePositions) {
-		this.allEdgePositions = edgePositions;
-	}
-
 	public Map<Community, Integer> getSizes() {
 		return sizes;
-	}
-
-	public void setSizes(Map<Community, Integer> sizes) {
-		this.sizes = sizes;
 	}
 
 	public int getHeight() {
@@ -138,10 +140,6 @@ public class GraphResult implements Serializable {
 
 	public Map<Integer, Double> getModularities() {
 		return modularities;
-	}
-
-	public void setModularities(Map<Integer, Double> modularities) {
-		this.modularities = modularities;
 	}
 
 }

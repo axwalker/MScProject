@@ -20,31 +20,31 @@ public class UpdateGraph extends HttpServlet {
 
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
-		int fileLevel = Integer.parseInt(request.getParameter("graphLevel"));
-		
 		HttpSession session = request.getSession(false);
-		GraphResult result = (GraphResult)session.getAttribute("result");
-		
 		String responseString;
-		try {
-			GraphJsonGenerator generator = new GraphJsonGenerator(result);
-			if (request.getParameter("selectedNode") != null) {
-				int community = Integer.parseInt(request.getParameter("selectedNode"));
-				int communityLevel = Integer.parseInt(request.getParameter("currentLevel"));
-				responseString = generator.getCommunityJson(community, communityLevel - 1, fileLevel);
-			} else {
-				responseString = generator.getGraphJson(fileLevel);
+		if (session != null) {
+			try {
+				GraphResult result = (GraphResult)session.getAttribute("result");
+				GraphJsonGenerator generator = new GraphJsonGenerator(result);
+				int fileLevel = Integer.parseInt(request.getParameter("graphLevel"));
+				if (request.getParameter("selectedNode") != null) {
+					int community = Integer.parseInt(request.getParameter("selectedNode"));
+					int communityLevel = Integer.parseInt(request.getParameter("currentLevel"));
+					responseString = generator.getCommunityJson(community, communityLevel - 1, fileLevel);
+				} else {
+					responseString = generator.getGraphJson(fileLevel);
+				}
+				logger.info("Response written succesfully");
+			} catch (Exception e) {
+				responseString = "{ \"success\" : false }";
+				logger.info(e.getMessage() + "\n" + Arrays.asList(e.getStackTrace()));
 			}
-			logger.info("Response written succesfully");
-		} catch (Exception e) {
+		} else {
 			responseString = "{ \"success\" : false }";
-			logger.info(e.getMessage() + "\n" + Arrays.asList(e.getStackTrace()));
 		}
-
 		response.setContentType("application/json");
 		response.getWriter().println(responseString);
 		
 	}
 
 }
-

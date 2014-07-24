@@ -31,11 +31,6 @@ public class GraphJsonGenerator {
 		parseGraph(result.getHeight());
 		return serializeGraph();
 	}
-
-	public String getBottomGraphJson() {
-		parseGraph(0);
-		return serializeGraph();
-	}
 	
 	public String getGraphJson(int level) {
 		parseGraph(level);

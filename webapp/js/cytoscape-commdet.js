@@ -6,8 +6,8 @@ function initCy() {
                 selector: 'node',
                 css: {
                     'background-color': 'data(colour)',
-                    'height': 'mapData(size, ' + 1 + ', ' + maxSize + ', 2, 30)',
-                    'width': 'mapData(size, ' + 1 + ', ' + maxSize + ', 2, 30)'
+                    'height': 'mapData(size, 1, ' + maxSize + ', 2, 30)',
+                    'width': 'mapData(size, 1, ' + maxSize + ', 2, 30)'
                 }
             },
             {

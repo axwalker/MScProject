@@ -86,12 +86,19 @@
 
                             <HR>
 
-                            Show hierarchy level: <select data-bind="options: availableLevels, value: drillLevel"></select> <br>
-                            Show only selected community: <input type="checkbox" data-bind="checked: onlySelectedCommunity, disable: isBottomLevel" /> <br>
+                            Choose hierarchy level: <select data-bind="options: availableLevels, value: drillLevel"></select> <br>
                             
-                            <HR>
+                            <div id="wholeLevel" data-bind="visible: !hasSelectedCommunity()">
+                                <HR>
+                                <input data-bind="click: updateGraph, enable: isSmallEnoughToView" type="button" value="View Level" />
+                                <input data-bind="click: downloadGraph" type="button" value="Download Level" /> <br>
+                            </div>
 
-                            <input data-bind="click: updateGraph" type="button" value="Update Graph" /> <br>
+                            <div id="singlCommunity" data-bind="visible: hasSelectedCommunity">
+                                <HR>
+                                <input data-bind="click: updateGraph, enable: isSmallEnoughToView, disable: isBottomLevel" type="button" value="View Community" />
+                                <input data-bind="click: downloadGraph, disable: isBottomLevel" type="button" value="Download Community" /> <br>
+                            </div>
 
                         </div>
                     </li>
@@ -109,7 +116,7 @@
             </div>
         </div>
         <div class="right col">
-            <div id="cy"></div>
+            <div id="cy" data-bind="click: updateSelectedCommunity"></div>
         </div>
         
         <script src="js/cytoscape-commdet.js"></script>

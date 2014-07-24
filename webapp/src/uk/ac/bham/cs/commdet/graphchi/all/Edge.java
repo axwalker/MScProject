@@ -13,6 +13,14 @@ public class Edge {
 		return node1 + " " + node2;
 	}
 
+	public int getNode1() {
+		return node1;
+	}
+
+	public int getNode2() {
+		return node2;
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;

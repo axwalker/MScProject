@@ -24,7 +24,7 @@ public class Neighbourhood {
 		}
 	}
 
-	public int getRankValue() {
+	public double getRankValue() {
 		return totalEdgeWeight / membersSeenCount.size();
 	}
 	

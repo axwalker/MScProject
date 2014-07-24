@@ -77,6 +77,17 @@ public class LouvainGraphStatus {
 			}
 		}
 	}
+	
+	public void updateModularity(int level) {
+		double q = 0.;
+		for (int i = 0; i < nodeToCommunity.length; i++) {
+			if (communityTotalEdges[i] > 0) {
+				q += (communityInternalEdges[i] / (double)totalGraphWeight);
+				q -= Math.pow(communityTotalEdges[i] / (double)totalGraphWeight, 2);
+			}
+		}
+		modularities.put(level, q);
+	}
 
 	public Map<Integer, Double> getModularities() {
 		return modularities;

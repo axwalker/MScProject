@@ -3,6 +3,7 @@ package uk.ac.bham.cs.commdet.graphchi.orca;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
@@ -40,6 +41,12 @@ public class OrcaProgram implements GraphChiProgram<Integer, Integer>, Detection
 	private Map<Integer, Neighbourhood> neighbourhoods;
 	private PriorityQueue<Neighbourhood> denseRegionsRanked;
 	private TreeSet<Neighbourhood> denseRegions;
+
+	private Map<Integer, Integer> commInternalEdgeTotal;
+
+	private boolean shortcutStage;
+	private boolean denseRegionStage = true;
+	private long previousNodeCount;
 
 	private boolean shortestPathsStage;
 	private boolean propagateShortestPathsStage;
@@ -104,8 +111,11 @@ public class OrcaProgram implements GraphChiProgram<Integer, Integer>, Detection
 		int node = vertex.getId();
 		pathsWithinD.put(node, new HashMap<Integer, Path>());
 		neighbourhoods.put(node, new Neighbourhood(node));
-		status.getCommunitySize()[node] = status.getCommunitySizes().get(new Community(trans.backward(node), passIndex - 1));
-		status.getNodeToCommunity()[node] = node;
+		if (denseRegionStage) {
+			status.getNodeToCommunity()[node] = -1;
+		} else if (shortcutStage) {
+			status.insertNodeIntoCommunity(node, node);
+		}
 	}
 
 	private void orcaUpdate(ChiVertex<Integer, Integer> vertex, GraphChiContext context) {
@@ -113,16 +123,46 @@ public class OrcaProgram implements GraphChiProgram<Integer, Integer>, Detection
 			addToInitialGraphStatus(vertex);
 			context.getScheduler().addTask(vertex.getId());
 		} else {
-			if (shortestPathsStage) {
-				addImmediateShortestPaths(vertex, context);
-			} else if (propagateShortestPathsStage){
-				propagateShortestPathsWithinMax(vertex, context);
-			} else if (neighbourhoodUpdateStage) {
-				updateNeighbourhoodMembers(vertex, context);
-			} else if (rankingRegionStage) {
-				rankDenseRegionUpdate(vertex, context);
+			if (denseRegionStage) {
+				if (shortestPathsStage) {
+					addImmediateShortestPaths(vertex, context);
+				} else if (propagateShortestPathsStage){
+					propagateShortestPathsWithinMax(vertex, context);
+				} else if (neighbourhoodUpdateStage) {
+					updateNeighbourhoodMembers(vertex, context);
+				} else if (rankingRegionStage) {
+					rankDenseRegionUpdate(vertex, context);
+				}
+			} else if (shortcutStage) {
+				shortcutUpdate(vertex, context);
+				System.out.println("shortcut stage");
 			}
 		}
+	}
+
+	private void shortcutUpdate(ChiVertex<Integer, Integer> vertex, GraphChiContext context) {
+		int degree = vertex.numEdges();
+		if (degree == 2) {
+			System.out.println("contracting " + vertex.getId());
+			int weightToNode0 = vertex.edge(0).getValue();
+			int weightToNode1 = vertex.edge(1).getValue();
+			int node0Id = vertex.edge(0).getVertexId();
+			int node1Id = vertex.edge(1).getVertexId();
+			int node0Community = status.getNodeToCommunity()[node0Id];
+			int node1Community = status.getNodeToCommunity()[node1Id];
+			if (node0Community == node0Id && node1Community == node1Id) {
+				status.removeNodeFromCommunity(vertex.getId(), vertex.getId());
+				if (weightToNode0 > weightToNode1) {
+					status.insertNodeIntoCommunity(vertex.getId(), node0Community);
+				} else {
+					status.insertNodeIntoCommunity(vertex.getId(), node1Community);
+				}
+				int weight = (int) (100 * (1. / ((1. / weightToNode0) + (1. / weightToNode1))));
+				Edge shortcut = new Edge(node0Community, node1Community);
+				contractedGraph.put(shortcut, weight);
+			}
+		}
+
 	}
 
 	private void addImmediateShortestPaths(ChiVertex<Integer, Integer> vertex, GraphChiContext context) {
@@ -162,38 +202,34 @@ public class OrcaProgram implements GraphChiProgram<Integer, Integer>, Detection
 		boolean hasPathsToPropagate = false;
 		for (int i = 0; i < vertex.numEdges(); i++) {
 			int edgeWeight = vertex.edge(i).getValue();
-			if (edgeWeight >= maxDistance) {
-				continue;
-			} else {
+			if (edgeWeight < maxDistance) {
 				int targetId = vertex.edge(i).getVertexId();
 				Map<Integer, Path> propagatedPaths = currentIterationPathsToPropagate.get(targetId);
-				if (propagatedPaths == null) {
-					continue;
-				}
-				for (Map.Entry<Integer, Path> entry : propagatedPaths.entrySet()) {
-					int target = entry.getKey();
-					Path path = entry.getValue();
-					if (target == vertex.getId()) {
-						continue;
-					} else {
-						int totalPathWeight = path.getWeight() + edgeWeight;
-						Path totalPath = new Path(vertex.getId(), target, totalPathWeight);
-						if (thisPaths.containsKey(target)){
-							Path currentPath = thisPaths.get(target);
-							int currentPathWeight = currentPath.getWeight();
-							if (totalPathWeight < currentPathWeight) {
-								thisPaths.put(target, totalPath);
-								neighbourhoods.get(target).addMember(vertex.getId());
-								pathsToPropagate.put(target, totalPath);
-								hasPathsToPropagate = true;
-							}
+				if (propagatedPaths != null) {
+					for (Map.Entry<Integer, Path> entry : propagatedPaths.entrySet()) {
+						int target = entry.getKey();
+						Path path = entry.getValue();
+						if (target == vertex.getId()) {
+							continue;
 						} else {
-							System.out.println("new");
-							if (totalPathWeight <= maxDistance) {
-								thisPaths.put(target, totalPath);
-								neighbourhoods.get(target).addMember(vertex.getId());
-								pathsToPropagate.put(target, totalPath);
-								hasPathsToPropagate = true;
+							int totalPathWeight = path.getWeight() + edgeWeight;
+							Path totalPath = new Path(vertex.getId(), target, totalPathWeight);
+							if (thisPaths.containsKey(target)){
+								Path currentPath = thisPaths.get(target);
+								int currentPathWeight = currentPath.getWeight();
+								if (totalPathWeight < currentPathWeight) {
+									thisPaths.put(target, totalPath);
+									neighbourhoods.get(target).addMember(vertex.getId());
+									pathsToPropagate.put(target, totalPath);
+									hasPathsToPropagate = true;
+								}
+							} else {
+								if (totalPathWeight <= maxDistance) {
+									thisPaths.put(target, totalPath);
+									neighbourhoods.get(target).addMember(vertex.getId());
+									pathsToPropagate.put(target, totalPath);
+									hasPathsToPropagate = true;
+								}
 							}
 						}
 					}
@@ -222,6 +258,8 @@ public class OrcaProgram implements GraphChiProgram<Integer, Integer>, Detection
 			}
 		}
 
+		System.out.println("**PRE: " + neighbourhood);
+
 		int neighbourhoodSize = neighbourhood.getMembersSeenCount().size() + 1;
 		double seenCountRequirement = (neighbourhoodSize / densityDegree);
 		Set<Integer> membersToRemove = new HashSet<Integer>();
@@ -240,6 +278,8 @@ public class OrcaProgram implements GraphChiProgram<Integer, Integer>, Detection
 
 		neighbourhood.addMember(vertex.getId());
 
+		System.out.println("post: " + neighbourhood);
+
 		int doubleTotalEdgeWeight = 0;
 		Set<Integer> members = neighbourhood.getMembersSeenCount().keySet();
 		for (Integer member : members) {
@@ -252,6 +292,7 @@ public class OrcaProgram implements GraphChiProgram<Integer, Integer>, Detection
 			}
 		}
 		neighbourhood.setTotalEdgeWeight(doubleTotalEdgeWeight / 2);
+		System.out.println("seed: " + neighbourhood.getSeedNode() + ", rank: " + neighbourhood.getRankValue() + ", totalWeight: " + neighbourhood.getTotalEdgeWeight() + "\n");
 
 	}
 
@@ -266,12 +307,12 @@ public class OrcaProgram implements GraphChiProgram<Integer, Integer>, Detection
 		if (passIndex == 0) {
 			addToContractedGraphTwoCore(vertex);
 		} else {
-			addToContractedGraphOrca(vertex);
+			if (denseRegionStage) {
+				addToContractedGraphDense(vertex);
+			} else if (shortcutStage) {
+				addToContractedGraphShortcut(vertex);
+			}
 		}
-	}
-
-	private void addToContractedGraphOrca(ChiVertex<Integer, Integer> vertex) {
-
 	}
 
 	private void addToContractedGraphTwoCore(ChiVertex<Integer, Integer> vertex) {
@@ -286,12 +327,61 @@ public class OrcaProgram implements GraphChiProgram<Integer, Integer>, Detection
 				Edge edge = new Edge(actualSourceCommunity, actualTargetCommunity);
 				if (contractedGraph.containsKey(edge)) {
 					int oldWeight = contractedGraph.get(edge);
-					contractedGraph.put(edge, oldWeight + weight);
+					contractedGraph.put(edge, oldWeight);
 				} else {
 					contractedGraph.put(edge, weight);
 				}
 			}
 		}
+	}
+
+	//TODO fix edge weights to be 'average adjacency to region'
+	private void addToContractedGraphDense(ChiVertex<Integer, Integer> vertex) {
+		for (int i = 0; i < vertex.numOutEdges(); i++) {
+			int target = vertex.outEdge(i).getVertexId();
+			int sourceCommunity = status.getNodeToCommunity()[vertex.getId()];
+			int targetCommunity = status.getNodeToCommunity()[target];
+			if (sourceCommunity != targetCommunity) {
+				int actualSourceCommunity = trans.backward(sourceCommunity);
+				int actualTargetCommunity = trans.backward(targetCommunity);
+				int weight = vertex.outEdge(i).getValue();
+				Edge edge = new Edge(actualSourceCommunity, actualTargetCommunity);
+				if (contractedGraph.containsKey(edge)) {
+					int oldWeight = contractedGraph.get(edge);
+					contractedGraph.put(edge, oldWeight + 1);
+				} else {
+					contractedGraph.put(edge, 1);
+				}
+			} else {
+				if (commInternalEdgeTotal.containsKey(sourceCommunity)) {
+					int previousTotal = commInternalEdgeTotal.get(sourceCommunity);
+					commInternalEdgeTotal.put(sourceCommunity, previousTotal + 1);
+				} else {
+					commInternalEdgeTotal.put(sourceCommunity, 1);
+				}
+			}
+		}
+	}
+
+	private void addToContractedGraphShortcut(ChiVertex<Integer, Integer> vertex) {
+		for (int i = 0; i < vertex.numOutEdges(); i++) {
+			int target = vertex.outEdge(i).getVertexId();
+			int sourceCommunity = status.getNodeToCommunity()[vertex.getId()];
+			int targetCommunity = status.getNodeToCommunity()[target];
+			if (sourceCommunity != targetCommunity) {
+				int actualSourceCommunity = trans.backward(sourceCommunity);
+				int actualTargetCommunity = trans.backward(targetCommunity);
+				int weight = vertex.outEdge(i).getValue();
+				Edge edge = new Edge(actualSourceCommunity, actualTargetCommunity);
+				if (contractedGraph.containsKey(edge)) {
+					int oldWeight = contractedGraph.get(edge);
+					contractedGraph.put(edge, Math.min(1, oldWeight + weight));
+				} else {
+					contractedGraph.put(edge, weight);
+				}
+			}
+		}
+
 	}
 
 	public void beginIteration(GraphChiContext ctx) {
@@ -317,7 +407,7 @@ public class OrcaProgram implements GraphChiProgram<Integer, Integer>, Detection
 				denseRegionsRanked = new PriorityQueue<Neighbourhood>(noOfVertices, new Comparator<Neighbourhood>() {
 					@Override
 					public int compare(Neighbourhood o1, Neighbourhood o2) {
-						return o1.getRankValue() - o2.getRankValue();
+						return Double.compare(o2.getRankValue(), o1.getRankValue());
 					}
 				});
 				denseRegions = new TreeSet<Neighbourhood>(new Comparator<Neighbourhood>() {
@@ -334,6 +424,21 @@ public class OrcaProgram implements GraphChiProgram<Integer, Integer>, Detection
 				propagateShortestPathsStage = true;
 				neighbourhoodUpdateStage = true;
 				rankingRegionStage = true;
+				commInternalEdgeTotal = new HashMap<Integer, Integer>();
+			}
+			if (passIndex == 1) {
+				previousNodeCount = noOfVertices;
+			}
+			if (passIndex > 1) {
+				long newNodeCount = noOfVertices;
+				if (newNodeCount > previousNodeCount/4) {
+					denseRegionStage = false;
+					shortcutStage = true;
+				} else {
+					denseRegionStage = true;
+					shortcutStage = false;
+				}
+				previousNodeCount = newNodeCount;
 			}
 		}
 	}
@@ -363,37 +468,85 @@ public class OrcaProgram implements GraphChiProgram<Integer, Integer>, Detection
 				status.incrementHeight();
 			}
 		} else {
-			if ((shortestPathsStage || propagateShortestPathsStage) && ctx.getIteration() > 0) {
-				shortestPathsStage = false;
-				System.out.println("initialShortestPathStage - nextIt:\n" + nextIterationPathsToPropagate);
-				System.out.println("initialShortestPathStage - pathsWithin:\n" + pathsWithinD);
-				System.out.println("neighbourhoods: " + neighbourhoods);
-				currentIterationPathsToPropagate = nextIterationPathsToPropagate;
-				nextIterationPathsToPropagate = new HashMap<Integer, Map<Integer, Path>>();
-				if (!ctx.getScheduler().hasTasks()) {
-					propagateShortestPathsStage = false;
-					ctx.getScheduler().addAllTasks();
-				}
-			} else if (neighbourhoodUpdateStage) {
-				if (!ctx.getScheduler().hasTasks()) {
+			if (denseRegionStage) {
+				if ((shortestPathsStage || propagateShortestPathsStage) && ctx.getIteration() > 0) {
+					shortestPathsStage = false;
+					System.out.println("initialShortestPathStage - nextIt:\n" + nextIterationPathsToPropagate);
+					System.out.println("initialShortestPathStage - pathsWithin:\n" + pathsWithinD);
 					System.out.println("neighbourhoods: " + neighbourhoods);
-					neighbourhoodUpdateStage = false;
-					rankingRegionStage = true;
+					currentIterationPathsToPropagate = nextIterationPathsToPropagate;
+					nextIterationPathsToPropagate = new HashMap<Integer, Map<Integer, Path>>();
+					if (!ctx.getScheduler().hasTasks()) {
+						propagateShortestPathsStage = false;
+						ctx.getScheduler().addAllTasks();
+					}
+				} else if (neighbourhoodUpdateStage) {
+					if (!ctx.getScheduler().hasTasks()) {
+						System.out.println("neighbourhoods: " + neighbourhoods);
+						neighbourhoodUpdateStage = false;
+						rankingRegionStage = true;
+						ctx.getScheduler().addAllTasks();
+					}
+				} else if (rankingRegionStage && !ctx.getScheduler().hasTasks()) {
+					System.out.println("ranked regions: " + denseRegionsRanked);
+					rankingRegionStage = false;
+					assignNodesToCommunities();
+					System.out.println(Arrays.toString(status.getNodeToCommunity()));
+					finalUpdate = true;
 					ctx.getScheduler().addAllTasks();
+					status.getModularities().put(passIndex, -1.);
+					status.updateSizesMap();
+					status.updateCommunitiesMap();
+					System.out.println(status.getCommunitySizes());
+					System.out.println(status.getCommunityHierarchy());
+					status.incrementHeight();
+				} else {
+					fixContractedGraphEdges();
 				}
-			} else if (rankingRegionStage && !ctx.getScheduler().hasTasks()) {
-				System.out.println("ranked regions: " + denseRegionsRanked);
-				rankingRegionStage = false;
-				finalUpdate = true;
-				ctx.getScheduler().addAllTasks();
-				status.getModularities().put(passIndex, -1.);
-				status.updateSizesMap();
-				status.updateCommunitiesMap();
-				status.incrementHeight();
+			} else if (shortcutStage) {
+				if (!finalUpdate && !ctx.getScheduler().hasTasks()) {
+					System.out.println(Arrays.toString(status.getNodeToCommunity()));
+					finalUpdate = true;
+					ctx.getScheduler().addAllTasks();
+					status.getModularities().put(passIndex, -1.);
+					status.updateSizesMap();
+					status.updateCommunitiesMap();
+					System.out.println(status.getCommunitySizes());
+					System.out.println(status.getCommunityHierarchy());
+					status.incrementHeight();
+				}
 			}
 		}
-
 	}
+
+	private void assignNodesToCommunities() {
+		while(!denseRegionsRanked.isEmpty()) {
+			Neighbourhood neighbourhood = denseRegionsRanked.poll();
+			int label = neighbourhood.getSeedNode();
+			for (Integer member : neighbourhood.getMembersSeenCount().keySet()) {
+				if (status.getNodeToCommunity()[member] == -1) {
+					status.insertNodeIntoCommunity(member, label);
+					//status.getNodeToCommunity()[member] = label;
+					//status.getCommunitySize()[label] += status.getCommunitySizes().get(new Community(trans.backward(member), passIndex - 1));
+				}
+			}
+		}
+	}
+
+	private void fixContractedGraphEdges() {
+		final Iterator<Edge> iterator = contractedGraph.keySet().iterator();
+		while(iterator.hasNext()) {
+			Edge edge = iterator.next();
+			int interCommunityEdges = contractedGraph.get(edge);
+			Integer sourceInternal = commInternalEdgeTotal.get(edge.getNode1());
+			sourceInternal = sourceInternal != null ? sourceInternal : 1;
+			Integer targetInternal = commInternalEdgeTotal.get(edge.getNode2());
+			targetInternal = targetInternal != null ? targetInternal : 1;
+			double averageAdjacency = (double)interCommunityEdges / (sourceInternal + targetInternal + interCommunityEdges);
+			contractedGraph.put(edge, (int)(averageAdjacency * 100));
+		}
+	}
+
 
 
 	public void beginInterval(GraphChiContext ctx, VertexInterval interval) {}
@@ -414,38 +567,33 @@ public class OrcaProgram implements GraphChiProgram<Integer, Integer>, Detection
 	}
 
 	public GraphResult run(String baseFilename, int nShards) throws  Exception {
-		FastSharder sharder = createSharder(baseFilename, nShards);
-		sharder.shard(new FileInputStream(new File(baseFilename)), "edgelist");
-		GraphChiEngine<Integer, Integer> engine = new GraphChiEngine<Integer, Integer>(baseFilename, nShards);
+		setupAndRunEngine(baseFilename);
+		String newFilename = baseFilename;
+		//while (contractedGraph.size() > 2) {
+		while (passIndex < 3) {
+			System.out.println("PASS INDEX: " + passIndex);
+			finalUpdate = false;
+			passIndex++;
+			newFilename = writeNextLevelEdgeList(newFilename);
+			setupAndRunEngine(newFilename);
+		}
+
+		return new GraphResult(baseFilename, status.getCommunityHierarchy(), 
+				status.getCommunitySizes(), status.getModularities(), passIndex);
+	}
+
+	private void setupAndRunEngine(String filename) throws FileNotFoundException, IOException {
+		FastSharder sharder = createSharder(filename, 1);
+		sharder.shard(new FileInputStream(new File(filename)), "edgelist");
+		GraphChiEngine<Integer, Integer> engine = new GraphChiEngine<Integer, Integer>(filename, 1);
 		engine.setEdataConverter(new IntConverter());
 		engine.setVertexDataConverter(new IntConverter());
 		engine.setEnableScheduler(true);
 		engine.setSkipZeroDegreeVertices(true);
 		engine.run(this, 1000);
-
-		String newFilename = baseFilename;
-		//while (contractedGraph.size() > 2) {
-		while (passIndex < 2) {
-			finalUpdate = false;
-			passIndex++;
-
-			newFilename = writeNewEdgeList(newFilename);
-
-			sharder = createSharder(newFilename, 1);
-			sharder.shard(new FileInputStream(new File(newFilename)), "edgelist");
-			engine = new GraphChiEngine<Integer, Integer>(newFilename, 1);
-			engine.setEdataConverter(new IntConverter());
-			engine.setVertexDataConverter(new IntConverter());
-			engine.setEnableScheduler(true);
-			engine.setSkipZeroDegreeVertices(true);
-			engine.run(this, 1000);
-		}
-
-		return new GraphResult(baseFilename, status.getCommunityHierarchy(), 
-				status.getCommunitySizes(), passIndex, status.getModularities());
 	}
 
-	public String writeNewEdgeList(String baseFilename) throws IOException {
+	public String writeNextLevelEdgeList(String baseFilename) throws IOException {
 		String base;
 		if (passIndex > 1) {
 			base = baseFilename.substring(0, baseFilename.indexOf("_pass_"));
@@ -455,6 +603,7 @@ public class OrcaProgram implements GraphChiProgram<Integer, Integer>, Detection
 		String newFilename = base + "_pass_" + passIndex;
 
 		BufferedWriter bw = new BufferedWriter(new FileWriter(newFilename));
+		System.out.println("Contracted graph: " + contractedGraph);
 		for (Entry<Edge, Integer> entry : contractedGraph.entrySet()) {
 			bw.write(entry.getKey().toString() + " " + entry.getValue() + "\n");
 		}
@@ -466,7 +615,7 @@ public class OrcaProgram implements GraphChiProgram<Integer, Integer>, Detection
 
 	public static void main(String[] args) throws Exception {
 		String folder = "sampledata/"; 
-		String file = "sample_label.txt";
+		String file = "karateclub_edg.txt";
 		OrcaProgram program = new OrcaProgram();
 		GraphResult result = program.run(folder + file, 1);
 		//System.out.println("FINAL MODULARITY: " + program.getModularity());

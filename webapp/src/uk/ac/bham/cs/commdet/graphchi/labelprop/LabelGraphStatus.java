@@ -11,8 +11,6 @@ public class LabelGraphStatus {
 	private int[] nodeToCommunity;
 	private int[] communityInternalEdges;
 	private int[] communityTotalEdges;
-	private int[] nodeWeightedDegree;
-	private int[] nodeSelfLoops;
 	private int[] communitySize;
 	private long totalGraphWeight;
 	private VertexIdTranslate vertexTrans;
@@ -46,6 +44,17 @@ public class LabelGraphStatus {
 				allCommunitySizes.put(new Community(vertexTrans.backward(i), 0), communitySize[i]);
 			}
 		}
+	}
+	
+	public void updateModularity(int level) {
+		double q = 0.;
+		for (int i = 0; i < nodeToCommunity.length; i++) {
+			if (communityTotalEdges[i] > 0) {
+				q += (communityInternalEdges[i] / (double)totalGraphWeight);
+				q -= Math.pow(communityTotalEdges[i] / (double)totalGraphWeight, 2);
+			}
+		}
+		modularities.put(level, q);
 	}
 
 	public Map<Integer, Double> getModularities() {
@@ -86,22 +95,6 @@ public class LabelGraphStatus {
 
 	public void setCommunityTotalEdges(int[] communityTotalEdges) {
 		this.communityTotalEdges = communityTotalEdges;
-	}
-
-	public int[] getNodeWeightedDegree() {
-		return nodeWeightedDegree;
-	}
-
-	public void setNodeWeightedDegree(int[] nodeWeightedDegree) {
-		this.nodeWeightedDegree = nodeWeightedDegree;
-	}
-
-	public int[] getNodeSelfLoops() {
-		return nodeSelfLoops;
-	}
-
-	public void setNodeSelfLoops(int[] nodeSelfLoops) {
-		this.nodeSelfLoops = nodeSelfLoops;
 	}
 
 	public int[] getCommunitySize() {

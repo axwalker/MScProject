@@ -80,14 +80,22 @@ public class OrcaGraphStatus {
 
 	public void insertNodeIntoCommunity(int nodeId, int communityId) {
 		nodeToCommunity[nodeId] = communityId;
-		communitySize[communityId]++;
+		if (hierarchyHeight == 0) {
+			communitySize[communityId]++;
+		} else {
+			communitySize[communityId] += allCommunitySizes.get(new Community(updatedVertexTrans.backward(nodeId), hierarchyHeight - 1));
+		}
 	}
-	
+
 	public void removeNodeFromCommunity(int nodeId, int communityId) {
 		nodeToCommunity[nodeId] = -1;
-		communitySize[communityId]--;
+		if (hierarchyHeight == 0) {
+			communitySize[communityId]--;
+		} else {
+			communitySize[communityId] -= allCommunitySizes.get(new Community(updatedVertexTrans.backward(nodeId), hierarchyHeight - 1));
+		}
 	}
-	
+
 	public Map<Integer, Double> getModularities() {
 		return modularities;
 	}

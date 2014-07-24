@@ -87,18 +87,15 @@ public class LabelPropagationProgram implements GraphChiProgram<Integer, Integer
 
 	private void addToContractedGraph(ChiVertex<Integer, Integer> vertex) {
 		int node = vertex.getId();
-		/*if (status.getCommunityInternalEdges()[node] > 0) {
-			int actualNode = trans.backward(node);
-			contractedGraph.put(new Edge(actualNode, actualNode), status.getCommunityInternalEdges()[node]/2);
-		}*/
 		for (int i = 0; i < vertex.numOutEdges(); i++) {
 			int target = vertex.outEdge(i).getVertexId();
 			int sourceCommunity = status.getNodeToCommunity()[node];
 			int targetCommunity = status.getNodeToCommunity()[target];
+			int weight = vertex.outEdge(i).getValue();
+			status.setTotalGraphWeight(status.getTotalGraphWeight() + weight*2);
 			if (sourceCommunity != targetCommunity) {
 				int actualSourceCommunity = trans.backward(sourceCommunity);
 				int actualTargetCommunity = trans.backward(targetCommunity);
-				int weight = vertex.outEdge(i).getValue();
 				Edge edge = new Edge(actualSourceCommunity, actualTargetCommunity);
 				if (contractedGraph.containsKey(edge)) {
 					int oldWeight = contractedGraph.get(edge);
@@ -106,6 +103,11 @@ public class LabelPropagationProgram implements GraphChiProgram<Integer, Integer
 				} else {
 					contractedGraph.put(edge, weight);
 				}
+				status.getCommunityTotalEdges()[sourceCommunity]+= weight;
+				status.getCommunityTotalEdges()[targetCommunity]+= weight;
+			} else {
+				status.getCommunityInternalEdges()[sourceCommunity] += weight*2;
+				status.getCommunityTotalEdges()[sourceCommunity]+= weight*2;
 			}
 		}
 	}
@@ -120,8 +122,6 @@ public class LabelPropagationProgram implements GraphChiProgram<Integer, Integer
 			}
 			status.setCommunityInternalEdges(new int[noOfVertices]);
 			status.setCommunityTotalEdges(new int[noOfVertices]);
-			status.setNodeWeightedDegree(new int[noOfVertices]);
-			status.setNodeSelfLoops(new int[noOfVertices]);
 			status.setTotalGraphWeight(0);
 			status.setCommunitySize(new int[noOfVertices]);
 		}
@@ -133,11 +133,13 @@ public class LabelPropagationProgram implements GraphChiProgram<Integer, Integer
 			status.initialiseCommunitiesMap();
 		}
 		if (!finalUpdate && !ctx.getScheduler().hasTasks()) {
-			status.getModularities().put(0, -1.);
+			//status.getModularities().put(0, -1.);
 			ctx.getScheduler().addAllTasks();
 			finalUpdate = true;
 			status.updateSizesMap();
 			status.updateCommunitiesMap();
+		} else {
+			status.updateModularity(0);
 		}
 	}
 	
@@ -159,23 +161,22 @@ public class LabelPropagationProgram implements GraphChiProgram<Integer, Integer
 	}
 
 	public GraphResult run(String baseFilename, int nShards) throws  Exception {
-		
 		FastSharder sharder = this.createSharder(baseFilename, nShards);
 		sharder.shard(new FileInputStream(new File(baseFilename)), "edgelist");
 		GraphChiEngine<Integer, Integer> engine = new GraphChiEngine<Integer, Integer>(baseFilename, nShards);
 		engine.setEdataConverter(new IntConverter());
 		engine.setVertexDataConverter(new IntConverter());
-		
 		engine.setEnableScheduler(true);
 		engine.run(this, 100);
 		
-		writeNewEdgeList(baseFilename);
+		writeNextLevelEdgeList(baseFilename);
 		
+		int hierarchyHeight = 1;
 		return new GraphResult(baseFilename, status.getCommunityHierarchy(), 
-				status.getCommunitySizes(), 1, status.getModularities());
+				status.getCommunitySizes(), status.getModularities(), hierarchyHeight);
 	}
 	
-	public String writeNewEdgeList(String baseFilename) throws IOException {
+	public String writeNextLevelEdgeList(String baseFilename) throws IOException {
 		String newFilename = baseFilename + "_pass_" + 1;
 
 		BufferedWriter bw = new BufferedWriter(new FileWriter(newFilename));
