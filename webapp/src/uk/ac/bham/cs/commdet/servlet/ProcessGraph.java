@@ -16,6 +16,7 @@ import org.apache.commons.io.FileUtils;
 import edu.cmu.graphchi.ChiLogger;
 
 import uk.ac.bham.cs.commdet.cyto.json.GraphJsonGenerator;
+import uk.ac.bham.cs.commdet.gml.GMLMapper;
 import uk.ac.bham.cs.commdet.graphchi.all.DetectionProgram;
 import uk.ac.bham.cs.commdet.graphchi.all.GraphResult;
 import uk.ac.bham.cs.commdet.graphchi.labelprop.LabelPropagationProgram;
@@ -76,9 +77,19 @@ public class ProcessGraph extends HttpServlet {
 		//process graph
 		String responseString;
 		GraphResult result = null;
+		String filetype = request.getParameter("filetype");;
 		try {
-			result = GCprogram.run(tempFolderPath + filename, 1);
-			result.writeSortedEdgeLists();
+			if (filetype.equals("GML")) {
+				GMLMapper mapper = new GMLMapper();
+				mapper.inputGraph(tempFolderPath + filename);
+				result = GCprogram.run(tempFolderPath + filename + "_fromGML", 1);
+				result.setMapper(mapper);
+				result.writeSortedEdgeLists();
+				
+			} else {
+				result = GCprogram.run(tempFolderPath + filename, 1);
+				result.writeSortedEdgeLists();
+			}
 			GraphJsonGenerator generator = new GraphJsonGenerator(result);
 			responseString = generator.getParentGraphJson();
 			logger.info("Response written succesfully for " + filename);

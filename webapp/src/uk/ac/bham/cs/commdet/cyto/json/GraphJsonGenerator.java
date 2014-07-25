@@ -9,6 +9,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig.Feature;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
+import uk.ac.bham.cs.commdet.gml.GMLMapper;
 import uk.ac.bham.cs.commdet.graphchi.all.Community;
 import uk.ac.bham.cs.commdet.graphchi.all.CommunityEdgePositions;
 import uk.ac.bham.cs.commdet.graphchi.all.GraphResult;
@@ -42,6 +43,9 @@ public class GraphJsonGenerator {
 		for (NodeData nodeData : graph.getNodes()) {
 			Node node = nodeData.getData();
 			int nodeId = Integer.parseInt(node.getId());
+			if (result.hasMapper()) {
+				nodeId = result.getMapper().getInternalId(nodeId);
+			}
 			int parentId = result.getHierarchy().get(nodeId).get(result.getHeight()-1);
 			node.setColour(getColour(parentId + ""));
 		}
@@ -79,20 +83,19 @@ public class GraphJsonGenerator {
 				int target = edge.getTarget();
 				int weight = edge.getWeight();
 				if (source != target) {
-					graph.getEdges().add(new EdgeData(new Edge("" + source, "" + target, weight)));
+					graph.getEdges().add(new EdgeData(new Edge(mapNode(source), mapNode(target), weight)));
 					maxEdgeConnection = Math.max(maxEdgeConnection, weight);
 				}
 				if (!nodesAdded.contains(source)) {
-					System.out.println("src: " + source + ", commLevel: " + fileLevel);
 					int size = (fileLevel == 0 ? 1 : result.getSizes().get(new Community(source, fileLevel - 1))); //
-					graph.getNodes().add(new NodeData(new Node("" + source, size)));
+					graph.getNodes().add(new NodeData(new Node(mapNode(source), size)));
 					nodesAdded.add(source);
 					maxCommunitySize = Math.max(maxCommunitySize, size);
 					minCommunitySize = Math.min(minCommunitySize, size);
 				}
 				if (!nodesAdded.contains(target)) {
 					int size = (fileLevel == 0 ? 1 : result.getSizes().get(new Community(target, fileLevel - 1)));
-					graph.getNodes().add(new NodeData(new Node("" + target, size)));
+					graph.getNodes().add(new NodeData(new Node(mapNode(target), size)));
 					nodesAdded.add(target);
 					maxCommunitySize = Math.max(maxCommunitySize, size);
 					minCommunitySize = Math.min(minCommunitySize, size);
@@ -115,6 +118,9 @@ public class GraphJsonGenerator {
 		for (NodeData nodeData : graph.getNodes()) {
 			Node node = nodeData.getData();
 			int nodeId = Integer.parseInt(node.getId());
+			if (result.hasMapper()) {
+				nodeId = result.getMapper().getInternalId(nodeId);
+			}
 			int parentId = result.getHierarchy().get(nodeId).get(result.getHeight()-1);
 			node.setColour(getColour(parentId + ""));
 		}
@@ -140,19 +146,19 @@ public class GraphJsonGenerator {
 				int target = edge.getTarget();
 				int weight = edge.getWeight();
 				if (source != target) {
-					graph.getEdges().add(new EdgeData(new Edge("" + source, "" + target, weight)));
+					graph.getEdges().add(new EdgeData(new Edge(mapNode(source), mapNode(target), weight)));
 					maxEdgeConnection = Math.max(maxEdgeConnection, weight);
 				}
 				if (!nodesAdded.contains(source)) {
 					int size = (level == 0 ? 1 : result.getSizes().get(new Community(source, level - 1)));
-					graph.getNodes().add(new NodeData(new Node("" + source, size)));
+					graph.getNodes().add(new NodeData(new Node(mapNode(source), size)));
 					nodesAdded.add(source);
 					maxCommunitySize = Math.max(maxCommunitySize, size);
 					minCommunitySize = Math.min(minCommunitySize, size);
 				}
 				if (!nodesAdded.contains(target)) {
 					int size = (level == 0 ? 1 : result.getSizes().get(new Community(target, level - 1)));
-					graph.getNodes().add(new NodeData(new Node("" + target, size)));
+					graph.getNodes().add(new NodeData(new Node(mapNode(target), size)));
 					nodesAdded.add(target);
 					maxCommunitySize = Math.max(maxCommunitySize, size);
 					minCommunitySize = Math.min(minCommunitySize, size);
@@ -167,6 +173,15 @@ public class GraphJsonGenerator {
 		metadata.setMinCommunitySize(minCommunitySize);
 	}
 
+	private String mapNode(int node) {
+		if (result.hasMapper()) {
+			GMLMapper mapper = result.getMapper();
+			return mapper.getGMLid(node);
+		} else {
+			return node + "";
+		}
+	}
+	
 	private String serializeGraph() {
 		ObjectMapper mapper = new ObjectMapper();
 		mapper.getSerializationConfig().enable(Feature.INDENT_OUTPUT);

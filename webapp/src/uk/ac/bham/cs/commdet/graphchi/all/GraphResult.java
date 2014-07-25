@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
 
+import uk.ac.bham.cs.commdet.gml.GMLMapper;
+
 public class GraphResult implements Serializable {
 
 	private String filename;
@@ -17,6 +19,8 @@ public class GraphResult implements Serializable {
 	private int height;
 	private List<Map<Community, CommunityEdgePositions>> allEdgePositions;
 	private Map<Integer, Integer> levelNodeCounts;
+	private GMLMapper mapper;
+	private boolean hasMapper;
 
 	public GraphResult(String filename, 
 					   Map<Integer, List<Integer>> hierarchy, 
@@ -30,6 +34,19 @@ public class GraphResult implements Serializable {
 		this.height = height;
 		allEdgePositions = new ArrayList<Map<Community, CommunityEdgePositions>>();
 		levelNodeCounts = new HashMap<Integer, Integer>();
+	}
+	
+	public GMLMapper getMapper() {
+		return this.mapper;
+	}
+	
+	public void setMapper(GMLMapper mapper) {
+		this.mapper = mapper;
+		hasMapper = true;
+	}
+	
+	public boolean hasMapper() {
+		return hasMapper;
 	}
 	
 	public int getLevelNodeCount(int level) {

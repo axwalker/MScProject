@@ -133,6 +133,43 @@ function arborLayout(maxTime) {
     };
 }
 
+function defaultArborLayout(maxTime) {
+    return {
+        name: 'arbor',
+
+        liveUpdate: true, // whether to show the layout as it's running
+        maxSimulationTime: 4000, // max length in ms to run the layout
+        fit: true, // reset viewport to fit default simulationBounds
+        padding: [ 50, 50, 50, 50 ], // top, right, bottom, left
+        simulationBounds: undefined, // [x1, y1, x2, y2]; [0, 0, width, height] by default
+        ungrabifyWhileSimulating: true, // so you can't drag nodes during layout
+        gravity: true,
+        stepSize: 1, // size of timestep in simulation
+
+        stableEnergy: function( energy ){
+          var e = energy; 
+          return (e.max <= 0.5) || (e.mean <= 0.3) || viewModel.cancelLayoutStatus();
+        }
+
+        ready: function() {
+            viewModel.isArborRunning(true);
+            $('#refreshButton').attr("disabled", true);
+            viewModel.status('Layout complete');
+        },
+        
+        stop: function() {
+            viewModel.isArborRunning(false);
+            $('#refreshButton').attr("disabled", false);
+            viewModel.status('Layout complete');
+
+            //hack to fix graph not refreshing if time remains unchanged:
+            var previousTime = viewModel.layoutTime();
+            viewModel.layoutTime(-1);
+            viewModel.layoutTime(previousTime);
+        }
+    }
+}
+
 function gridLayout() {
     return {
         name: 'grid',

@@ -148,7 +148,11 @@ var viewModel = function() {
     self.layoutChoiceComputed = ko.computed(function() {
         if (self.layoutChoice() === 'Force-directed') {
             self.cancelLayoutStatus(false);
-            return arborLayout(self.layoutTime());
+            if (self.drillLevel() > 0) {
+                return arborLayout(self.layoutTime());
+            } else {
+                return defaultArborLayout(self.layoutTime());
+            }
         } else if (self.layoutChoice() === 'Grid') {
             return gridLayout();
         } else if (self.layoutChoice() === 'Breadth-first') {

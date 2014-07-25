@@ -32,6 +32,12 @@
 
                                     <input data-bind="event: { change: addedFile }" type="file" name="file"> <br>
 
+                                    <label for="filetype">Graph file type:</label>
+                                    <select id="filetype" name="filetype">
+                                        <option>GML</option>
+                                        <option>Edgelist</option>
+                                    </select> <br>
+
                                     <label for="algorithm">Detection Algorithm:</label>
                                     <select id="algorithm" name="algorithm">
                                         <option>Louvain Method</option>

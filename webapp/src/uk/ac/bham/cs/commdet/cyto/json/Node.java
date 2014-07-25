@@ -1,16 +1,25 @@
 package uk.ac.bham.cs.commdet.cyto.json;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Node implements Serializable {
 
 	private String id;
 	private int size;
 	private String colour = "blue";
-
+	private Map<String, String> metadata;
+	
+	public Node(String id, Map<String, String> metadata) {
+		this.id = id;
+		this.metadata = metadata;
+	}
+	
 	public Node(String id, int size) {
 		this.id = id;
 		this.size = size;
+		this.setMetadata(new HashMap<String, String>());
 	}
 
 	public String getId() {
@@ -33,6 +42,14 @@ public class Node implements Serializable {
 		this.colour = colour;
 	}
 
+	public Map<String, String> getMetadata() {
+		return metadata;
+	}
+
+	public void setMetadata(Map<String, String> metadata) {
+		this.metadata = metadata;
+	}
+	
 	@Override
 	public int hashCode() {
 		final int prime = 31;

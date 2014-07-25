@@ -44,9 +44,9 @@ public class OrcaProgram implements GraphChiProgram<Integer, Integer>, Detection
 
 	private Map<Integer, Integer> commInternalEdgeTotal;
 
-	private boolean shortcutStage;
+	//private boolean shortcutStage;
 	private boolean denseRegionStage = true;
-	private long previousNodeCount;
+	//private long previousNodeCount;
 
 	private boolean shortestPathsStage;
 	private boolean propagateShortestPathsStage;
@@ -113,9 +113,9 @@ public class OrcaProgram implements GraphChiProgram<Integer, Integer>, Detection
 		neighbourhoods.put(node, new Neighbourhood(node));
 		if (denseRegionStage) {
 			status.getNodeToCommunity()[node] = -1;
-		} else if (shortcutStage) {
+		} /*else if (shortcutStage) {
 			status.insertNodeIntoCommunity(node, node);
-		}
+		}*/
 	}
 
 	private void orcaUpdate(ChiVertex<Integer, Integer> vertex, GraphChiContext context) {
@@ -133,10 +133,10 @@ public class OrcaProgram implements GraphChiProgram<Integer, Integer>, Detection
 				} else if (rankingRegionStage) {
 					rankDenseRegionUpdate(vertex, context);
 				}
-			} else if (shortcutStage) {
+			} /*else if (shortcutStage) {
 				shortcutUpdate(vertex, context);
 				System.out.println("shortcut stage");
-			}
+			} */
 		}
 	}
 
@@ -309,9 +309,9 @@ public class OrcaProgram implements GraphChiProgram<Integer, Integer>, Detection
 		} else {
 			if (denseRegionStage) {
 				addToContractedGraphDense(vertex);
-			} else if (shortcutStage) {
+			} /*else if (shortcutStage) {
 				addToContractedGraphShortcut(vertex);
-			}
+			}*/
 		}
 	}
 
@@ -363,7 +363,7 @@ public class OrcaProgram implements GraphChiProgram<Integer, Integer>, Detection
 		}
 	}
 
-	private void addToContractedGraphShortcut(ChiVertex<Integer, Integer> vertex) {
+	/*private void addToContractedGraphShortcut(ChiVertex<Integer, Integer> vertex) {
 		for (int i = 0; i < vertex.numOutEdges(); i++) {
 			int target = vertex.outEdge(i).getVertexId();
 			int sourceCommunity = status.getNodeToCommunity()[vertex.getId()];
@@ -382,7 +382,7 @@ public class OrcaProgram implements GraphChiProgram<Integer, Integer>, Detection
 			}
 		}
 
-	}
+	}*/
 
 	public void beginIteration(GraphChiContext ctx) {
 		if (ctx.getIteration() == 0) {
@@ -426,7 +426,7 @@ public class OrcaProgram implements GraphChiProgram<Integer, Integer>, Detection
 				rankingRegionStage = true;
 				commInternalEdgeTotal = new HashMap<Integer, Integer>();
 			}
-			if (passIndex == 1) {
+			/*if (passIndex == 1) {
 				previousNodeCount = noOfVertices;
 			}
 			if (passIndex > 1) {
@@ -439,7 +439,7 @@ public class OrcaProgram implements GraphChiProgram<Integer, Integer>, Detection
 					shortcutStage = false;
 				}
 				previousNodeCount = newNodeCount;
-			}
+			}*/
 		}
 	}
 
@@ -503,7 +503,7 @@ public class OrcaProgram implements GraphChiProgram<Integer, Integer>, Detection
 				} else {
 					fixContractedGraphEdges();
 				}
-			} else if (shortcutStage) {
+			} /*else if (shortcutStage) {
 				if (!finalUpdate && !ctx.getScheduler().hasTasks()) {
 					System.out.println(Arrays.toString(status.getNodeToCommunity()));
 					finalUpdate = true;
@@ -515,7 +515,7 @@ public class OrcaProgram implements GraphChiProgram<Integer, Integer>, Detection
 					System.out.println(status.getCommunityHierarchy());
 					status.incrementHeight();
 				}
-			}
+			}*/
 		}
 	}
 
