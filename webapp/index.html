@@ -67,9 +67,12 @@
 
                                 <HR data-bind="visible: graph">
 
-                                <input data-bind="visible: graph, value: labelButton, click: toggleLabels" type="button" />
-                                
-                                <HR>
+                                <div data-bind="visible: isBottomLevel">
+                                    Label data: <select data-bind="options: availableNodeData, value: nodeDataChoice"></select>
+                                    <input data-bind="value: labelButton, click: toggleLabels" type="button" />
+                                    
+                                    <HR>
+                                </div>
 
                                 <input data-bind="enable: graph, click: refreshLayout" id="refreshButton" type="button" value="Refresh Display" /> 
                                 <input id="cancelLayout" data-bind="visible: isArborRunning, click: cancelLayout" type="button" value="Cancel layout" /><br>
@@ -92,7 +95,8 @@
 
                             <HR>
 
-                            Choose hierarchy level: <select data-bind="options: availableLevels, value: drillLevel"></select> <br>
+                            Hierarchy view level: <select data-bind="options: availableLevels, value: drillLevel"></select> <br>
+                            Color by level: <select data-bind="options: colourLevels, value: colourLevel"></select> <br>
                             
                             <div id="wholeLevel" data-bind="visible: !hasSelectedCommunity()">
                                 <HR>
@@ -100,7 +104,7 @@
                                 <input data-bind="click: downloadGraph" type="button" value="Download Level" /> <br>
                             </div>
 
-                            <div id="singlCommunity" data-bind="visible: hasSelectedCommunity">
+                            <div id="singleCommunity" data-bind="visible: hasSelectedCommunity">
                                 <HR>
                                 <input data-bind="click: updateGraph, enable: isSmallEnoughToView, disable: isBottomLevel" type="button" value="View Community" />
                                 <input data-bind="click: downloadGraph, disable: isBottomLevel" type="button" value="Download Community" /> <br>

@@ -65,14 +65,30 @@ var viewModel = function() {
     self.availableLevels = ko.computed(function() {
         var levels = [];
         if (self.hasSelectedCommunity()) {
-            for (var i = 0; i < self.currentLevel(); i++) {
+            var i;
+            for (i = 0; i < self.currentLevel(); i++) {
                 levels.push(i);
             }
+            self.drillLevel(i - 1);
         } else {
-            for (var j = 0; j <= self.hierarchyHeight(); j++) {
+            var j;
+            for (j = 0; j <= self.hierarchyHeight(); j++) {
                 levels.push(j);
             }
+            self.drillLevel(j - 1);
         }
+        return levels;
+    });
+
+    self.colourLevel = ko.observable();
+
+    self.colourLevels = ko.computed(function() {
+        var levels = [];
+        var i;
+        for (i = Math.max(self.drillLevel(), 1); i <= self.hierarchyHeight(); i++) {
+            levels.push(i);
+        }
+        self.colourLevel(i - 1);
         return levels;
     });
 
@@ -92,7 +108,7 @@ var viewModel = function() {
                   data: formData,
                   cache: false,
                   success: function(data){
-                    if (data < 100) {
+                    if (data < 200) {
                         self.isSmallEnoughToView(true);
                     } else {
                         self.isSmallEnoughToView(false);
@@ -120,8 +136,33 @@ var viewModel = function() {
     // NODE LABELS -----
     self.hasLabels = ko.observable(false);
 
+    self.resetHasLabels = ko.computed(function() {
+        if (self.graph()) {
+            self.hasLabels(false);
+        }
+    });
+
+    self.nodeDataChoice = ko.observable();
+
+    self.availableNodeData = ko.computed(function() {
+        var options = [];
+        if (self.drillLevel() === 0) {
+            var metadata = self.graph().nodes[0].data.metadata;
+            for (var key in metadata) {
+               options.push(key);
+            }
+        }
+        return options;
+    });
+
     self.labelButton = ko.computed(function() {
         return self.hasLabels() ? 'Hide node labels' : 'Show node labels';
+    });
+
+    self.updateLabels = ko.computed(function() {
+         if (self.hasLabels()) {
+            self.cy().style().selector('node').css('content', 'data(metadata.' + self.nodeDataChoice() + ')').update();
+        }
     });
 
     self.toggleLabels = function() {
@@ -129,7 +170,7 @@ var viewModel = function() {
             self.cy().style().selector('node').css('content', '').update();
             self.hasLabels(false);
         } else {
-            self.cy().style().selector('node').css('content', 'data(id)').update();
+            self.cy().style().selector('node').css('content', 'data(metadata.' + self.nodeDataChoice() + ')').update();
             self.hasLabels(true);
         }
     };
@@ -196,6 +237,7 @@ var viewModel = function() {
 
     self.updateGraph = function() {
         var formData = 'graphLevel=' + encodeURIComponent(self.drillLevel());
+        formData += '&colourLevel=' + encodeURIComponent(self.colourLevel());
         if (self.hasSelectedCommunity()) {
             formData += '&currentLevel=' + encodeURIComponent(self.currentLevel());
             formData += '&selectedNode=' + encodeURIComponent(self.selectedCommunity());

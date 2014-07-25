@@ -9,9 +9,9 @@ public class Node implements Serializable {
 	private String id;
 	private int size;
 	private String colour = "blue";
-	private Map<String, String> metadata;
+	private Map<String, Object> metadata;
 	
-	public Node(String id, Map<String, String> metadata) {
+	public Node(String id, Map<String, Object> metadata) {
 		this.id = id;
 		this.metadata = metadata;
 	}
@@ -19,7 +19,7 @@ public class Node implements Serializable {
 	public Node(String id, int size) {
 		this.id = id;
 		this.size = size;
-		this.setMetadata(new HashMap<String, String>());
+		this.setMetadata(new HashMap<String, Object>());
 	}
 
 	public String getId() {
@@ -42,11 +42,11 @@ public class Node implements Serializable {
 		this.colour = colour;
 	}
 
-	public Map<String, String> getMetadata() {
+	public Map<String, Object> getMetadata() {
 		return metadata;
 	}
 
-	public void setMetadata(Map<String, String> metadata) {
+	public void setMetadata(Map<String, Object> metadata) {
 		this.metadata = metadata;
 	}
 	

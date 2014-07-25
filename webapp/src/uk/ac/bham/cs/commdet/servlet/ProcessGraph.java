@@ -85,7 +85,6 @@ public class ProcessGraph extends HttpServlet {
 				result = GCprogram.run(tempFolderPath + filename + "_fromGML", 1);
 				result.setMapper(mapper);
 				result.writeSortedEdgeLists();
-				
 			} else {
 				result = GCprogram.run(tempFolderPath + filename, 1);
 				result.writeSortedEdgeLists();

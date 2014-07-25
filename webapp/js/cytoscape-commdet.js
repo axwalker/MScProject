@@ -1,14 +1,40 @@
+/*jshint strict: false */
+
 function initCy() {
     var maxSize = viewModel.maxCommunitySize();
     var maxEdge = viewModel.maxEdgeConnection();
+
+    var nodeCss;
+    var edgeCss;
+    var nodeCount = viewModel.graph().nodes.length;
+
+    if (viewModel.currentLevel() !== 0) {
+        nodeCss = {
+            'background-color': 'data(colour)',
+            'height': 'mapData(size, 1, ' + maxSize + ', 2, 30)',
+            'width': 'mapData(size, 1, ' + maxSize + ', 2, 30)'
+        };
+        edgeCss = {
+            'line-color': '#53433F',
+            'width': 'mapData(weight, 1, ' + maxEdge + ', 0.2, 5)'
+        };
+    } else {
+        nodeCss = {
+            'background-color': 'data(colour)',
+            'height': Math.min(750 / nodeCount, 30),
+            'width': Math.min(750 / nodeCount, 30),
+            'font-size': Math.min(750 / nodeCount, 20)
+        };
+        edgeCss = {
+            'line-color': '#53433F',
+            'width': Math.min(18 / nodeCount, 2)
+        };
+    }
+
     var styleOptions = [
             {
                 selector: 'node',
-                css: {
-                    'background-color': 'data(colour)',
-                    'height': 'mapData(size, 1, ' + maxSize + ', 2, 30)',
-                    'width': 'mapData(size, 1, ' + maxSize + ', 2, 30)'
-                }
+                css: nodeCss
             },
             {
                 selector: ':selected',
@@ -20,10 +46,7 @@ function initCy() {
             },
             {
                 selector: 'edge',
-                css: {
-                    'line-color': '#53433F',
-                    'width': 'mapData(weight, 1, ' + maxEdge + ', 0.2, 5)'
-                }
+                css: edgeCss
             }
     ];
 
@@ -46,7 +69,16 @@ function initCy() {
             cy.nodes().qtip({
 				content: {
                     text: function(){ 
-                        return '<b>Size:</b> ' + this.data('size') + '<br>';
+                        var dataText = '';
+                        if (viewModel.currentLevel() === 0 && this.data('metadata')) {
+                            var metadata = this.data('metadata');
+                            for (var key in metadata) {
+                                dataText += '<b>' + key + ':</b> ' + metadata[key] + '<br>';
+                            }
+                        } else {
+                            dataText = '<b>Size:</b> ' + this.data('size') + '<br>';
+                        }
+                        return dataText;
                     }
                 },
 				position: {
@@ -138,7 +170,7 @@ function defaultArborLayout(maxTime) {
         name: 'arbor',
 
         liveUpdate: true, // whether to show the layout as it's running
-        maxSimulationTime: 4000, // max length in ms to run the layout
+        maxSimulationTime: maxTime * 1000, // max length in ms to run the layout
         fit: true, // reset viewport to fit default simulationBounds
         padding: [ 50, 50, 50, 50 ], // top, right, bottom, left
         simulationBounds: undefined, // [x1, y1, x2, y2]; [0, 0, width, height] by default
@@ -149,7 +181,7 @@ function defaultArborLayout(maxTime) {
         stableEnergy: function( energy ){
           var e = energy; 
           return (e.max <= 0.5) || (e.mean <= 0.3) || viewModel.cancelLayoutStatus();
-        }
+        },
 
         ready: function() {
             viewModel.isArborRunning(true);

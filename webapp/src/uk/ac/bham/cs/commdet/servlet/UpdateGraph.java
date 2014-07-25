@@ -27,12 +27,16 @@ public class UpdateGraph extends HttpServlet {
 				GraphResult result = (GraphResult)session.getAttribute("result");
 				GraphJsonGenerator generator = new GraphJsonGenerator(result);
 				int fileLevel = Integer.parseInt(request.getParameter("graphLevel"));
+				int colourLevel = Integer.parseInt(request.getParameter("colourLevel"));
 				if (request.getParameter("selectedNode") != null) {
 					int community = Integer.parseInt(request.getParameter("selectedNode"));
+					if (result.hasMapper()) {
+						community = result.getMapper().getInternalId(community);
+					}
 					int communityLevel = Integer.parseInt(request.getParameter("currentLevel"));
-					responseString = generator.getCommunityJson(community, communityLevel - 1, fileLevel);
+					responseString = generator.getCommunityJson(community, communityLevel - 1, fileLevel, colourLevel);
 				} else {
-					responseString = generator.getGraphJson(fileLevel);
+					responseString = generator.getGraphJson(fileLevel, colourLevel);
 				}
 				logger.info("Response written succesfully");
 			} catch (Exception e) {
