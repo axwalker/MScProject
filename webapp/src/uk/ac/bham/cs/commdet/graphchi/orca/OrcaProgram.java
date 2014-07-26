@@ -570,7 +570,7 @@ public class OrcaProgram implements GraphChiProgram<Integer, Integer>, Detection
 		setupAndRunEngine(baseFilename);
 		String newFilename = baseFilename;
 		//while (contractedGraph.size() > 2) {
-		while (passIndex < 3) {
+		while (passIndex < 2) {
 			System.out.println("PASS INDEX: " + passIndex);
 			finalUpdate = false;
 			passIndex++;
@@ -615,7 +615,7 @@ public class OrcaProgram implements GraphChiProgram<Integer, Integer>, Detection
 
 	public static void main(String[] args) throws Exception {
 		String folder = "sampledata/"; 
-		String file = "karateclub_edg.txt";
+		String file = "test_2core3.txt";
 		OrcaProgram program = new OrcaProgram();
 		GraphResult result = program.run(folder + file, 1);
 		//System.out.println("FINAL MODULARITY: " + program.getModularity());

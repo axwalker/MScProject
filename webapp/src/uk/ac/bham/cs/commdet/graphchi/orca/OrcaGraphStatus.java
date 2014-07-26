@@ -3,6 +3,7 @@ package uk.ac.bham.cs.commdet.graphchi.orca;
 import java.util.*;
 
 import uk.ac.bham.cs.commdet.graphchi.all.Community;
+import uk.ac.bham.cs.commdet.graphchi.all.Edge;
 
 import edu.cmu.graphchi.preprocessing.VertexIdTranslate;
 
@@ -21,6 +22,8 @@ public class OrcaGraphStatus {
 	private Map<Integer, Double> modularities = new HashMap<Integer, Double>();
 	private Map<Integer, List<Integer>> communityHierarchy = new HashMap<Integer, List<Integer>>();
 	private Map<Community, Integer> allCommunitySizes = new HashMap<Community, Integer>();
+	private HashMap<Edge, Integer> contractedGraph = new HashMap<Edge, Integer>();
+	private Set<Integer> communities;
 
 	/*
 	 * must be called after initial single node communities are set, before any further updates.
@@ -96,6 +99,10 @@ public class OrcaGraphStatus {
 		}
 	}
 
+	public int getNodeCount() {
+		return communities.size();
+	}
+	
 	public Map<Integer, Double> getModularities() {
 		return modularities;
 	}
@@ -118,6 +125,10 @@ public class OrcaGraphStatus {
 
 	public void incrementHeight() {
 		hierarchyHeight++;
+	}
+	
+	public int getHierarchyHeight() {
+		return hierarchyHeight;
 	}
 
 	public int[] getNodeToCommunity() {
@@ -174,6 +185,22 @@ public class OrcaGraphStatus {
 
 	public void setTotalGraphWeight(long totalGraphWeight) {
 		this.totalGraphWeight = totalGraphWeight;
+	}
+
+	public HashMap<Edge, Integer> getContractedGraph() {
+		return contractedGraph;
+	}
+
+	public void setContractedGraph(HashMap<Edge, Integer> contractedGraph) {
+		this.contractedGraph = contractedGraph;
+	}
+
+	public Set<Integer> getCommunities() {
+		return communities;
+	}
+
+	public void setCommunities(Set<Integer> communities) {
+		this.communities = communities;
 	}
 
 }
