@@ -61,6 +61,9 @@ function initCy() {
         ready: function(){
             window.cy = this;
 
+            $('#cy').cytoscapeNavigator('destroy');
+            $('#cy').cytoscapeNavigator();
+
             cy.on('click', 'node', function(evt){
                 this.select();
                 viewModel.selectedCommunity(this.data('id'));
@@ -122,7 +125,12 @@ function initCy() {
                     event: 'mouseout'
                 }
 			});
+
         }
+    }).cytoscape(function(){
+        //$('#cy').cytoscapeNavigator();
+        //$('#cy').trigger('resize');
+        //$('#cy').cytoscapeNavigator('resize')
     });
     viewModel.cy($('#cy').cytoscape('get'));
 }

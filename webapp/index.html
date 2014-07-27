@@ -9,6 +9,7 @@
 
         <link rel="stylesheet" href="css/main.css">
         <link rel="stylesheet" href="css/plugins/jquery.qtip.css">
+        <link rel="stylesheet" href="css/plugins/cytoscape.js-navigator.css">
 
         <script src="js/plugins/jquery.min.js"></script>
         <script src="js/plugins/arbor.js"></script>
@@ -16,6 +17,7 @@
         <script src="js/plugins/jquery.qtip.js"></script>
         <script src="js/plugins/cytoscape.js-qtip.js"></script>
         <script src="js/plugins/knockout-3.1.0.js"></script>
+        <script src="js/plugins/cytoscape.js-navigator.js"></script>
     </head>
 
     <body>    
@@ -126,7 +128,42 @@
             </div>
         </div>
         <div class="right col">
-            <div id="cy" data-bind="click: updateSelectedCommunity"></div>
+            <div class="top row">
+                <div id="cy" data-bind="click: updateSelectedCommunity"></div>
+            </div>
+            <div class="bottom row">
+                <div class="table col scroll-y scroll-x">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Id</th>
+                                <!-- ko foreach: tableHeadings -->
+                                    <th data-bind="text: $data"></th>
+                                <!-- /ko -->
+                            </tr>
+                        </thead>
+                        <tbody data-bind="foreach: community">
+                            <tr>
+                                <td data-bind="text: $data.data.id"></td>
+                                <!-- ko foreach: Object.keys($data.data.metadata).map(function (key) {
+                                                    return $data.data.metadata[key];
+                                                }); 
+                                -->                                
+                                    <td data-bind="text: $data"></td>
+                                <!-- /ko -->
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pan col">
+                    <div class="cytoscape-navigator">
+                        <canvas></canvas>
+                        <div class="cytoscape-navigatorView"></div>
+                        <div class="cytoscape-navigatorOverlay"></div>
+                    </div>
+                </div>
+            </div>
+
         </div>
         
         <script src="js/cytoscape-commdet.js"></script>

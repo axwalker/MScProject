@@ -47,6 +47,11 @@ input[type=button]:disabled {
 .right.col { left: 302px; right: 0; }
 .body.row { top: 0px; bottom: 0px; }
 
+.top { bottom: 200px; top: 0px;}
+.bottom { height: 200px; bottom: 0px; }
+.table.col { left: 0px; right: 350px; border-top:1px solid #010F1F; }
+.pan.col { width: 350px; right: 0px; }
+
 fieldset { 
   border-style: none; 
   -webkit-padding-before: 0.0em;

@@ -6,6 +6,20 @@ var viewModel = function() {
     self.status = ko.observable();
     self.graph = ko.observable();
     self.cy = ko.observable();
+    self.community = ko.observableArray();
+
+    self.tableHeadings = ko.observableArray();
+
+    self.computeTableHeadings = ko.computed(function() {
+        var headings = [];
+        if (self.community().length > 0 && self.community()[0].data.metadata) {
+            var metadata = self.community()[0].data.metadata;
+            for (var key in metadata) {
+                headings.push(key);
+            }
+        }
+        self.tableHeadings(headings);
+    });
 
     // RESULTS -----
     self.metadata = ko.computed( function() {
@@ -232,7 +246,7 @@ var viewModel = function() {
     self.uploadGraph = function() {
         self.selectedCommunity(-1);
         var formData = new FormData($('form')[0]);
-        graphRequest('ProcessGraph', formData, false, false);
+        graphRequest('ProcessGraph', formData, false, false, initialiseGraph);
     };
 
     self.updateGraph = function() {
@@ -242,20 +256,42 @@ var viewModel = function() {
             formData += '&currentLevel=' + encodeURIComponent(self.currentLevel());
             formData += '&selectedNode=' + encodeURIComponent(self.selectedCommunity());
         }
+        formData += '&includeEdges=' + encodeURIComponent('true');
         self.selectedCommunity(-1);
-        graphRequest('UpdateGraph', formData, true, 'application/x-www-form-urlencoded');
+        graphRequest('UpdateGraph', formData, true, 'application/x-www-form-urlencoded', initialiseGraph);
     };
 
     self.downloadGraph = function() {
-
+        var formData = 'graphLevel=' + encodeURIComponent(self.drillLevel());
+        formData += '&colourLevel=' + encodeURIComponent(self.colourLevel());
+        if (self.hasSelectedCommunity()) {
+            formData += '&currentLevel=' + encodeURIComponent(self.currentLevel());
+            formData += '&selectedNode=' + encodeURIComponent(self.selectedCommunity());
+        }
+        formData += '&includeEdges=' + encodeURIComponent('true');
+        self.selectedCommunity(-1);
+        window.location = 'DownloadGraph?' + formData;
     };
+
+    self.updateCommunityTable = ko.computed(function() {
+        if (self.hasSelectedCommunity()) {
+            var formData = 'graphLevel=' + encodeURIComponent(0);
+            formData += '&colourLevel=' + encodeURIComponent(self.hierarchyHeight());
+            formData += '&currentLevel=' + encodeURIComponent(self.currentLevel());
+            formData += '&selectedNode=' + encodeURIComponent(self.selectedCommunity());
+            formData += '&includeEdges=' + encodeURIComponent('true');
+            graphRequest('UpdateGraph', formData, true, 'application/x-www-form-urlencoded', setCommunity);
+        } else {
+            self.community([]);
+        }
+    });
 };
 
 viewModel = new viewModel();
 
 ko.applyBindings(viewModel);
 
-var graphRequest = function(url, formData, processData, contentType) {
+var graphRequest = function(url, formData, processData, contentType, dataFunction) {
     $.ajax({
         type: 'POST',
         url: url,
@@ -267,10 +303,7 @@ var graphRequest = function(url, formData, processData, contentType) {
 
         success: function( data, textStatus, jqXHR) {
             if(data.success) {
-                viewModel.status('Graph processed');
-                viewModel.graph(data);
-                //console.log("in success: " + JSON.stringify(data, undefined, 2));
-                initCy(viewModel.graph());
+                dataFunction(data);
             } else {
                 console.log(data.error);
                 viewModel.status('Exception: failed to process graph');
@@ -279,7 +312,7 @@ var graphRequest = function(url, formData, processData, contentType) {
 
         beforeSend: function(jqXHR, settings) {
             $('#uploadButton').attr('disabled', true);
-            viewModel.status('Processing graph...');
+            viewModel.status('Processing...');
         },
 
         complete: function(jqXHR, textStatus){
@@ -288,7 +321,19 @@ var graphRequest = function(url, formData, processData, contentType) {
 
         error: function(jqXHR, textStatus, errorThrown){
             console.log('Something really bad happened ' + textStatus);
-            viewModel.status('Failed to process graph: POST error');
+            viewModel.status('Failed to process: POST error');
         }
     });
+};
+
+var initialiseGraph = function(data) {
+    viewModel.status('Graph processed');
+    viewModel.graph(data);
+    //console.log("in success: " + JSON.stringify(data, undefined, 2));
+    initCy(viewModel.graph());
+};
+
+var setCommunity = function(data) {
+    viewModel.status('Processed');
+    viewModel.community(data.nodes);
 };

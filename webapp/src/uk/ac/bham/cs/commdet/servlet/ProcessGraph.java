@@ -15,7 +15,7 @@ import org.apache.commons.io.FileUtils;
 
 import edu.cmu.graphchi.ChiLogger;
 
-import uk.ac.bham.cs.commdet.cyto.json.GraphJsonGenerator;
+import uk.ac.bham.cs.commdet.cyto.json.GraphGenerator;
 import uk.ac.bham.cs.commdet.gml.GMLMapper;
 import uk.ac.bham.cs.commdet.graphchi.all.DetectionProgram;
 import uk.ac.bham.cs.commdet.graphchi.all.GraphResult;
@@ -90,7 +90,8 @@ public class ProcessGraph extends HttpServlet {
 				result = GCprogram.run(tempFolderPath + filename, 1);
 				result.writeSortedEdgeLists();
 			}
-			GraphJsonGenerator generator = new GraphJsonGenerator(result);
+			GraphGenerator generator = new GraphGenerator(result);
+			generator.setIncludeEdges(true);
 			responseString = generator.getParentGraphJson();
 			logger.info("Response written succesfully for " + filename);
 		} catch (Exception e) {

@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
 
-import uk.ac.bham.cs.commdet.cyto.json.GraphJsonGenerator;
+import uk.ac.bham.cs.commdet.cyto.json.GraphGenerator;
 import uk.ac.bham.cs.commdet.graphchi.all.DetectionProgram;
 import uk.ac.bham.cs.commdet.graphchi.all.Edge;
 import uk.ac.bham.cs.commdet.graphchi.all.GraphResult;
@@ -75,7 +75,7 @@ public class OrcaProgram2 implements DetectionProgram {
 		GraphResult result = program.run(folder + file, 1);
 		//System.out.println("FINAL MODULARITY: " + program.getModularity());
 		result.writeSortedEdgeLists();
-		GraphJsonGenerator generator = new GraphJsonGenerator(result);
+		GraphGenerator generator = new GraphGenerator(result);
 		System.out.println("hierarchy: " + result.getHierarchy());
 		System.out.println(result.getSizes());
 		System.out.println(result.getHeight());
