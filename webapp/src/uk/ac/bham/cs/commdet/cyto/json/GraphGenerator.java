@@ -2,6 +2,7 @@ package uk.ac.bham.cs.commdet.cyto.json;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.*;
 
 import org.apache.commons.io.FileUtils;
@@ -10,6 +11,7 @@ import org.codehaus.jackson.map.SerializationConfig.Feature;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 import uk.ac.bham.cs.commdet.gml.GMLMapper;
+import uk.ac.bham.cs.commdet.gml.GMLWriter;
 import uk.ac.bham.cs.commdet.graphchi.all.Community;
 import uk.ac.bham.cs.commdet.graphchi.all.CommunityEdgePositions;
 import uk.ac.bham.cs.commdet.graphchi.all.GraphResult;
@@ -18,7 +20,7 @@ import uk.ac.bham.cs.commdet.graphchi.all.UndirectedEdge;
 /**
  * Generate JSON strings for a given graph result produced by a graphchi community detection program.
  */
-public class GraphJsonGenerator {
+public class GraphGenerator {
 
 	private GraphResult result;
 	@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
@@ -28,8 +30,9 @@ public class GraphJsonGenerator {
 	private int minCommunitySize = Integer.MAX_VALUE;
 	private int maxEdgeConnection;
 
+	private boolean includeEdges;
 	
-	public GraphJsonGenerator(GraphResult result) {
+	public GraphGenerator(GraphResult result) {
 		this.result = result;
 		this.graph = new Graph();
 	}
@@ -39,19 +42,38 @@ public class GraphJsonGenerator {
 	}
 	
 	public String getGraphJson(int level, int colourLevel) {
+		parseGraph(level, colourLevel);
+		return serializeJson();
+	}
+	
+	public String getCommunityJson(int community, int communityLevel, int fileLevel, int colourLevel) {
+		parseCommunity(community, communityLevel, fileLevel, colourLevel);
+		return serializeJson();
+	}
+	
+	public void outputGraphGML(int level, int colourLevel, final OutputStream graphMLOutputStream) throws IOException {
+		parseGraph(level, colourLevel);
+		GMLWriter.outputGraph(graph, graphMLOutputStream);
+	}
+	
+	public void ouputCommunityGML(int community, int communityLevel, int fileLevel, int colourLevel,
+			final OutputStream graphMLOutputStream) throws IOException {
+		parseCommunity(community, communityLevel, fileLevel, colourLevel);
+		GMLWriter.outputGraph(graph, graphMLOutputStream);
+	}
+	
+	private void parseGraph(int level, int colourLevel) {
 		parseCompoundEdgeFile(result.getFilename(), level);
 		double modularity = (level == 0 ? 0 : result.getModularities().get(level - 1));
 		setMetadata(modularity, level);
 		colourNodes(colourLevel);
-		return serializeGraph();
 	}
 	
-	public String getCommunityJson(int community, int communityLevel, int fileLevel, int colourLevel) {
+	private void parseCommunity(int community, int communityLevel, int fileLevel, int colourLevel) {
 		parseEdgeFile(result.getFilename(), community, communityLevel, fileLevel);
 		double modularity = (fileLevel == 0 ? 0 : result.getModularities().get(fileLevel));
 		setMetadata(modularity, fileLevel);
 		colourNodes(colourLevel);
-		return serializeGraph();
 	}
 	
 	private void colourNodes(int colourLevel) {
@@ -101,7 +123,7 @@ public class GraphJsonGenerator {
 				if (lineIndex >= endIndex) {
 					break;
 				}
-				addNode(fileLevel, line, nodesAdded);
+				addLine(fileLevel, line, nodesAdded);
 				lineIndex++;
 			}
 		} catch (IOException e) {
@@ -120,21 +142,23 @@ public class GraphJsonGenerator {
 		Set<Integer> nodesAdded = new HashSet<Integer>();
 		try {
 			for(String line: FileUtils.readLines(new File(edgeFilename))) {
-				addNode(level, line, nodesAdded);
+				addLine(level, line, nodesAdded);
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 	
-	private void addNode(int level, String line, Set<Integer> nodesAdded) {
+	private void addLine(int level, String line, Set<Integer> nodesAdded) {
 		UndirectedEdge edge = UndirectedEdge.getEdge(line);
 		int source = edge.getSource();
 		int target = edge.getTarget();
 		int weight = edge.getWeight();
-		if (source != target) {
-			graph.getEdges().add(new EdgeData(new Edge(mapNode(source), mapNode(target), weight)));
-			maxEdgeConnection = Math.max(maxEdgeConnection, weight);
+		if (includeEdges) {
+			if (source != target) {
+				graph.getEdges().add(new EdgeData(new Edge(mapNode(source), mapNode(target), weight)));
+				maxEdgeConnection = Math.max(maxEdgeConnection, weight);
+			}
 		}
 		if (!nodesAdded.contains(source)) {
 			int size = (level == 0 ? 1 : result.getSizes().get(new Community(source, level - 1)));
@@ -169,9 +193,9 @@ public class GraphJsonGenerator {
 		}
 	}
 	
-	private String serializeGraph() {
+	private String serializeJson() {
 		ObjectMapper mapper = new ObjectMapper();
-		mapper.getSerializationConfig().enable(Feature.INDENT_OUTPUT);
+		//mapper.getSerializationConfig().enable(Feature.INDENT_OUTPUT);
 		try {
 			return mapper.writeValueAsString(graph);
 		} catch (Exception e) {
@@ -192,5 +216,13 @@ public class GraphJsonGenerator {
 		result = Math.abs(result % (Integer.MAX_VALUE));
 
 		return String.format("#%06X", 0xFFFFFF & result);
+	}
+
+	public boolean isIncludeEdges() {
+		return includeEdges;
+	}
+
+	public void setIncludeEdges(boolean includeEdges) {
+		this.includeEdges = includeEdges;
 	}
 }
