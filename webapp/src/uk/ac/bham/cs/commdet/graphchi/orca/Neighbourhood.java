@@ -7,6 +7,7 @@ public class Neighbourhood {
 	private int seedNode;
 	private Map<Integer, Integer> membersSeenCount;
 	private int totalEdgeWeight;
+	private int edgeCount;
 	
 	public Neighbourhood(int seedNode) {
 		this.seedNode = seedNode;
@@ -57,6 +58,14 @@ public class Neighbourhood {
 		return "Neighbourhood [seedNode=" + seedNode + ", membersSeenCount="
 				+ membersSeenCount + ", totalEdgeWeight=" + totalEdgeWeight
 				+ "]";
+	}
+
+	public int getEdgeCount() {
+		return edgeCount;
+	}
+
+	public void setEdgeCount(int edgeCount) {
+		this.edgeCount = edgeCount;
 	}
 	
 }

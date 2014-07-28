@@ -36,12 +36,21 @@ public class OrcaProgram2 implements DetectionProgram {
 		new TwoCore().run(baseFilename, nShards, status);
 		String newFilename = baseFilename;
 		int nodeCount = status.getNodeCount();
-		while (nodeCount > 2) {
+		while (nodeCount >= 2 && status.getHierarchyHeight() < 10) {
+			int previousNodeCount = nodeCount;
 			status.incrementHeight();
 			newFilename = writeNextLevelEdgeList(newFilename);
 			new DenseRegion().run(newFilename, nShards, status);
 			nodeCount = status.getNodeCount();
 			System.out.println("NODE COUNT: " + nodeCount);
+			
+			/*if (nodeCount > 2 ) { //&& (nodeCount*4 > previousNodeCount)) {
+				status.incrementHeight();
+				newFilename = writeNextLevelEdgeList(newFilename);
+				new TwoCore().run(newFilename, nShards, status);
+				nodeCount = status.getNodeCount();
+				System.out.println("NODE COUNT: " + nodeCount);
+			}*/
 		}
 
 		return new GraphResult(baseFilename, status.getCommunityHierarchy(), 
@@ -87,11 +96,6 @@ public class OrcaProgram2 implements DetectionProgram {
 
 		//System.out.println(Arrays.toString(program.status.getCommunitySize()));
 		//System.out.println(result.getEdgePositions());
-
-		//System.out.println(result.getHierarchy());
-		//FileUtils.moveFile(new File(folder + file), new File(file));
-		//FileUtils.cleanDirectory(new File(folder));
-		//FileUtils.moveFile(new File(file), new File(folder + file));
 	}
 
 }

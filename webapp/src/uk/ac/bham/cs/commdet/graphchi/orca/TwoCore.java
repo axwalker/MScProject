@@ -2,7 +2,6 @@ package uk.ac.bham.cs.commdet.graphchi.orca;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.HashSet;
 
 import uk.ac.bham.cs.commdet.graphchi.all.Edge;
 
@@ -23,14 +22,13 @@ public class TwoCore implements GraphChiProgram<Integer, Integer> {
 
 	private boolean finalUpdate;
 	private OrcaGraphStatus status = new OrcaGraphStatus();
-	private VertexIdTranslate trans;
 
 
 	public synchronized void update(ChiVertex<Integer, Integer> vertex, GraphChiContext context) {
 		if (!twoCoreCompleted && !finalUpdate) {
 			twoCoreUpdate(vertex, context);
 		} else {
-			addToContractedGraph(vertex);
+			addToContractedGraph(vertex, context.getVertexIdTranslate());
 		}
 	}
 
@@ -71,7 +69,7 @@ public class TwoCore implements GraphChiProgram<Integer, Integer> {
 		}
 	}
 
-	private void addToContractedGraph(ChiVertex<Integer, Integer> vertex) {
+	private void addToContractedGraph(ChiVertex<Integer, Integer> vertex, VertexIdTranslate trans) {
 		for (int i = 0; i < vertex.numOutEdges(); i++) {
 			int target = vertex.outEdge(i).getVertexId();
 			int sourceCommunity = status.getNodeToCommunity()[vertex.getId()];
@@ -90,19 +88,8 @@ public class TwoCore implements GraphChiProgram<Integer, Integer> {
 
 	public void beginIteration(GraphChiContext ctx) {
 		if (ctx.getIteration() == 0) {
-			trans = ctx.getVertexIdTranslate();
 			int noOfVertices = (int)ctx.getNumVertices();
-			status.setNodeToCommunity(new int[noOfVertices]);
-			for (int i = 0; i < noOfVertices; i++) {
-				status.getNodeToCommunity()[i] = -1;
-			}
-			status.setCommunityInternalEdges(new int[noOfVertices]);
-			status.setCommunityTotalEdges(new int[noOfVertices]);
-			status.setNodeWeightedDegree(new int[noOfVertices]);
-			status.setNodeSelfLoops(new int[noOfVertices]);
-			status.setTotalGraphWeight(0);
-			status.setCommunitySize(new int[noOfVertices]);
-			status.setCommunities(new HashSet<Integer>());
+			status.setFromNodeCount(noOfVertices);
 			nodeDegree = new int[noOfVertices];
 			contracted = new boolean[noOfVertices];
 		}

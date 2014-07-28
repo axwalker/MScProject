@@ -273,30 +273,4 @@ public class LouvainProgram implements GraphChiProgram<Integer, Integer>, Detect
 		}, new IntConverter(), new IntConverter());
 	}
 
-	/*public static void main(String[] args) throws Exception {
-		String folder = "sampledata/"; 
-		String file = "karateclub_edg.txt";
-		LouvainProgram program = new LouvainProgram();
-		GraphResult result = program.run(folder + file, 1);
-		//System.out.println("FINAL MODULARITY: " + program.getModularity());
-		result.writeSortedEdgeLists();
-		GraphJsonGenerator generator = new GraphJsonGenerator(result);
-		System.out.println("hierarchy: " + result.getHierarchy());
-		System.out.println(result.getSizes());
-		System.out.println(result.getHeight());
-		System.out.println(result.getAllEdgePositions());
-		System.out.println(program.status.getModularities());
-		System.out.println(generator.getCommunityJson(36, 1, 1));
-		//System.out.println(generator.getParentGraphJson());
-		//System.out.println(generator.getGraphJson(1));
-
-		//System.out.println(Arrays.toString(program.status.getCommunitySize()));
-		//System.out.println(result.getEdgePositions());
-
-		//System.out.println(result.getHierarchy());
-		//FileUtils.moveFile(new File(folder + file), new File(file));
-		//FileUtils.cleanDirectory(new File(folder));
-		//FileUtils.moveFile(new File(file), new File(folder + file));
-	}*/
-
 }
