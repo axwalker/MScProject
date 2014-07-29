@@ -61,8 +61,8 @@ function initCy() {
         ready: function(){
             window.cy = this;
 
-            $('#cy').cytoscapeNavigator('destroy');
-            $('#cy').cytoscapeNavigator();
+            //$('#cy').cytoscapeNavigator('destroy');
+            //$('#cy').cytoscapeNavigator();
 
             cy.on('click', 'node', function(evt){
                 this.select();
@@ -127,10 +127,6 @@ function initCy() {
 			});
 
         }
-    }).cytoscape(function(){
-        //$('#cy').cytoscapeNavigator();
-        //$('#cy').trigger('resize');
-        //$('#cy').cytoscapeNavigator('resize')
     });
     viewModel.cy($('#cy').cytoscape('get'));
 }

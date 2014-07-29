@@ -22,7 +22,7 @@ import uk.ac.bham.cs.commdet.graphchi.all.GraphResult;
 import uk.ac.bham.cs.commdet.graphchi.labelprop.LabelPropagationProgram;
 import uk.ac.bham.cs.commdet.graphchi.louvain.LouvainProgram;
 import uk.ac.bham.cs.commdet.graphchi.orca.OrcaProgram;
-import uk.ac.bham.cs.commdet.graphchi.orca.OrcaProgram2;
+import uk.ac.bham.cs.commdet.graphchi.orca.OrcaProgram;
 
 @MultipartConfig
 @WebServlet("/ProcessGraph")
@@ -54,7 +54,7 @@ public class ProcessGraph extends HttpServlet {
 		if (detectionAlgorithm.equals("Louvain Method")){
 			GCprogram = new LouvainProgram();
 		} else if (detectionAlgorithm.equals("ORCA")){
-			GCprogram = new OrcaProgram2();
+			GCprogram = new OrcaProgram();
 		} else {
 			GCprogram = new LabelPropagationProgram();
 		}

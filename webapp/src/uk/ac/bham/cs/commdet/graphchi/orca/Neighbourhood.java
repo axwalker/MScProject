@@ -25,7 +25,11 @@ public class Neighbourhood {
 		}
 	}
 
-	public double getRankValue() {
+	public double getPrimaryRankValue() {
+		return (edgeCount == 0) ? 0 : totalEdgeWeight / edgeCount;
+	}
+	
+	public double getSecondaryRankValue() {
 		return totalEdgeWeight / membersSeenCount.size();
 	}
 	
