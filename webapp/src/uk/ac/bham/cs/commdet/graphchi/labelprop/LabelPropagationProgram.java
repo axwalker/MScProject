@@ -10,10 +10,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import uk.ac.bham.cs.commdet.graphchi.all.DetectionProgram;
-import uk.ac.bham.cs.commdet.graphchi.all.Edge;
 import uk.ac.bham.cs.commdet.graphchi.all.GraphResult;
-
-import edu.cmu.graphchi.*;
+import uk.ac.bham.cs.commdet.graphchi.all.GraphStatus;
+import uk.ac.bham.cs.commdet.graphchi.all.UndirectedEdge;
+import edu.cmu.graphchi.ChiVertex;
+import edu.cmu.graphchi.GraphChiContext;
+import edu.cmu.graphchi.GraphChiProgram;
 import edu.cmu.graphchi.datablocks.IntConverter;
 import edu.cmu.graphchi.engine.GraphChiEngine;
 import edu.cmu.graphchi.engine.VertexInterval;
@@ -25,8 +27,8 @@ import edu.cmu.graphchi.preprocessing.VertexProcessor;
 public class LabelPropagationProgram implements GraphChiProgram<Integer, Integer>, DetectionProgram  {
 	
 	private boolean finalUpdate;
-	private LabelGraphStatus status = new LabelGraphStatus();
-	private HashMap<Edge, Integer> contractedGraph = new HashMap<Edge, Integer>();
+	private GraphStatus status = new GraphStatus();
+	private HashMap<UndirectedEdge, Integer> contractedGraph = new HashMap<UndirectedEdge, Integer>();
 	private VertexIdTranslate trans;
 
 	@Override
@@ -96,7 +98,7 @@ public class LabelPropagationProgram implements GraphChiProgram<Integer, Integer
 			if (sourceCommunity != targetCommunity) {
 				int actualSourceCommunity = trans.backward(sourceCommunity);
 				int actualTargetCommunity = trans.backward(targetCommunity);
-				Edge edge = new Edge(actualSourceCommunity, actualTargetCommunity);
+				UndirectedEdge edge = new UndirectedEdge(actualSourceCommunity, actualTargetCommunity);
 				if (contractedGraph.containsKey(edge)) {
 					int oldWeight = contractedGraph.get(edge);
 					contractedGraph.put(edge, oldWeight + weight);
@@ -129,11 +131,11 @@ public class LabelPropagationProgram implements GraphChiProgram<Integer, Integer
 	
 	public void endIteration(GraphChiContext ctx) {
 		if (ctx.getIteration() == 0) {
-			status.setVertexTrans(ctx.getVertexIdTranslate());
+			status.setOriginalVertexTrans(ctx.getVertexIdTranslate());
+			status.setUpdatedVertexTrans(ctx.getVertexIdTranslate());
 			status.initialiseCommunitiesMap();
 		}
 		if (!finalUpdate && !ctx.getScheduler().hasTasks()) {
-			//status.getModularities().put(0, -1.);
 			ctx.getScheduler().addAllTasks();
 			finalUpdate = true;
 			status.updateSizesMap();
@@ -180,12 +182,12 @@ public class LabelPropagationProgram implements GraphChiProgram<Integer, Integer
 		String newFilename = baseFilename + "_pass_" + 1;
 
 		BufferedWriter bw = new BufferedWriter(new FileWriter(newFilename));
-		for (Entry<Edge, Integer> entry : contractedGraph.entrySet()) {
-			bw.write(entry.getKey().toString() + " " + entry.getValue() + "\n");
+		for (Entry<UndirectedEdge, Integer> entry : contractedGraph.entrySet()) {
+			bw.write(entry.getKey().toStringWeightless() + " " + entry.getValue() + "\n");
 		}
 		bw.close();
 
-		contractedGraph = new HashMap<Edge, Integer>();
+		contractedGraph = new HashMap<UndirectedEdge, Integer>();
 		return newFilename;
 	}
 

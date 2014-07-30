@@ -1,12 +1,11 @@
-package uk.ac.bham.cs.commdet.graphchi.louvain;
+package uk.ac.bham.cs.commdet.graphchi.all;
 
 import java.util.*;
 
-import uk.ac.bham.cs.commdet.graphchi.all.Community;
 
 import edu.cmu.graphchi.preprocessing.VertexIdTranslate;
 
-public class LouvainGraphStatus {
+public class GraphStatus {
 
 	private int[] nodeToCommunity;
 	private int[] communityInternalEdges;
@@ -14,6 +13,7 @@ public class LouvainGraphStatus {
 	private int[] nodeWeightedDegree;
 	private int[] nodeSelfLoops;
 	private int[] communitySize;
+	private int[] communitySizeAtThisLevel;
 	private long totalGraphWeight;
 	private int hierarchyHeight = 0;
 	private VertexIdTranslate originalVertexTrans;
@@ -21,6 +21,8 @@ public class LouvainGraphStatus {
 	private Map<Integer, Double> modularities = new HashMap<Integer, Double>();
 	private Map<Integer, List<Integer>> communityHierarchy = new HashMap<Integer, List<Integer>>();
 	private Map<Community, Integer> allCommunitySizes = new HashMap<Community, Integer>();
+	private HashMap<UndirectedEdge, Integer> contractedGraph = new HashMap<UndirectedEdge, Integer>();
+	private Set<Integer> communities;
 
 	/*
 	 * must be called after initial single node communities are set, before any further updates.
@@ -54,7 +56,7 @@ public class LouvainGraphStatus {
 					int previousCommunityGcId = updatedVertexTrans.forward(previousCommunity);
 					int latestCommunityGcId = nodeToCommunity[previousCommunityGcId];
 					if (updatedVertexTrans.backward(latestCommunityGcId) == -1) {
-						System.out.println("This is not a connected graph");
+						System.out.println("This is not a connected graph: " + previousCommunityGcId);
 						/* this happens when graph is not connected, resulting in single disjoint communities,
 						 * therefore community will simply remain the same
 						 */
@@ -77,6 +79,40 @@ public class LouvainGraphStatus {
 			}
 		}
 	}
+
+	public void insertNodeIntoCommunity(int nodeId, int communityId) {
+		nodeToCommunity[nodeId] = communityId;
+		if (hierarchyHeight == 0) {
+			communitySize[communityId]++;
+		} else {
+			communitySize[communityId] += allCommunitySizes.get(new Community(updatedVertexTrans.backward(nodeId), hierarchyHeight - 1));
+		}
+		communitySizeAtThisLevel[communityId]++;
+	}
+
+	public void removeNodeFromCommunity(int nodeId, int communityId) {
+		nodeToCommunity[nodeId] = -1;
+		if (hierarchyHeight == 0) {
+			communitySize[communityId]--;
+		} else {
+			communitySize[communityId] -= allCommunitySizes.get(new Community(updatedVertexTrans.backward(nodeId), hierarchyHeight - 1));
+		}
+		communitySizeAtThisLevel[communityId]--;
+	}
+	
+	public void setFromNodeCount(int noOfVertices) {
+		nodeToCommunity = new int[noOfVertices];
+		for (int i = 0; i < noOfVertices; i++) {
+			nodeToCommunity[i] = -1;
+		}
+		communityInternalEdges = new int[noOfVertices];
+		communityTotalEdges = new int[noOfVertices];
+		nodeWeightedDegree = new int[noOfVertices];
+		nodeSelfLoops = new int[noOfVertices];
+		communitySize = new int[noOfVertices];
+		communitySizeAtThisLevel = new int[noOfVertices];
+		communities = new HashSet<Integer>();
+	}
 	
 	public void updateModularity(int level) {
 		double q = 0.;
@@ -88,7 +124,15 @@ public class LouvainGraphStatus {
 		}
 		modularities.put(level, q);
 	}
+	
+	public int nodeSize(int node) {
+		return allCommunitySizes.get(new Community(updatedVertexTrans.backward(node), hierarchyHeight - 1));
+	}
 
+	public int getNodeCount() {
+		return communities.size();
+	}
+	
 	public Map<Integer, Double> getModularities() {
 		return modularities;
 	}
@@ -111,6 +155,10 @@ public class LouvainGraphStatus {
 
 	public void incrementHeight() {
 		hierarchyHeight++;
+	}
+	
+	public int getHierarchyHeight() {
+		return hierarchyHeight;
 	}
 
 	public int[] getNodeToCommunity() {
@@ -167,6 +215,30 @@ public class LouvainGraphStatus {
 
 	public void setTotalGraphWeight(long totalGraphWeight) {
 		this.totalGraphWeight = totalGraphWeight;
+	}
+
+	public HashMap<UndirectedEdge, Integer> getContractedGraph() {
+		return contractedGraph;
+	}
+
+	public void setContractedGraph(HashMap<UndirectedEdge, Integer> contractedGraph) {
+		this.contractedGraph = contractedGraph;
+	}
+
+	public Set<Integer> getCommunities() {
+		return communities;
+	}
+
+	public void setCommunities(Set<Integer> communities) {
+		this.communities = communities;
+	}
+
+	public int[] getCommunitySizeAtThisLevel() {
+		return communitySizeAtThisLevel;
+	}
+
+	public void setCommunitySizeAtThisLevel(int[] communitySizeAtThisLevel) {
+		this.communitySizeAtThisLevel = communitySizeAtThisLevel;
 	}
 
 }

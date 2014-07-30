@@ -8,8 +8,9 @@ import java.util.Map.Entry;
 
 import uk.ac.bham.cs.commdet.cyto.json.GraphGenerator;
 import uk.ac.bham.cs.commdet.graphchi.all.DetectionProgram;
-import uk.ac.bham.cs.commdet.graphchi.all.Edge;
 import uk.ac.bham.cs.commdet.graphchi.all.GraphResult;
+import uk.ac.bham.cs.commdet.graphchi.all.GraphStatus;
+import uk.ac.bham.cs.commdet.graphchi.all.UndirectedEdge;
 
 import edu.cmu.graphchi.datablocks.IntConverter;
 import edu.cmu.graphchi.preprocessing.EdgeProcessor;
@@ -18,7 +19,7 @@ import edu.cmu.graphchi.preprocessing.VertexProcessor;
 
 public class OrcaProgram implements DetectionProgram {
 
-	private OrcaGraphStatus status = new OrcaGraphStatus();
+	private GraphStatus status = new GraphStatus();
 
 	protected static FastSharder createSharder(String graphName, int numShards) throws IOException {
 		return new FastSharder<Integer, Integer>(graphName, numShards, new VertexProcessor<Integer>() {
@@ -59,12 +60,12 @@ public class OrcaProgram implements DetectionProgram {
 
 		BufferedWriter bw = new BufferedWriter(new FileWriter(newFilename));
 		System.out.println("Contracted graph: " + status.getContractedGraph());
-		for (Entry<Edge, Integer> entry : status.getContractedGraph().entrySet()) {
-			bw.write(entry.getKey().toString() + " " + entry.getValue() + "\n");
+		for (Entry<UndirectedEdge, Integer> entry : status.getContractedGraph().entrySet()) {
+			bw.write(entry.getKey().toStringWeightless() + " " + entry.getValue() + "\n");
 		}
 		bw.close();
 
-		status.setContractedGraph(new HashMap<Edge, Integer>());
+		status.setContractedGraph(new HashMap<UndirectedEdge, Integer>());
 		return newFilename;
 	}
 

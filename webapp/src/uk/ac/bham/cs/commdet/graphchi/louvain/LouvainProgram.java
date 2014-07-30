@@ -6,15 +6,18 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import uk.ac.bham.cs.commdet.graphchi.all.Community;
 import uk.ac.bham.cs.commdet.graphchi.all.DetectionProgram;
-import uk.ac.bham.cs.commdet.graphchi.all.Edge;
 import uk.ac.bham.cs.commdet.graphchi.all.GraphResult;
-
-import edu.cmu.graphchi.*;
+import uk.ac.bham.cs.commdet.graphchi.all.GraphStatus;
+import uk.ac.bham.cs.commdet.graphchi.all.UndirectedEdge;
+import edu.cmu.graphchi.ChiVertex;
+import edu.cmu.graphchi.GraphChiContext;
+import edu.cmu.graphchi.GraphChiProgram;
 import edu.cmu.graphchi.datablocks.IntConverter;
 import edu.cmu.graphchi.engine.GraphChiEngine;
 import edu.cmu.graphchi.engine.VertexInterval;
@@ -32,8 +35,8 @@ public class LouvainProgram implements GraphChiProgram<Integer, Integer>, Detect
 	private boolean improvedOnPass;
 	private double iterationModularityImprovement;
 	private boolean finalUpdate;
-	private LouvainGraphStatus status = new LouvainGraphStatus();
-	private HashMap<Edge, Integer> contractedGraph = new HashMap<Edge, Integer>();
+	private GraphStatus status = new GraphStatus();
+	private HashMap<UndirectedEdge, Integer> contractedGraph = new HashMap<UndirectedEdge, Integer>();
 	private VertexIdTranslate trans;
 
 	public synchronized void update(ChiVertex<Integer, Integer> vertex, GraphChiContext context) {
@@ -154,7 +157,7 @@ public class LouvainProgram implements GraphChiProgram<Integer, Integer>, Detect
 		int node = vertex.getId();
 		if (status.getCommunityInternalEdges()[node] > 0) {
 			int actualNode = trans.backward(node);
-			contractedGraph.put(new Edge(actualNode, actualNode), status.getCommunityInternalEdges()[node]/2);
+			contractedGraph.put(new UndirectedEdge(actualNode, actualNode), status.getCommunityInternalEdges()[node]/2);
 		}
 		for (int i = 0; i < vertex.numOutEdges(); i++) {
 			int target = vertex.outEdge(i).getVertexId();
@@ -164,7 +167,7 @@ public class LouvainProgram implements GraphChiProgram<Integer, Integer>, Detect
 				int actualSourceCommunity = trans.backward(sourceCommunity);
 				int actualTargetCommunity = trans.backward(targetCommunity);
 				int weight = vertex.outEdge(i).getValue();
-				Edge edge = new Edge(actualSourceCommunity, actualTargetCommunity);
+				UndirectedEdge edge = new UndirectedEdge(actualSourceCommunity, actualTargetCommunity);
 				if (contractedGraph.containsKey(edge)) {
 					int oldWeight = contractedGraph.get(edge);
 					contractedGraph.put(edge, oldWeight + weight);
@@ -252,12 +255,12 @@ public class LouvainProgram implements GraphChiProgram<Integer, Integer>, Detect
 		String newFilename = base + "_pass_" + passIndex;
 
 		BufferedWriter bw = new BufferedWriter(new FileWriter(newFilename));
-		for (Entry<Edge, Integer> entry : contractedGraph.entrySet()) {
-			bw.write(entry.getKey().toString() + " " + entry.getValue() + "\n");
+		for (Entry<UndirectedEdge, Integer> entry : contractedGraph.entrySet()) {
+			bw.write(entry.getKey().toStringWeightless() + " " + entry.getValue() + "\n");
 		}
 		bw.close();
 
-		contractedGraph = new HashMap<Edge, Integer>();
+		contractedGraph = new HashMap<UndirectedEdge, Integer>();
 		return newFilename;
 	}
 	

@@ -3,9 +3,11 @@ package uk.ac.bham.cs.commdet.graphchi.orca;
 import java.io.File;
 import java.io.FileInputStream;
 
-import uk.ac.bham.cs.commdet.graphchi.all.Edge;
-
-import edu.cmu.graphchi.*;
+import uk.ac.bham.cs.commdet.graphchi.all.GraphStatus;
+import uk.ac.bham.cs.commdet.graphchi.all.UndirectedEdge;
+import edu.cmu.graphchi.ChiVertex;
+import edu.cmu.graphchi.GraphChiContext;
+import edu.cmu.graphchi.GraphChiProgram;
 import edu.cmu.graphchi.datablocks.IntConverter;
 import edu.cmu.graphchi.engine.GraphChiEngine;
 import edu.cmu.graphchi.engine.VertexInterval;
@@ -21,7 +23,7 @@ public class TwoCore implements GraphChiProgram<Integer, Integer> {
 	private boolean contracted[];
 
 	private boolean finalUpdate;
-	private OrcaGraphStatus status = new OrcaGraphStatus();
+	private GraphStatus status = new GraphStatus();
 
 
 	public synchronized void update(ChiVertex<Integer, Integer> vertex, GraphChiContext context) {
@@ -72,18 +74,22 @@ public class TwoCore implements GraphChiProgram<Integer, Integer> {
 	private void addToContractedGraph(ChiVertex<Integer, Integer> vertex, VertexIdTranslate trans) {
 		for (int i = 0; i < vertex.numOutEdges(); i++) {
 			int target = vertex.outEdge(i).getVertexId();
+			int weight = vertex.outEdge(i).getValue();
 			int sourceCommunity = status.getNodeToCommunity()[vertex.getId()];
 			int targetCommunity = status.getNodeToCommunity()[target];
 			status.getCommunities().add(sourceCommunity);
 			status.getCommunities().add(targetCommunity);
+			status.setTotalGraphWeight(status.getTotalGraphWeight() + 2*weight);
 			if (sourceCommunity != targetCommunity) {
 				int actualSourceCommunity = trans.backward(sourceCommunity);
 				int actualTargetCommunity = trans.backward(targetCommunity);
-				int weight = vertex.outEdge(i).getValue();
-				Edge edge = new Edge(actualSourceCommunity, actualTargetCommunity);
+				UndirectedEdge edge = new UndirectedEdge(actualSourceCommunity, actualTargetCommunity);
 				status.getContractedGraph().put(edge, weight);
 			}
 		}
+		
+		//int communitySelfLoops = status.getCommunitySizeAtThisLevel()[vertex.getId()] - 1;
+		//vertex.setValue(communitySelfLoops);
 	}
 
 	public void beginIteration(GraphChiContext ctx) {
@@ -113,7 +119,7 @@ public class TwoCore implements GraphChiProgram<Integer, Integer> {
 			finalUpdate = true;
 			twoCoreCompleted = true;
 			ctx.getScheduler().addAllTasks();
-			status.getModularities().put(status.getHierarchyHeight(), -1.);
+			status.getModularities().put(status.getHierarchyHeight(), 0.);
 			status.updateSizesMap();
 			status.updateCommunitiesMap();
 		}
@@ -124,7 +130,7 @@ public class TwoCore implements GraphChiProgram<Integer, Integer> {
 	public void beginSubInterval(GraphChiContext ctx, VertexInterval interval) {}
 	public void endSubInterval(GraphChiContext ctx, VertexInterval interval) {}
 
-	public void run(String filename, int nShards, OrcaGraphStatus status) throws  Exception {
+	public void run(String filename, int nShards, GraphStatus status) throws  Exception {
 		this.status = status;
 		FastSharder sharder = OrcaProgram.createSharder(filename, 1);
 		sharder.shard(new FileInputStream(new File(filename)), "edgelist");

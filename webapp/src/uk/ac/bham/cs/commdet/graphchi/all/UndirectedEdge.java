@@ -16,6 +16,11 @@ public class UndirectedEdge {
 	int target;
 	int weight;
 	 
+	public UndirectedEdge(int node1, int node2) {
+		this.source = Math.min(node1, node2);
+		this.target = Math.max(node1, node2);
+	}
+	
 	public UndirectedEdge(int node1, int node2, int weight) {
 		this.source = Math.min(node1, node2);
 		this.target = Math.max(node1, node2);
@@ -79,6 +84,10 @@ public class UndirectedEdge {
 		if (source != other.source)
 			return false;
 		return true;
+	}
+	
+	public String toStringWeightless() {
+		return source + " " + target;
 	}
 
 	@Override
