@@ -145,7 +145,7 @@ public class DenseRegion implements GraphChiProgram<Integer, Integer> {
 	}
 
 	private void assignNodesToCommunities() {
-		while(!denseRegionsRanked.isEmpty()) {
+		/*while(!denseRegionsRanked.isEmpty()) {
 			Neighbourhood neighbourhood = denseRegionsRanked.poll();
 			int label = neighbourhood.getSeedNode();
 			//flag that seed node is already assigned elsewhere and new label is therefore needed
@@ -157,11 +157,11 @@ public class DenseRegion implements GraphChiProgram<Integer, Integer> {
 					status.insertNodeIntoCommunity(member, label);
 				}
 			}
-		}
+		}*/
 	}
 
 	private void contractSingleNode(ChiVertex<Integer, Integer> vertex, GraphChiContext context) {
-		//*
+		/*
 		if (status.getCommunitySizeAtThisLevel()[vertex.getId()] == 1) {
 
 			//System.out.println("!!!!!!CONTRACTING NODE: " + vertex.getId());
@@ -207,7 +207,7 @@ public class DenseRegion implements GraphChiProgram<Integer, Integer> {
 	}
 
 	private void addToContractedGraph(ChiVertex<Integer, Integer> vertex, VertexIdTranslate trans) {
-		for (int i = 0; i < vertex.numOutEdges(); i++) {
+		/*for (int i = 0; i < vertex.numOutEdges(); i++) {
 			int target = vertex.outEdge(i).getVertexId();
 			int sourceCommunity = status.getNodeToCommunity()[vertex.getId()];
 			int targetCommunity = status.getNodeToCommunity()[target];
@@ -227,13 +227,13 @@ public class DenseRegion implements GraphChiProgram<Integer, Integer> {
 					status.getContractedGraph().put(edge, weight);
 				}
 			}
-		}
+		}*/
 	}
 
 	public void beginIteration(GraphChiContext ctx) {
 		if (ctx.getIteration() == ADD_INITIAL) {
 			int noOfVertices = (int)ctx.getNumVertices();
-			status.setFromNodeCount(noOfVertices);
+			//status.setFromNodeCount(noOfVertices);
 
 			pathsWithinD = new HashMap<Integer, Map<Integer, Path>>();
 			neighbourhoods = new HashMap<Integer, Neighbourhood>();
@@ -283,10 +283,10 @@ public class DenseRegion implements GraphChiProgram<Integer, Integer> {
 		while(iterator.hasNext()) {
 			UndirectedEdge edge = iterator.next();
 			int interCommunityEdgeWeight = status.getContractedGraph().get(edge);
-			int sourceSize = status.getCommunitySizeAtThisLevel()[edge.getSource()];
-			int targetSize = status.getCommunitySizeAtThisLevel()[edge.getTarget()];
-			int averageAdjacency = interCommunityEdgeWeight / (sourceSize + targetSize);
-			status.getContractedGraph().put(edge, Math.max(1, averageAdjacency));
+			//int sourceSize = status.getCommunitySizeAtThisLevel()[edge.getSource()];
+			//int targetSize = status.getCommunitySizeAtThisLevel()[edge.getTarget()];
+			//int averageAdjacency = interCommunityEdgeWeight / (sourceSize + targetSize);
+			//status.getContractedGraph().put(edge, Math.max(1, averageAdjacency));
 		}
 	}
 

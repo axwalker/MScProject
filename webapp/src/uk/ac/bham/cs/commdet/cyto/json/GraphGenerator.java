@@ -25,13 +25,13 @@ public class GraphGenerator {
 	private GraphResult result;
 	@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 	private Graph graph;
-	
+
 	private int maxCommunitySize;
 	private int minCommunitySize = Integer.MAX_VALUE;
 	private int maxEdgeConnection;
 
 	private boolean includeEdges;
-	
+
 	public GraphGenerator(GraphResult result) {
 		this.result = result;
 		this.graph = new Graph();
@@ -40,54 +40,59 @@ public class GraphGenerator {
 	public String getParentGraphJson() {
 		return getGraphJson(result.getHeight(), result.getHeight());
 	}
-	
+
 	public String getGraphJson(int level, int colourLevel) {
 		parseGraph(level, colourLevel);
 		return serializeJson();
 	}
-	
+
 	public String getCommunityJson(int community, int communityLevel, int fileLevel, int colourLevel) {
 		parseCommunity(community, communityLevel, fileLevel, colourLevel);
 		return serializeJson();
 	}
-	
+
 	public void outputGraphGML(int level, int colourLevel, final OutputStream graphMLOutputStream) throws IOException {
 		parseGraph(level, colourLevel);
 		GMLWriter.outputGraph(graph, graphMLOutputStream);
 	}
-	
+
 	public void ouputCommunityGML(int community, int communityLevel, int fileLevel, int colourLevel,
 			final OutputStream graphMLOutputStream) throws IOException {
 		parseCommunity(community, communityLevel, fileLevel, colourLevel);
 		GMLWriter.outputGraph(graph, graphMLOutputStream);
 	}
-	
+
 	private void parseGraph(int level, int colourLevel) {
 		parseCompoundEdgeFile(result.getFilename(), level);
 		double modularity = (level == 0 ? 0 : result.getModularities().get(level - 1));
 		setMetadata(modularity, level);
-		colourNodes(colourLevel);
+		colourNodes(level, colourLevel);
 	}
-	
+
 	private void parseCommunity(int community, int communityLevel, int fileLevel, int colourLevel) {
 		parseEdgeFile(result.getFilename(), community, communityLevel, fileLevel);
 		double modularity = (fileLevel == 0 ? 0 : result.getModularities().get(fileLevel));
 		setMetadata(modularity, fileLevel);
-		colourNodes(colourLevel);
+		colourNodes(fileLevel, colourLevel);
 	}
-	
-	private void colourNodes(int colourLevel) {
+
+	private void colourNodes(int level, int colourLevel) {
 		for (NodeData nodeData : graph.getNodes()) {
 			Node node = nodeData.getData();
 			int nodeId = Integer.parseInt(node.getId());
 			if (result.hasMapper()) {
 				nodeId = result.getMapper().getInternalId(nodeId);
 			}
-			int parentId = result.getHierarchy().get(nodeId).get(colourLevel - 1);
+			int parentId;
+			if (level == result.getHeight()) {
+				parentId = nodeId;
+			} else {
+				parentId = result.getHierarchy().get(nodeId).get(colourLevel - 1);
+			}
 			node.setColour(getColour(parentId + ""));
 		}
 	}
-	
+
 	private void setMetadata(double modularity, int level) {
 		Metadata metadata = graph.getMetadata();
 		metadata.setModularity(modularity);
@@ -99,7 +104,7 @@ public class GraphGenerator {
 		metadata.setMaxCommunitySize(maxCommunitySize);
 		metadata.setMinCommunitySize(minCommunitySize);
 	}
-	
+
 	/**
 	 * 
 	 * @param baseFilename  the original base name of the graphs's edgelist file
@@ -130,7 +135,7 @@ public class GraphGenerator {
 			e.printStackTrace();
 		}
 	}
-	
+
 	/**
 	 * 
 	 * @param baseFilename the original base name of the graphs's edgelist file
@@ -138,7 +143,7 @@ public class GraphGenerator {
 	 */
 	private void parseCompoundEdgeFile(String baseFilename, int level) {
 		String edgeFilename = baseFilename + (level == 0 ? "" : "_pass_" + (level));
-		
+
 		Set<Integer> nodesAdded = new HashSet<Integer>();
 		try {
 			for(String line: FileUtils.readLines(new File(edgeFilename))) {
@@ -148,7 +153,7 @@ public class GraphGenerator {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private void addLine(int level, String line, Set<Integer> nodesAdded) {
 		UndirectedEdge edge = UndirectedEdge.getEdge(line);
 		int source = edge.getSource();
@@ -192,7 +197,7 @@ public class GraphGenerator {
 			return node + "";
 		}
 	}
-	
+
 	private String serializeJson() {
 		ObjectMapper mapper = new ObjectMapper();
 		//mapper.getSerializationConfig().enable(Feature.INDENT_OUTPUT);
@@ -203,7 +208,7 @@ public class GraphGenerator {
 			return "unsuccessful";
 		}
 	}
-	
+
 	//http://stackoverflow.com/questions/3816466/evenly-distributed-hash-function
 	private static String getColour(String id) {
 		char[] chars = id.toCharArray();

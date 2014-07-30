@@ -40,7 +40,7 @@ public class TwoCore implements GraphChiProgram<Integer, Integer> {
 			if (context.getIteration() == 0) {
 				degree = vertex.numEdges();
 				nodeDegree[vertex.getId()] = degree;
-				status.insertNodeIntoCommunity(vertex.getId(), vertex.getId());
+				//status.insertNodeIntoCommunity(vertex.getId(), vertex.getId());
 				context.getScheduler().addTask(vertex.getId());
 			} else {
 				degree = nodeDegree[vertex.getId()];
@@ -60,9 +60,9 @@ public class TwoCore implements GraphChiProgram<Integer, Integer> {
 				for (int i = 0; i < vertex.numEdges(); i++) {
 					int neighbourId = vertex.edge(i).getVertexId();
 					if (contracted[neighbourId]) {
-						int thisCommunity = status.getNodeToCommunity()[vertex.getId()];
-						status.removeNodeFromCommunity(neighbourId, neighbourId);
-						status.insertNodeIntoCommunity(neighbourId, thisCommunity);
+						//int thisCommunity = status.getNodeToCommunity()[vertex.getId()];
+						//status.removeNodeFromCommunity(neighbourId, neighbourId);
+						//status.insertNodeIntoCommunity(neighbourId, thisCommunity);
 						contracted[neighbourId] = false; //to prevent looping round adding tasks infintely
 						context.getScheduler().addTask(neighbourId);
 					}
@@ -72,7 +72,7 @@ public class TwoCore implements GraphChiProgram<Integer, Integer> {
 	}
 
 	private void addToContractedGraph(ChiVertex<Integer, Integer> vertex, VertexIdTranslate trans) {
-		for (int i = 0; i < vertex.numOutEdges(); i++) {
+		/*for (int i = 0; i < vertex.numOutEdges(); i++) {
 			int target = vertex.outEdge(i).getVertexId();
 			int weight = vertex.outEdge(i).getValue();
 			int sourceCommunity = status.getNodeToCommunity()[vertex.getId()];
@@ -86,7 +86,7 @@ public class TwoCore implements GraphChiProgram<Integer, Integer> {
 				UndirectedEdge edge = new UndirectedEdge(actualSourceCommunity, actualTargetCommunity);
 				status.getContractedGraph().put(edge, weight);
 			}
-		}
+		}*/
 		
 		//int communitySelfLoops = status.getCommunitySizeAtThisLevel()[vertex.getId()] - 1;
 		//vertex.setValue(communitySelfLoops);
@@ -95,7 +95,7 @@ public class TwoCore implements GraphChiProgram<Integer, Integer> {
 	public void beginIteration(GraphChiContext ctx) {
 		if (ctx.getIteration() == 0) {
 			int noOfVertices = (int)ctx.getNumVertices();
-			status.setFromNodeCount(noOfVertices);
+			//status.setFromNodeCount(noOfVertices);
 			nodeDegree = new int[noOfVertices];
 			contracted = new boolean[noOfVertices];
 		}

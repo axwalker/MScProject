@@ -11,6 +11,30 @@ public class Community {
 	public Community(int seedNode) {
 		this.seedNode = seedNode;
 	}
+	
+	public void increaseInternalEdges(int increase) {
+		this.internalEdges += increase;
+	}
+	
+	public void decreaseInternalEdges(int decrease) {
+		this.internalEdges -= decrease;
+	}
+	
+	public void increaseTotalEdges(int increase) {
+		this.totalEdges += increase;
+	}
+	
+	public void decreaseTotalEdges(int decrease) {
+		this.totalEdges -= decrease;
+	}
+	
+	public void increaseTotalSize(int increase) {
+		this.totalSize += increase;
+	}
+	
+	public void decreaseTotalSize(int decrease) {
+		this.totalSize -= decrease;
+	}
 
 	public int getSeedNode() {
 		return seedNode;
@@ -51,6 +75,12 @@ public class Community {
 	public void setLevelSize(int levelSize) {
 		this.levelSize = levelSize;
 	}
-	
+
+	@Override
+	public String toString() {
+		return "Community [seedNode=" + seedNode + ", internalEdges="
+				+ internalEdges + ", totalEdges=" + totalEdges + ", totalSize="
+				+ totalSize + ", levelSize=" + levelSize + "]";
+	}
 	
 }

@@ -15,6 +15,7 @@ import uk.ac.bham.cs.commdet.graphchi.all.CommunityIdentity;
 import uk.ac.bham.cs.commdet.graphchi.all.DetectionProgram;
 import uk.ac.bham.cs.commdet.graphchi.all.GraphResult;
 import uk.ac.bham.cs.commdet.graphchi.all.GraphStatus;
+import uk.ac.bham.cs.commdet.graphchi.all.Node;
 import uk.ac.bham.cs.commdet.graphchi.all.UndirectedEdge;
 import edu.cmu.graphchi.ChiVertex;
 import edu.cmu.graphchi.GraphChiContext;
@@ -46,21 +47,18 @@ public class LouvainProgram implements GraphChiProgram<Integer, Integer>, Detect
 		} else if (finalUpdate) {
 			addToContractedGraph(vertex);
 		} else {
-			int node = vertex.getId();
-			int nodeCommunity = status.getNodeToCommunity()[node];
+			Node node = status.getNodes()[vertex.getId()];
+			Community community = status.getNodeToCommunityMap()[vertex.getId()];
+			Map<Community, Integer> neighbourCommunities = getNeighbourCommunities(vertex);
 
-			Map<Integer, Integer> neighbourCommunities = getNeighbourCommunities(vertex);
+			remove(node, community, neighbourCommunities.get(community));
 
-			decreaseCommunitySize(node, nodeCommunity);
-			remove(node, nodeCommunity, neighbourCommunities.get(nodeCommunity));
-
-			int bestCommunity = nodeCommunity;
+			Community bestCommunity = community;
 			int bestNoOfLinks = 0;
 			double bestModularityGain = 0.;
-
-			for (Map.Entry<Integer, Integer> entry : neighbourCommunities.entrySet()) {	
+			for (Map.Entry<Community, Integer> entry : neighbourCommunities.entrySet()) {	
 				double gain = modularityGain(node, entry.getKey(), entry.getValue());
-				if (gain > bestModularityGain || (gain == bestModularityGain && entry.getKey() == nodeCommunity)) {
+				if (gain > bestModularityGain || (gain == bestModularityGain && entry.getKey().equals(community))) {
 					bestCommunity = entry.getKey();
 					bestNoOfLinks = entry.getValue();
 					bestModularityGain = gain;
@@ -68,60 +66,50 @@ public class LouvainProgram implements GraphChiProgram<Integer, Integer>, Detect
 			}
 
 			insert(node, bestCommunity, bestNoOfLinks);
-			increaseCommunitySize(node, bestCommunity);
 
-			if (bestCommunity != nodeCommunity) {
+			if (bestCommunity != community) {
 				improvedOnPass = true;
 				iterationModularityImprovement += bestModularityGain;
 			}
 		}
 	}
 
-	private void decreaseCommunitySize(int node, int nodeCommunity) {
-		if (passIndex == 0) {
-			status.getCommunitySize()[nodeCommunity]--;
-		} else {
-			status.getCommunitySize()[nodeCommunity] -= status.getCommunitySizes().get(new CommunityIdentity(trans.backward(node), passIndex - 1));
-		}
+	private void remove(Node node, Community community, int noNodeLinksToComm) {
+		int totalSize = (passIndex == 0)
+				? 1
+				: status.getCommunitySizes().get(new CommunityIdentity(trans.backward(node.getId()), passIndex - 1));
+		community.setTotalSize(community.getTotalSize() - totalSize);
+		community.setTotalEdges(community.getTotalEdges() - node.getWeightedDegree());
+		community.setInternalEdges(community.getInternalEdges() - (2*noNodeLinksToComm + node.getSelfLoops()));
+	}
+	
+	private void insert(Node node, Community community, int noNodeLinksToComm) {
+		int totalSize = (passIndex == 0)
+				? 1
+				: status.getCommunitySizes().get(new CommunityIdentity(trans.backward(node.getId()), passIndex - 1));
+		community.setTotalSize(community.getTotalSize() + totalSize);
+		community.setTotalEdges(community.getTotalEdges() + node.getWeightedDegree());
+		community.setInternalEdges(community.getInternalEdges() + (2*noNodeLinksToComm + node.getSelfLoops()));
+		status.getNodeToCommunityMap()[node.getId()] = community;
+		
 	}
 
-	private void increaseCommunitySize(int node, int bestCommunity) {
-		if (passIndex == 0) {
-			status.getCommunitySize()[bestCommunity]++;
-		} else {
-			status.getCommunitySize()[bestCommunity] += status.getCommunitySizes().get(new CommunityIdentity(trans.backward(node), passIndex - 1));
-		}		
-	}
-
-	private void remove(int node, int community, int noNodeLinksToComm) {
-		status.getCommunityTotalEdges()[community] -= status.getNodeWeightedDegree()[node];
-		status.getCommunityInternalEdges()[community] -= 2*noNodeLinksToComm + status.getNodeSelfLoops()[node];
-		status.getNodeToCommunity()[node] = -1;
-	}
-
-	private void insert(int node, int community, int noNodeLinksToComm) {
-		status.getCommunityTotalEdges()[community] += status.getNodeWeightedDegree()[node];
-		status.getCommunityInternalEdges()[community] += 2*noNodeLinksToComm + status.getNodeSelfLoops()[node];
-		status.getNodeToCommunity()[node] = community;
-	}
-
-	private double modularityGain(int node, int community, int noNodeLinksToComm) {
-		double totc = (double)status.getCommunityTotalEdges()[community];
-		double degc = (double)status.getNodeWeightedDegree()[node];
+	private double modularityGain(Node node, Community community, int noNodeLinksToComm) {
+		double totc = (double)community.getTotalEdges();
+		double degc = (double)node.getWeightedDegree();
 		double m2 = (double)status.getTotalGraphWeight();
 		double dnc = (double)noNodeLinksToComm;
 
 		return (dnc - (totc*degc)/m2) / (m2/2); 
 	}
 
-	private Map<Integer, Integer> getNeighbourCommunities(ChiVertex<Integer, Integer> vertex) {
-		int node = vertex.getId();
-		Map<Integer, Integer> result = new HashMap<Integer, Integer>();
-		result.put(status.getNodeToCommunity()[node], 0);
+	private Map<Community, Integer> getNeighbourCommunities(ChiVertex<Integer, Integer> vertex) {
+		Map<Community, Integer> result = new HashMap<Community, Integer>();
+		result.put(status.getNodeToCommunityMap()[vertex.getId()], 0);
 
 		for (int i = 0; i < vertex.numEdges(); i++) {
 			int neighbour = vertex.edge(i).getVertexId();
-			int neighbourCommunity = status.getNodeToCommunity()[neighbour];
+			Community neighbourCommunity = status.getNodeToCommunityMap()[neighbour];
 			int edgeWeight = vertex.edge(i).getValue();
 			if (result.containsKey(neighbourCommunity)) {
 				int previousWeightToCommunity = result.get(neighbourCommunity);
@@ -136,42 +124,53 @@ public class LouvainProgram implements GraphChiProgram<Integer, Integer>, Detect
 
 	private void addToInitialGraphStatus(ChiVertex<Integer, Integer> vertex) {
 		Community community = new Community(vertex.getId());	
-		int nodeWeightedDegree = 0;
+		int externalWeightedDegree = 0;
 		for (int i = 0; i < vertex.numEdges(); i++) {
 			int edgeWeight = vertex.edge(i).getValue();
-			status.setTotalGraphWeight(status.getTotalGraphWeight() + edgeWeight);
-			nodeWeightedDegree += edgeWeight;
-			//status.getNodeWeightedDegree()[node] += edgeWeight;
+			externalWeightedDegree += edgeWeight;
 		}
-		//Node node = new Node();
-		
-		//status.getNodeSelfLoops()[node] = 2 * vertex.getValue();
-		//status.setTotalGraphWeight(status.getTotalGraphWeight() + status.getNodeSelfLoops()[node]);
-		//status.getNodeWeightedDegree()[node] += status.getNodeSelfLoops()[node];
-		//status.getCommunityInternalEdges()[node] = status.getNodeSelfLoops()[node];
-		//status.getCommunityTotalEdges()[node] = status.getNodeWeightedDegree()[node];
-		
 		if (passIndex == 0) {
-			//status.getCommunitySize()[node] = 1;
+			status.increaseTotalGraphWeight(externalWeightedDegree);
+		}
+		int selfLoops = 2 * vertex.getValue();
+		int weightedDegree = selfLoops + externalWeightedDegree;
+		Node node = new Node(vertex.getId());
+		node.setSelfLoops(selfLoops);
+		node.setWeightedDegree(weightedDegree);
+
+		if (passIndex == 0) {
+			status.increaseTotalGraphWeight(selfLoops);
+		}
+
+		community.setInternalEdges(selfLoops);
+		community.setTotalEdges(weightedDegree);
+
+		if (passIndex == 0) {
 			community.setTotalSize(1);
 		} else {
-			int previousSize = status.getCommunitySizes().get(new CommunityIdentity(trans.backward(vertex.getId()), passIndex - 1));
+			System.out.println(status.getCommunitySizes());
+			System.out.println("id: " + vertex.getId());
+			System.out.println("trans: " + trans.backward(vertex.getId()));
+			int previousSize = status.getCommunitySizes()
+					.get(new CommunityIdentity(trans.backward(vertex.getId()), passIndex - 1));
 			community.setTotalSize(previousSize);
-			//status.getCommunitySize()[node] = status.getCommunitySizes().get(new CommunityIdentity(trans.backward(node), passIndex - 1));
+			
 		}
-		status.getNodeToCommunity()[node] = node;
+		status.getNodes()[vertex.getId()] = node;
+		status.getNodeToCommunityMap()[vertex.getId()] = community;
 	}
 
 	private void addToContractedGraph(ChiVertex<Integer, Integer> vertex) {
-		int node = vertex.getId();
-		if (status.getCommunityInternalEdges()[node] > 0) {
-			int actualNode = trans.backward(node);
-			contractedGraph.put(new UndirectedEdge(actualNode, actualNode), status.getCommunityInternalEdges()[node]/2);
+		int source = vertex.getId();
+		Community community = status.getNodeToCommunityMap()[source];
+		if (community.getInternalEdges() > 0) {
+			int actualNode = trans.backward(community.getSeedNode());
+			contractedGraph.put(new UndirectedEdge(actualNode, actualNode), community.getInternalEdges() / 2);
 		}
 		for (int i = 0; i < vertex.numOutEdges(); i++) {
 			int target = vertex.outEdge(i).getVertexId();
-			int sourceCommunity = status.getNodeToCommunity()[node];
-			int targetCommunity = status.getNodeToCommunity()[target];
+			int sourceCommunity = community.getSeedNode();
+			int targetCommunity = status.getNodeToCommunityMap()[target].getSeedNode();
 			if (sourceCommunity != targetCommunity) {
 				int actualSourceCommunity = trans.backward(sourceCommunity);
 				int actualTargetCommunity = trans.backward(targetCommunity);
@@ -190,17 +189,8 @@ public class LouvainProgram implements GraphChiProgram<Integer, Integer>, Detect
 	public void beginIteration(GraphChiContext ctx) {
 		if (ctx.getIteration() == 0) {
 			trans = ctx.getVertexIdTranslate();
-			int noOfVertices = (int)ctx.getNumVertices();
-			status.setNodeToCommunity(new int[noOfVertices]);
-			for (int i = 0; i < noOfVertices; i++) {
-				status.getNodeToCommunity()[i] = -1;
-			}
-			status.setCommunityInternalEdges(new int[noOfVertices]);
-			status.setCommunityTotalEdges(new int[noOfVertices]);
-			status.setNodeWeightedDegree(new int[noOfVertices]);
-			status.setNodeSelfLoops(new int[noOfVertices]);
-			status.setCommunitySize(new int[noOfVertices]);
-			status.setTotalGraphWeight(0);
+			status.setNodeToCommunityMap(new Community[(int) ctx.getNumVertices()]);
+			status.setNodes(new Node[(int) ctx.getNumVertices()]);
 		}
 		iterationModularityImprovement = 0.;
 	}
@@ -272,7 +262,7 @@ public class LouvainProgram implements GraphChiProgram<Integer, Integer>, Detect
 		contractedGraph = new HashMap<UndirectedEdge, Integer>();
 		return newFilename;
 	}
-	
+
 	protected static FastSharder createSharder(String graphName, int numShards) throws IOException {
 		return new FastSharder<Integer, Integer>(graphName, numShards, new VertexProcessor<Integer>() {
 			public Integer receiveVertexValue(int vertexId, String token) {

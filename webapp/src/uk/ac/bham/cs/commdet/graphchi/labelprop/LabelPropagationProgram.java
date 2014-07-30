@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import uk.ac.bham.cs.commdet.graphchi.all.Community;
 import uk.ac.bham.cs.commdet.graphchi.all.DetectionProgram;
 import uk.ac.bham.cs.commdet.graphchi.all.GraphResult;
 import uk.ac.bham.cs.commdet.graphchi.all.GraphStatus;
@@ -32,30 +33,24 @@ public class LabelPropagationProgram implements GraphChiProgram<Integer, Integer
 	private VertexIdTranslate trans;
 
 	@Override
-	public void update(ChiVertex<Integer, Integer> vertex, GraphChiContext context) {
-		int newLabel;
+	public synchronized void update(ChiVertex<Integer, Integer> vertex, GraphChiContext context) {
 		if (context.getIteration() == 0) {
-			newLabel = vertex.getId();
-			status.getCommunitySize()[vertex.getId()] = 1;
-			status.getNodeToCommunity()[vertex.getId()] = newLabel;
+			Community community = new Community(vertex.getId());
+			community.setTotalSize(1);
+			status.getNodeToCommunityMap()[vertex.getId()] = community;
 			context.getScheduler().addTask(vertex.getId());
-			vertex.setValue(newLabel);
 		} else {
-			newLabel = mostFrequentNeighbourLabel(vertex);
-			if (newLabel != vertex.getValue()) {
+			Community currentCommunity = status.getNodeToCommunityMap()[vertex.getId()];
+			Community mostFrequentNeighbour = mostFrequentNeighbourCommunity(vertex);
+			if (mostFrequentNeighbour != currentCommunity) {
 				for (int i = 0; i < vertex.numEdges(); i++) {
-					if (context.getIteration() > 0) {
-						context.getScheduler().addTask(vertex.edge(i).getVertexId());
-					}
+					context.getScheduler().addTask(vertex.edge(i).getVertexId());
 				}
-				int oldLabel = vertex.getValue();
 				synchronized(status) {
-					status.getCommunitySize()[oldLabel]--;
-					status.getCommunitySize()[newLabel]++;
+					currentCommunity.decreaseTotalSize(1);
+					mostFrequentNeighbour.increaseTotalSize(1);
 				}
-				status.getNodeToCommunity()[vertex.getId()] = newLabel;
-				vertex.setValue(newLabel);
-				
+				status.getNodeToCommunityMap()[vertex.getId()] = mostFrequentNeighbour;
 			}
 		}
 		if (finalUpdate) {
@@ -65,51 +60,55 @@ public class LabelPropagationProgram implements GraphChiProgram<Integer, Integer
 		}
 	}
 	
-	private int mostFrequentNeighbourLabel(ChiVertex<Integer, Integer> vertex) {
-		Map<Integer, Integer> labelCounts = new HashMap<Integer, Integer>();
+	private Community mostFrequentNeighbourCommunity(ChiVertex<Integer, Integer> vertex) {
+		Map<Community, Integer> labelCounts = new HashMap<Community, Integer>();
 		for (int i = 0; i < vertex.numEdges(); i++) {
-			int neighbourLabel = status.getNodeToCommunity()[vertex.edge(i).getVertexId()];
-			if (labelCounts.containsKey(neighbourLabel)) {
-				int previousCount = labelCounts.get(neighbourLabel);
-				labelCounts.put(neighbourLabel, previousCount + 1);
+			int neighbour = vertex.edge(i).getVertexId();
+			Community neighbourCommunity = status.getNodeToCommunityMap()[neighbour];
+			if (labelCounts.containsKey(neighbourCommunity)) {
+				int previousCount = labelCounts.get(neighbourCommunity);
+				labelCounts.put(neighbourCommunity, previousCount + 1);
 			} else {
-				labelCounts.put(neighbourLabel, 1);
+				labelCounts.put(neighbourCommunity, 1);
 			}
 		}
 		int maxCount = -1;
-		int maxLabel = -1;
-		for (Map.Entry<Integer, Integer> entry : labelCounts.entrySet()) {
-			if (entry.getValue() > maxCount || (entry.getValue() == maxCount && entry.getKey() > maxLabel)) {
+		Community maxCommunity = new Community(-1);
+		for (Map.Entry<Community, Integer> entry : labelCounts.entrySet()) {
+			if (entry.getValue() > maxCount || 
+					(entry.getValue() == maxCount && entry.getKey().getSeedNode() > maxCommunity.getSeedNode())) {
 				maxCount = entry.getValue();
-				maxLabel = entry.getKey();
+				maxCommunity = entry.getKey();
 			}
 		}
-		return maxLabel;
+		return maxCommunity;
 	}
 
 	private void addToContractedGraph(ChiVertex<Integer, Integer> vertex) {
-		int node = vertex.getId();
+		int source = vertex.getId();
 		for (int i = 0; i < vertex.numOutEdges(); i++) {
 			int target = vertex.outEdge(i).getVertexId();
-			int sourceCommunity = status.getNodeToCommunity()[node];
-			int targetCommunity = status.getNodeToCommunity()[target];
+			Community sourceCommunity = status.getNodeToCommunityMap()[source];
+			Community targetCommunity = status.getNodeToCommunityMap()[target];
+			int sourceCommunityId = sourceCommunity.getSeedNode();
+			int targetCommunityId = targetCommunity.getSeedNode();
 			int weight = vertex.outEdge(i).getValue();
 			status.setTotalGraphWeight(status.getTotalGraphWeight() + weight*2);
-			if (sourceCommunity != targetCommunity) {
-				int actualSourceCommunity = trans.backward(sourceCommunity);
-				int actualTargetCommunity = trans.backward(targetCommunity);
-				UndirectedEdge edge = new UndirectedEdge(actualSourceCommunity, actualTargetCommunity);
+			if (sourceCommunityId != targetCommunityId) {
+				int actualSourceCommunityId = trans.backward(sourceCommunityId);
+				int actualTargetCommunityId = trans.backward(targetCommunityId);
+				UndirectedEdge edge = new UndirectedEdge(actualSourceCommunityId, actualTargetCommunityId);
 				if (contractedGraph.containsKey(edge)) {
 					int oldWeight = contractedGraph.get(edge);
 					contractedGraph.put(edge, oldWeight + weight);
 				} else {
 					contractedGraph.put(edge, weight);
 				}
-				status.getCommunityTotalEdges()[sourceCommunity]+= weight;
-				status.getCommunityTotalEdges()[targetCommunity]+= weight;
+				sourceCommunity.increaseTotalEdges(weight);
+				targetCommunity.increaseTotalEdges(weight);
 			} else {
-				status.getCommunityInternalEdges()[sourceCommunity] += weight*2;
-				status.getCommunityTotalEdges()[sourceCommunity]+= weight*2;
+				sourceCommunity.increaseInternalEdges(weight * 2);
+				sourceCommunity.increaseTotalEdges(weight * 2);
 			}
 		}
 	}
@@ -118,14 +117,7 @@ public class LabelPropagationProgram implements GraphChiProgram<Integer, Integer
 		if (ctx.getIteration() == 0) {
 			trans = ctx.getVertexIdTranslate();
 			int noOfVertices = (int)ctx.getNumVertices();
-			status.setNodeToCommunity(new int[noOfVertices]);
-			for (int i = 0; i < noOfVertices; i++) {
-				status.getNodeToCommunity()[i] = -1;
-			}
-			status.setCommunityInternalEdges(new int[noOfVertices]);
-			status.setCommunityTotalEdges(new int[noOfVertices]);
-			status.setTotalGraphWeight(0);
-			status.setCommunitySize(new int[noOfVertices]);
+			status.setNodeToCommunityMap(new Community[noOfVertices]);
 		}
 	}
 	
@@ -169,7 +161,8 @@ public class LabelPropagationProgram implements GraphChiProgram<Integer, Integer
 		engine.setEdataConverter(new IntConverter());
 		engine.setVertexDataConverter(new IntConverter());
 		engine.setEnableScheduler(true);
-		engine.run(this, 100);
+		engine.setSkipZeroDegreeVertices(true);
+		engine.run(this, 1000);
 		
 		writeNextLevelEdgeList(baseFilename);
 		

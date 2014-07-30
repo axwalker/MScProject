@@ -1,6 +1,8 @@
 package uk.ac.bham.cs.commdet.graphchi.all;
 
-public class CommunityIdentity {
+import java.io.Serializable;
+
+public class CommunityIdentity implements Serializable{
 
 	private int id;
 	private int level;
