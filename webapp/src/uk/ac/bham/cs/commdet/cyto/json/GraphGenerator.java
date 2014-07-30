@@ -12,7 +12,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 import uk.ac.bham.cs.commdet.gml.GMLMapper;
 import uk.ac.bham.cs.commdet.gml.GMLWriter;
-import uk.ac.bham.cs.commdet.graphchi.all.Community;
+import uk.ac.bham.cs.commdet.graphchi.all.CommunityIdentity;
 import uk.ac.bham.cs.commdet.graphchi.all.CommunityEdgePositions;
 import uk.ac.bham.cs.commdet.graphchi.all.GraphResult;
 import uk.ac.bham.cs.commdet.graphchi.all.UndirectedEdge;
@@ -109,7 +109,7 @@ public class GraphGenerator {
 	 */
 	private void parseEdgeFile(String baseFilename, int community, int communityLevel, int fileLevel) {
 		String edgeFilename = baseFilename + (fileLevel == 0 ? "" : "_pass_" + (fileLevel)) + "_sorted";
-		CommunityEdgePositions positions = result.getAllEdgePositions().get(fileLevel).get(new Community(community, communityLevel));
+		CommunityEdgePositions positions = result.getAllEdgePositions().get(fileLevel).get(new CommunityIdentity(community, communityLevel));
 		int startIndex = positions.getStartIndex();
 		int endIndex = positions.getEndIndex();
 		Set<Integer> nodesAdded = new HashSet<Integer>();
@@ -161,7 +161,7 @@ public class GraphGenerator {
 			}
 		}
 		if (!nodesAdded.contains(source)) {
-			int size = (level == 0 ? 1 : result.getSizes().get(new Community(source, level - 1)));
+			int size = (level == 0 ? 1 : result.getSizes().get(new CommunityIdentity(source, level - 1)));
 			Node node = new Node(mapNode(source), size);
 			if (result.hasMapper() && level == 0) {
 				node.setMetadata(result.getMapper().getInternalToGml().get(source));
@@ -172,7 +172,7 @@ public class GraphGenerator {
 			minCommunitySize = Math.min(minCommunitySize, size);
 		}
 		if (!nodesAdded.contains(target)) {
-			int size = (level == 0 ? 1 : result.getSizes().get(new Community(target, level - 1)));
+			int size = (level == 0 ? 1 : result.getSizes().get(new CommunityIdentity(target, level - 1)));
 			Node node = new Node(mapNode(target), size);
 			if (result.hasMapper() && level == 0) {
 				node.setMetadata(result.getMapper().getInternalToGml().get(target));

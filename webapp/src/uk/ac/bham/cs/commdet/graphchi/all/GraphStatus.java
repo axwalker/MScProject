@@ -7,20 +7,24 @@ import edu.cmu.graphchi.preprocessing.VertexIdTranslate;
 
 public class GraphStatus {
 
-	private int[] nodeToCommunity;
+	/*private int[] nodeToCommunity;
 	private int[] communityInternalEdges;
 	private int[] communityTotalEdges;
 	private int[] nodeWeightedDegree;
 	private int[] nodeSelfLoops;
 	private int[] communitySize;
-	private int[] communitySizeAtThisLevel;
+	private int[] communitySizeAtThisLevel; */
+	
+	private Community[] nodeToCommunityMap;
+	private Node[] nodes;
+
 	private long totalGraphWeight;
 	private int hierarchyHeight = 0;
 	private VertexIdTranslate originalVertexTrans;
 	private VertexIdTranslate updatedVertexTrans;
 	private Map<Integer, Double> modularities = new HashMap<Integer, Double>();
 	private Map<Integer, List<Integer>> communityHierarchy = new HashMap<Integer, List<Integer>>();
-	private Map<Community, Integer> allCommunitySizes = new HashMap<Community, Integer>();
+	private Map<CommunityIdentity, Integer> allCommunitySizes = new HashMap<CommunityIdentity, Integer>();
 	private HashMap<UndirectedEdge, Integer> contractedGraph = new HashMap<UndirectedEdge, Integer>();
 	private Set<Integer> communities;
 
@@ -75,7 +79,7 @@ public class GraphStatus {
 	public void updateSizesMap() {
 		for (int i = 0; i < communitySize.length; i++) {
 			if (communitySize[i] > 0) {
-				allCommunitySizes.put(new Community(updatedVertexTrans.backward(i), hierarchyHeight), communitySize[i]);
+				allCommunitySizes.put(new CommunityIdentity(updatedVertexTrans.backward(i), hierarchyHeight), communitySize[i]);
 			}
 		}
 	}
@@ -85,7 +89,7 @@ public class GraphStatus {
 		if (hierarchyHeight == 0) {
 			communitySize[communityId]++;
 		} else {
-			communitySize[communityId] += allCommunitySizes.get(new Community(updatedVertexTrans.backward(nodeId), hierarchyHeight - 1));
+			communitySize[communityId] += allCommunitySizes.get(new CommunityIdentity(updatedVertexTrans.backward(nodeId), hierarchyHeight - 1));
 		}
 		communitySizeAtThisLevel[communityId]++;
 	}
@@ -95,7 +99,7 @@ public class GraphStatus {
 		if (hierarchyHeight == 0) {
 			communitySize[communityId]--;
 		} else {
-			communitySize[communityId] -= allCommunitySizes.get(new Community(updatedVertexTrans.backward(nodeId), hierarchyHeight - 1));
+			communitySize[communityId] -= allCommunitySizes.get(new CommunityIdentity(updatedVertexTrans.backward(nodeId), hierarchyHeight - 1));
 		}
 		communitySizeAtThisLevel[communityId]--;
 	}
@@ -126,11 +130,19 @@ public class GraphStatus {
 	}
 	
 	public int nodeSize(int node) {
-		return allCommunitySizes.get(new Community(updatedVertexTrans.backward(node), hierarchyHeight - 1));
+		return allCommunitySizes.get(new CommunityIdentity(updatedVertexTrans.backward(node), hierarchyHeight - 1));
 	}
 
 	public int getNodeCount() {
 		return communities.size();
+	}
+	
+	public Node[] getNodes() {
+		return nodes;
+	}
+
+	public void setNodes(Node[] nodes) {
+		this.nodes = nodes;
 	}
 	
 	public Map<Integer, Double> getModularities() {
@@ -141,7 +153,7 @@ public class GraphStatus {
 		return communityHierarchy;
 	}
 
-	public Map<Community, Integer> getCommunitySizes() {
+	public Map<CommunityIdentity, Integer> getCommunitySizes() {
 		return allCommunitySizes;
 	}
 
@@ -161,7 +173,7 @@ public class GraphStatus {
 		return hierarchyHeight;
 	}
 
-	public int[] getNodeToCommunity() {
+	/*public int[] getNodeToCommunity() {
 		return nodeToCommunity;
 	}
 
@@ -207,7 +219,7 @@ public class GraphStatus {
 
 	public void setCommunitySize(int[] communitySize) {
 		this.communitySize = communitySize;
-	}
+	}*/
 
 	public long getTotalGraphWeight() {
 		return totalGraphWeight;
@@ -233,12 +245,12 @@ public class GraphStatus {
 		this.communities = communities;
 	}
 
-	public int[] getCommunitySizeAtThisLevel() {
-		return communitySizeAtThisLevel;
+	public Community[] getNodeToCommunityMap() {
+		return nodeToCommunityMap;
 	}
 
-	public void setCommunitySizeAtThisLevel(int[] communitySizeAtThisLevel) {
-		this.communitySizeAtThisLevel = communitySizeAtThisLevel;
+	public void setNodeToCommunityMap(Community[] nodeToCommunityMap) {
+		this.nodeToCommunityMap = nodeToCommunityMap;
 	}
 
 }

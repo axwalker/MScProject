@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import uk.ac.bham.cs.commdet.graphchi.all.Community;
+import uk.ac.bham.cs.commdet.graphchi.all.CommunityIdentity;
 import uk.ac.bham.cs.commdet.graphchi.all.DetectionProgram;
 import uk.ac.bham.cs.commdet.graphchi.all.GraphResult;
 import uk.ac.bham.cs.commdet.graphchi.all.GraphStatus;
@@ -80,7 +81,7 @@ public class LouvainProgram implements GraphChiProgram<Integer, Integer>, Detect
 		if (passIndex == 0) {
 			status.getCommunitySize()[nodeCommunity]--;
 		} else {
-			status.getCommunitySize()[nodeCommunity] -= status.getCommunitySizes().get(new Community(trans.backward(node), passIndex - 1));
+			status.getCommunitySize()[nodeCommunity] -= status.getCommunitySizes().get(new CommunityIdentity(trans.backward(node), passIndex - 1));
 		}
 	}
 
@@ -88,7 +89,7 @@ public class LouvainProgram implements GraphChiProgram<Integer, Integer>, Detect
 		if (passIndex == 0) {
 			status.getCommunitySize()[bestCommunity]++;
 		} else {
-			status.getCommunitySize()[bestCommunity] += status.getCommunitySizes().get(new Community(trans.backward(node), passIndex - 1));
+			status.getCommunitySize()[bestCommunity] += status.getCommunitySizes().get(new CommunityIdentity(trans.backward(node), passIndex - 1));
 		}		
 	}
 
@@ -134,21 +135,29 @@ public class LouvainProgram implements GraphChiProgram<Integer, Integer>, Detect
 	}
 
 	private void addToInitialGraphStatus(ChiVertex<Integer, Integer> vertex) {
-		int node = vertex.getId();
+		Community community = new Community(vertex.getId());	
+		int nodeWeightedDegree = 0;
 		for (int i = 0; i < vertex.numEdges(); i++) {
 			int edgeWeight = vertex.edge(i).getValue();
 			status.setTotalGraphWeight(status.getTotalGraphWeight() + edgeWeight);
-			status.getNodeWeightedDegree()[node] += edgeWeight;
+			nodeWeightedDegree += edgeWeight;
+			//status.getNodeWeightedDegree()[node] += edgeWeight;
 		}
-		status.getNodeSelfLoops()[node] = 2 * vertex.getValue();
-		status.setTotalGraphWeight(status.getTotalGraphWeight() + status.getNodeSelfLoops()[node]);
-		status.getNodeWeightedDegree()[node] += status.getNodeSelfLoops()[node];
-		status.getCommunityInternalEdges()[node] = status.getNodeSelfLoops()[node];
-		status.getCommunityTotalEdges()[node] = status.getNodeWeightedDegree()[node];
+		//Node node = new Node();
+		
+		//status.getNodeSelfLoops()[node] = 2 * vertex.getValue();
+		//status.setTotalGraphWeight(status.getTotalGraphWeight() + status.getNodeSelfLoops()[node]);
+		//status.getNodeWeightedDegree()[node] += status.getNodeSelfLoops()[node];
+		//status.getCommunityInternalEdges()[node] = status.getNodeSelfLoops()[node];
+		//status.getCommunityTotalEdges()[node] = status.getNodeWeightedDegree()[node];
+		
 		if (passIndex == 0) {
-			status.getCommunitySize()[node] = 1;
+			//status.getCommunitySize()[node] = 1;
+			community.setTotalSize(1);
 		} else {
-			status.getCommunitySize()[node] = status.getCommunitySizes().get(new Community(trans.backward(node), passIndex - 1));
+			int previousSize = status.getCommunitySizes().get(new CommunityIdentity(trans.backward(vertex.getId()), passIndex - 1));
+			community.setTotalSize(previousSize);
+			//status.getCommunitySize()[node] = status.getCommunitySizes().get(new CommunityIdentity(trans.backward(node), passIndex - 1));
 		}
 		status.getNodeToCommunity()[node] = node;
 	}

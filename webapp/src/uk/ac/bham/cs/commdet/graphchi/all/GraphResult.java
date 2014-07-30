@@ -14,17 +14,17 @@ public class GraphResult implements Serializable {
 
 	private String filename;
 	private Map<Integer, List<Integer>> hierarchy;
-	private Map<Community, Integer> sizes;
+	private Map<CommunityIdentity, Integer> sizes;
 	private Map<Integer, Double> modularities = new HashMap<Integer, Double>();
 	private int height;
-	private List<Map<Community, CommunityEdgePositions>> allEdgePositions;
+	private List<Map<CommunityIdentity, CommunityEdgePositions>> allEdgePositions;
 	private Map<Integer, Integer> levelNodeCounts;
 	private GMLMapper mapper;
 	private boolean hasMapper;
 
 	public GraphResult(String filename, 
 					   Map<Integer, List<Integer>> hierarchy, 
-					   Map<Community, Integer> sizes, 
+					   Map<CommunityIdentity, Integer> sizes, 
 					   Map<Integer, Double> modularities,
 					   int height) {
 		this.filename = filename;
@@ -32,7 +32,7 @@ public class GraphResult implements Serializable {
 		this.sizes = sizes;
 		this.modularities = modularities;
 		this.height = height;
-		allEdgePositions = new ArrayList<Map<Community, CommunityEdgePositions>>();
+		allEdgePositions = new ArrayList<Map<CommunityIdentity, CommunityEdgePositions>>();
 		levelNodeCounts = new HashMap<Integer, Integer>();
 	}
 	
@@ -54,7 +54,7 @@ public class GraphResult implements Serializable {
 	}
 	
 	public int getCommunityEdgeCount(int community, int communityLevel, int fileLevel) {
-		CommunityEdgePositions positions = allEdgePositions.get(fileLevel).get(new Community(community, communityLevel));
+		CommunityEdgePositions positions = allEdgePositions.get(fileLevel).get(new CommunityIdentity(community, communityLevel));
 		return positions.getEndIndex() - positions.getStartIndex();
 	}
 
@@ -89,19 +89,19 @@ public class GraphResult implements Serializable {
 	}
 
 	private void generateCommunityPositions(TreeSet<UndirectedEdge> edges, int fromLevel) throws IOException {
-		Map<Community, CommunityEdgePositions> edgePositions = new HashMap<Community, CommunityEdgePositions>();
-		Community[] previousCommunities = new Community[height];
+		Map<CommunityIdentity, CommunityEdgePositions> edgePositions = new HashMap<CommunityIdentity, CommunityEdgePositions>();
+		CommunityIdentity[] previousCommunities = new CommunityIdentity[height];
 		UndirectedEdge firstEdge = edges.first();
 		for (int level = fromLevel; level < height; level++) {
-			Community communityAtLevel = getCommunityAtLevel(firstEdge, level);
+			CommunityIdentity communityAtLevel = getCommunityAtLevel(firstEdge, level);
 			previousCommunities[level] = communityAtLevel;
 			edgePositions.put(communityAtLevel, new CommunityEdgePositions(0, 0));
 		}
 		int setIndex = 0;
 		for (UndirectedEdge edge : edges) {
 			for (int level = fromLevel; level < height; level++) {
-				Community communityAtLevel = getCommunityAtLevel(edge, level);
-				Community previousCommunity = previousCommunities[level];
+				CommunityIdentity communityAtLevel = getCommunityAtLevel(edge, level);
+				CommunityIdentity previousCommunity = previousCommunities[level];
 				if (communityAtLevel.equals(previousCommunity)) {
 					if (previousCommunity.getId() != -1) {
 						break;
@@ -123,15 +123,15 @@ public class GraphResult implements Serializable {
 		allEdgePositions.add(edgePositions);
 	}
 
-	private Community getCommunityAtLevel(UndirectedEdge edge, int level) {
+	private CommunityIdentity getCommunityAtLevel(UndirectedEdge edge, int level) {
 		int source = edge.getSource();
 		int target = edge.getTarget();
 		int sourceCommunity = hierarchy.get(source).get(level);
 		int targetCommunity = hierarchy.get(target).get(level);
 		if (sourceCommunity == targetCommunity) {
-			return new Community(sourceCommunity, level);
+			return new CommunityIdentity(sourceCommunity, level);
 		} else {
-			return new Community(-1, level);
+			return new CommunityIdentity(-1, level);
 		}
 	}
 
@@ -143,11 +143,11 @@ public class GraphResult implements Serializable {
 		return hierarchy;
 	}
 
-	public List<Map<Community, CommunityEdgePositions>> getAllEdgePositions() {
+	public List<Map<CommunityIdentity, CommunityEdgePositions>> getAllEdgePositions() {
 		return allEdgePositions;
 	}
 
-	public Map<Community, Integer> getSizes() {
+	public Map<CommunityIdentity, Integer> getSizes() {
 		return sizes;
 	}
 
