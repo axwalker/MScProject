@@ -3,7 +3,9 @@ package uk.ac.bham.cs.commdet.cyto.json;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
@@ -17,19 +19,17 @@ import uk.ac.bham.cs.commdet.graphchi.all.GraphResult;
 import uk.ac.bham.cs.commdet.graphchi.all.UndirectedEdge;
 
 /**
- * Generate strings in GML or JSON for a given graph result produced by a graphchi
- * community detection program.
+ * Generate strings in GML or JSON for a given graph result produced by a
+ * graphchi community detection program.
  */
 public class GraphGenerator {
 
 	private GraphResult result;
 	@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 	private Graph graph;
-
 	private int maxCommunitySize;
 	private int minCommunitySize = Integer.MAX_VALUE;
 	private int maxEdgeConnection;
-
 	private boolean includeEdges;
 
 	public GraphGenerator(GraphResult result) {
@@ -46,39 +46,33 @@ public class GraphGenerator {
 		return serializeJson();
 	}
 
-	public String getCommunityJson(int community, int communityLevel,
-			int fileLevel, int colourLevel) {
+	public String getCommunityJson(int community, int communityLevel, int fileLevel, int colourLevel) {
 		parseCommunity(community, communityLevel, fileLevel, colourLevel);
 		return serializeJson();
 	}
 
-	public void outputGraphGML(int level, int colourLevel,
-			final OutputStream graphMLOutputStream) throws IOException {
+	public void outputGraphGML(int level, int colourLevel, final OutputStream graphMLOutputStream)
+			throws IOException {
 		parseGraph(level, colourLevel);
 		GMLWriter.outputGraph(graph, graphMLOutputStream);
 	}
 
-	public void ouputCommunityGML(int community, int communityLevel,
-			int fileLevel, int colourLevel,
-			final OutputStream graphMLOutputStream) throws IOException {
+	public void ouputCommunityGML(int community, int communityLevel, int fileLevel,
+			int colourLevel, final OutputStream graphMLOutputStream) throws IOException {
 		parseCommunity(community, communityLevel, fileLevel, colourLevel);
 		GMLWriter.outputGraph(graph, graphMLOutputStream);
 	}
 
 	private void parseGraph(int level, int colourLevel) {
 		parseCompoundEdgeFile(result.getFilename(), level);
-		double modularity = (level == 0 ? 0 : result.getModularities().get(
-				level - 1));
+		double modularity = (level == 0 ? 0 : result.getModularities().get(level - 1));
 		setMetadata(modularity, level);
 		colourNodes(level, colourLevel);
 	}
 
-	private void parseCommunity(int community, int communityLevel,
-			int fileLevel, int colourLevel) {
-		parseEdgeFile(result.getFilename(), community, communityLevel,
-				fileLevel);
-		double modularity = (fileLevel == 0 ? 0 : result.getModularities().get(
-				fileLevel));
+	private void parseCommunity(int community, int communityLevel, int fileLevel, int colourLevel) {
+		parseEdgeFile(result.getFilename(), community, communityLevel, fileLevel);
+		double modularity = (fileLevel == 0 ? 0 : result.getModularities().get(fileLevel));
 		setMetadata(modularity, fileLevel);
 		colourNodes(fileLevel, colourLevel);
 	}
@@ -94,10 +88,10 @@ public class GraphGenerator {
 			if (level == result.getHeight()) {
 				parentId = nodeId;
 			} else {
-				parentId = result.getHierarchy().get(nodeId)
-						.get(colourLevel - 1);
+				parentId = result.getHierarchy().get(nodeId).get(colourLevel - 1);
 			}
 			node.setColour(toColour(parentId + ""));
+			node.getMetadata().put("community", parentId);
 		}
 	}
 
@@ -105,8 +99,7 @@ public class GraphGenerator {
 		Metadata metadata = graph.getMetadata();
 		metadata.setModularity(modularity);
 		metadata.setNoOfCommunities(graph.getNodes().size());
-		metadata.setAvgCommunitySize(result.getHierarchy().size()
-				/ graph.getNodes().size());
+		metadata.setAvgCommunitySize(result.getHierarchy().size() / graph.getNodes().size());
 		metadata.setHierarchyHeight(result.getHeight());
 		metadata.setCurrentLevel(level);
 		metadata.setMaxEdgeConnection(maxEdgeConnection);
@@ -125,12 +118,11 @@ public class GraphGenerator {
 	 * @param fileLevel
 	 *            the level of the hierarchy to retrieve the edges for
 	 */
-	private void parseEdgeFile(String baseFilename, int community,
-			int communityLevel, int fileLevel) {
-		String edgeFilename = baseFilename
-				+ (fileLevel == 0 ? "" : "_pass_" + (fileLevel)) + "_sorted";
-		CommunityEdgePositions positions = result.getAllEdgePositions()
-				.get(fileLevel).get(new CommunityID(community, communityLevel));
+	private void parseEdgeFile(String baseFilename, int community, int communityLevel, int fileLevel) {
+		String edgeFilename = baseFilename + (fileLevel == 0 ? "" : "_pass_" + (fileLevel))
+				+ "_sorted";
+		CommunityEdgePositions positions = result.getAllEdgePositions().get(fileLevel)
+				.get(new CommunityID(community, communityLevel));
 		int startIndex = positions.getStartIndex();
 		int endIndex = positions.getEndIndex();
 		Set<Integer> nodesAdded = new HashSet<Integer>();
@@ -160,8 +152,7 @@ public class GraphGenerator {
 	 *            the level of the hierarchy to retrieve the edges for
 	 */
 	private void parseCompoundEdgeFile(String baseFilename, int level) {
-		String edgeFilename = baseFilename
-				+ (level == 0 ? "" : "_pass_" + (level));
+		String edgeFilename = baseFilename + (level == 0 ? "" : "_pass_" + (level));
 
 		Set<Integer> nodesAdded = new HashSet<Integer>();
 		try {
@@ -181,37 +172,30 @@ public class GraphGenerator {
 		if (includeEdges) {
 			if (source != target) {
 				graph.getEdges().add(
-						new EdgeData(new Edge(mapNode(source), mapNode(target),
-								weight)));
+						new EdgeData(new Edge(mapNode(source), mapNode(target), weight)));
 				maxEdgeConnection = Math.max(maxEdgeConnection, weight);
 			}
 		}
 		if (!nodesAdded.contains(source)) {
-			int size = (level == 0 ? 1 : result.getSizes().get(
-					new CommunityID(source, level - 1)));
-			Node node = new Node(mapNode(source), size);
-			if (result.hasMapper() && level == 0) {
-				node.setMetadata(result.getMapper().getInternalToExternal()
-						.get(source));
-			}
-			graph.getNodes().add(new NodeData(node));
-			nodesAdded.add(source);
-			maxCommunitySize = Math.max(maxCommunitySize, size);
-			minCommunitySize = Math.min(minCommunitySize, size);
+			addNode(level, source, nodesAdded);
 		}
 		if (!nodesAdded.contains(target)) {
-			int size = (level == 0 ? 1 : result.getSizes().get(
-					new CommunityID(target, level - 1)));
-			Node node = new Node(mapNode(target), size);
-			if (result.hasMapper() && level == 0) {
-				node.setMetadata(result.getMapper().getInternalToExternal()
-						.get(target));
-			}
-			graph.getNodes().add(new NodeData(node));
-			nodesAdded.add(target);
-			maxCommunitySize = Math.max(maxCommunitySize, size);
-			minCommunitySize = Math.min(minCommunitySize, size);
+			addNode(level, target, nodesAdded);
 		}
+	}
+	
+	private void addNode(int level, int nodeId, Set<Integer> nodesAdded) {
+		int size = (level == 0 ? 1 : result.getSizes().get(new CommunityID(nodeId, level - 1)));
+		Node node = new Node(mapNode(nodeId), size);
+		Map<String, Object> nodeMetadata = new HashMap<String, Object>();
+		if (result.hasMapper() && level == 0) {
+			nodeMetadata.putAll(result.getMapper().getInternalToExternal().get(nodeId));
+		}
+		node.setMetadata(nodeMetadata);
+		graph.getNodes().add(new NodeData(node));
+		nodesAdded.add(nodeId);
+		maxCommunitySize = Math.max(maxCommunitySize, size);
+		minCommunitySize = Math.min(minCommunitySize, size);
 	}
 
 	private String mapNode(int node) {
