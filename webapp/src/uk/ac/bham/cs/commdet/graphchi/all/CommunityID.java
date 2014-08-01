@@ -1,13 +1,14 @@
 package uk.ac.bham.cs.commdet.graphchi.all;
 
-import java.io.Serializable;
-
-public class CommunityIdentity implements Serializable{
+/**
+ * The id label of a community and the level of the hierarchy it belongs to.
+ */
+public class CommunityID {
 
 	private int id;
 	private int level;
-	
-	public CommunityIdentity(int id, int level) {
+
+	public CommunityID(int id, int level) {
 		this.id = id;
 		this.level = level;
 	}
@@ -15,7 +16,7 @@ public class CommunityIdentity implements Serializable{
 	public int getId() {
 		return id;
 	}
-	
+
 	public int getLevel() {
 		return level;
 	}
@@ -42,12 +43,12 @@ public class CommunityIdentity implements Serializable{
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		CommunityIdentity other = (CommunityIdentity) obj;
+		CommunityID other = (CommunityID) obj;
 		if (id != other.id)
 			return false;
 		if (level != other.level)
 			return false;
 		return true;
 	}
-	
+
 }

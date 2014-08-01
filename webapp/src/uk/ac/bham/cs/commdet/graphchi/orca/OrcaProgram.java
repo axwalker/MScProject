@@ -15,13 +15,17 @@ import edu.cmu.graphchi.preprocessing.EdgeProcessor;
 import edu.cmu.graphchi.preprocessing.FastSharder;
 import edu.cmu.graphchi.preprocessing.VertexProcessor;
 
+/**
+ * Given an edge list file, used to generate a GraphResult object with corresponding edge list
+ * files that progressively group nodes into fewer larger communities.
+ * 
+ * Based on algorithm as described by Delling et al 
+ * (http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.164.2905&rep=rep1&type=pdf)
+ */
 public class OrcaProgram implements DetectionProgram {
 
 	private GraphStatus status = new GraphStatus();
 
-	/**
-	 * 
-	 */
 	public GraphResult run(final String baseFilename, int nShards) throws  Exception {
 		new TwoCore().run(baseFilename, nShards, status);
 		String newFilename = baseFilename;

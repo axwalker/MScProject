@@ -26,7 +26,10 @@ import edu.cmu.graphchi.preprocessing.VertexIdTranslate;
 import edu.cmu.graphchi.preprocessing.VertexProcessor;
 
 /**
- * Algorithm as described by Raghavan et al at http://arxiv.org/pdf/0709.2938.pdf
+ * Given an edge list file, used to generate a GraphResult object with a
+ * corresponding edge list file that groups nodes into communities.
+ * 
+ * Algorithm as described by Raghavan et al (http://arxiv.org/pdf/0709.2938.pdf)
  */
 public class LabelPropagationProgram implements GraphChiProgram<Integer, Integer>, DetectionProgram  {
 
@@ -47,17 +50,17 @@ public class LabelPropagationProgram implements GraphChiProgram<Integer, Integer
 	private void addToInitialGraphStatus(ChiVertex<Integer, Integer> vertex, GraphChiContext context) {
 		Community community = new Community(vertex.getId());
 		community.setTotalSize(1);
-		status.getNodeToCommunity()[vertex.getId()] = community;
+		status.getCommunities()[vertex.getId()] = community;
 		context.getScheduler().addTask(vertex.getId());
 	}
 
 	private void updateLabelFromNeighbours(ChiVertex<Integer, Integer> vertex, GraphChiContext context) {
 		Community mostFrequentNeighbour = mostFrequentNeighbourCommunity(vertex);
-		Community currentCommunity = status.getNodeToCommunity()[vertex.getId()];
+		Community currentCommunity = status.getCommunities()[vertex.getId()];
 		if (mostFrequentNeighbour != currentCommunity) {
 			currentCommunity.decreaseTotalSize(1);
 			mostFrequentNeighbour.increaseTotalSize(1);
-			status.getNodeToCommunity()[vertex.getId()] = mostFrequentNeighbour;
+			status.getCommunities()[vertex.getId()] = mostFrequentNeighbour;
 			for (int i = 0; i < vertex.numEdges(); i++) {
 				//neighbours will need to check again for their own most frequent neighbour labels
 				context.getScheduler().addTask(vertex.edge(i).getVertexId());
@@ -66,9 +69,7 @@ public class LabelPropagationProgram implements GraphChiProgram<Integer, Integer
 	}
 
 	private Community mostFrequentNeighbourCommunity(ChiVertex<Integer, Integer> vertex) {
-		Map<Community, Integer> labelCounts = new HashMap<Community, Integer>();
-		generateNeighbourLabelCounts(vertex, labelCounts);
-
+		Map<Community, Integer> labelCounts = generateNeighbourLabelCounts(vertex);
 		Community mostFrequentNeighbour = new Community(-1);
 		int maxFrequency = -1;
 		for (Map.Entry<Community, Integer> neighbour : labelCounts.entrySet()) {
@@ -83,10 +84,11 @@ public class LabelPropagationProgram implements GraphChiProgram<Integer, Integer
 		return mostFrequentNeighbour;
 	}
 
-	private void generateNeighbourLabelCounts(ChiVertex<Integer, Integer> vertex, Map<Community, Integer> labelCounts) {
+	private Map<Community, Integer> generateNeighbourLabelCounts(ChiVertex<Integer, Integer> vertex) {
+		Map<Community, Integer> labelCounts = new HashMap<Community, Integer>();
 		for (int i = 0; i < vertex.numEdges(); i++) {
 			int neighbour = vertex.edge(i).getVertexId();
-			Community neighbourCommunity = status.getNodeToCommunity()[neighbour];
+			Community neighbourCommunity = status.getCommunities()[neighbour];
 			if (labelCounts.containsKey(neighbourCommunity)) {
 				int previousCount = labelCounts.get(neighbourCommunity);
 				labelCounts.put(neighbourCommunity, previousCount + 1);
@@ -94,6 +96,7 @@ public class LabelPropagationProgram implements GraphChiProgram<Integer, Integer
 				labelCounts.put(neighbourCommunity, 1);
 			}
 		}
+		return labelCounts;
 	}
 
 	/*
@@ -104,8 +107,8 @@ public class LabelPropagationProgram implements GraphChiProgram<Integer, Integer
 		for (int i = 0; i < vertex.numOutEdges(); i++) {
 			int target = vertex.outEdge(i).getVertexId();
 			int weight = vertex.outEdge(i).getValue();
-			Community sourceCommunity = status.getNodeToCommunity()[source];
-			Community targetCommunity = status.getNodeToCommunity()[target];
+			Community sourceCommunity = status.getCommunities()[source];
+			Community targetCommunity = status.getCommunities()[target];
 			if (sourceCommunity != targetCommunity) {
 				int externalSourceCommunityId = trans.backward(sourceCommunity.getSeedNode());
 				int externalTargetCommunityId = trans.backward(targetCommunity.getSeedNode());
@@ -126,7 +129,7 @@ public class LabelPropagationProgram implements GraphChiProgram<Integer, Integer
 	public void beginIteration(GraphChiContext ctx) {
 		if (ctx.getIteration() == 0) {
 			int noOfVertices = (int)ctx.getNumVertices();
-			status.setNodeToCommunity(new Community[noOfVertices]);
+			status.setCommunities(new Community[noOfVertices]);
 		}
 	}
 

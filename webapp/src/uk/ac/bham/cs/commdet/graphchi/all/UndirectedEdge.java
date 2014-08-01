@@ -1,15 +1,8 @@
 package uk.ac.bham.cs.commdet.graphchi.all;
 
-import java.io.IOException;
-
-import org.codehaus.jackson.JsonGenerator;
-import org.codehaus.jackson.map.JsonSerializer;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializerProvider;
-import org.codehaus.jackson.map.SerializationConfig.Feature;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-
-@JsonSerialize(using = UndirectedEdgeSerializer.class)
+/**
+ * Edge with lowest id value is always used as the source in the edge.
+ */
 public class UndirectedEdge {
 	
 	int source;
@@ -94,18 +87,4 @@ public class UndirectedEdge {
 	public String toString() {
 		return source + " " + target + " " + weight + "\n";
 	}
-}
-
-class UndirectedEdgeSerializer extends JsonSerializer<UndirectedEdge> {
-    @Override
-    public void serialize(UndirectedEdge edge, JsonGenerator jsonGenerator, 
-            SerializerProvider serializerProvider) throws IOException {    	
-    	
-    	ObjectMapper mapper = new ObjectMapper();
-    	mapper.getSerializationConfig().disable(Feature.USE_ANNOTATIONS);
-    	jsonGenerator.writeStartObject();
-    	jsonGenerator.writeFieldName("data");
-    	jsonGenerator.writeRawValue(mapper.writeValueAsString(edge));
-    	jsonGenerator.writeEndObject();
-    }
 }

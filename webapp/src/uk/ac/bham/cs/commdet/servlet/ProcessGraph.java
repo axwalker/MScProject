@@ -1,28 +1,34 @@
 package uk.ac.bham.cs.commdet.servlet;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.logging.Logger;
 
-import javax.servlet.*;
+import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.*;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import javax.servlet.http.Part;
 
 import org.apache.commons.io.FileUtils;
 
-import edu.cmu.graphchi.ChiLogger;
-
 import uk.ac.bham.cs.commdet.cyto.json.GraphGenerator;
-import uk.ac.bham.cs.commdet.gml.GMLMapper;
+import uk.ac.bham.cs.commdet.fileutils.FileMapper;
+import uk.ac.bham.cs.commdet.fileutils.gml.GMLMapper;
 import uk.ac.bham.cs.commdet.graphchi.all.DetectionProgram;
 import uk.ac.bham.cs.commdet.graphchi.all.GraphResult;
 import uk.ac.bham.cs.commdet.graphchi.labelprop.LabelPropagationProgram;
 import uk.ac.bham.cs.commdet.graphchi.louvain.LouvainProgram;
 import uk.ac.bham.cs.commdet.graphchi.orca.OrcaProgram;
-import uk.ac.bham.cs.commdet.graphchi.orca.OrcaProgram;
+import edu.cmu.graphchi.ChiLogger;
 
 @MultipartConfig
 @WebServlet("/ProcessGraph")
@@ -81,7 +87,7 @@ public class ProcessGraph extends HttpServlet {
 		String filetype = request.getParameter("filetype");;
 		try {
 			if (filetype.equals("GML")) {
-				GMLMapper mapper = new GMLMapper();
+				FileMapper mapper = new GMLMapper();
 				mapper.inputGraph(tempFolderPath + filename);
 				result = GCprogram.run(tempFolderPath + filename + "_fromGML", 1);
 				result.setMapper(mapper);

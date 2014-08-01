@@ -8,62 +8,104 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
 
-import uk.ac.bham.cs.commdet.gml.GMLMapper;
+import uk.ac.bham.cs.commdet.fileutils.FileMapper;
+import uk.ac.bham.cs.commdet.fileutils.gml.GMLMapper;
 
+/**
+ * The result of a DetectionProgram being run on a graph. Holds the location of
+ * edgelist files related to this graph. Holds details on the hierarchical
+ * community structure of the graph, memberships of vertices and edges to each
+ * community, and other metadata about the structure.
+ */
 public class GraphResult implements Serializable {
 
+	private static final long serialVersionUID = 3330383923363076417L;
 	private String filename;
 	private Map<Integer, List<Integer>> hierarchy;
-	private Map<CommunityIdentity, Integer> sizes;
+	private Map<CommunityID, Integer> sizes;
 	private Map<Integer, Double> modularities = new HashMap<Integer, Double>();
 	private int height;
-	private List<Map<CommunityIdentity, CommunityEdgePositions>> allEdgePositions;
+	private List<Map<CommunityID, CommunityEdgePositions>> allEdgePositions;
 	private Map<Integer, Integer> levelNodeCounts;
-	private GMLMapper mapper;
+	private FileMapper mapper;
 	private boolean hasMapper;
 
-	public GraphResult(String filename, 
-					   Map<Integer, List<Integer>> hierarchy, 
-					   Map<CommunityIdentity, Integer> sizes, 
-					   Map<Integer, Double> modularities,
-					   int height) {
+	/**
+	 * 
+	 * @param filename
+	 *            the filepath of the initial input edgelist file
+	 * @param hierarchy
+	 *            map describing the community each node belongs to at each
+	 *            level of the community hierarchy
+	 * @param sizes
+	 *            map holding the number of vertices in each community
+	 * @param modularities
+	 *            map for the modularity at each level of the hierarchy
+	 * @param height
+	 *            the number of levels in the hierarchy
+	 */
+	public GraphResult(String filename, Map<Integer, List<Integer>> hierarchy,
+			Map<CommunityID, Integer> sizes, Map<Integer, Double> modularities,
+			int height) {
 		this.filename = filename;
 		this.hierarchy = hierarchy;
 		this.sizes = sizes;
 		this.modularities = modularities;
 		this.height = height;
-		allEdgePositions = new ArrayList<Map<CommunityIdentity, CommunityEdgePositions>>();
+		allEdgePositions = new ArrayList<Map<CommunityID, CommunityEdgePositions>>();
 		levelNodeCounts = new HashMap<Integer, Integer>();
 	}
-	
-	public GMLMapper getMapper() {
+
+	public FileMapper getMapper() {
 		return this.mapper;
 	}
-	
-	public void setMapper(GMLMapper mapper) {
+
+	public void setMapper(FileMapper mapper) {
 		this.mapper = mapper;
 		hasMapper = true;
 	}
-	
+
 	public boolean hasMapper() {
 		return hasMapper;
 	}
-	
+
 	public int getLevelNodeCount(int level) {
 		return levelNodeCounts.get(level);
 	}
-	
-	public int getCommunityEdgeCount(int community, int communityLevel, int fileLevel) {
-		CommunityEdgePositions positions = allEdgePositions.get(fileLevel).get(new CommunityIdentity(community, communityLevel));
+
+	/**
+	 * 
+	 * @param community
+	 *            the id of the community
+	 * @param communityLevel
+	 *            the level of the hierarchy at which this community exists
+	 * @param fileLevel
+	 *            the level of the hierarchy from which to find the individual
+	 *            edges
+	 * @return the number of edges in this community at the chosen file level
+	 */
+	public int getCommunityEdgeCount(int community, int communityLevel,
+			int fileLevel) {
+		CommunityEdgePositions positions = allEdgePositions.get(fileLevel).get(
+				new CommunityID(community, communityLevel));
 		return positions.getEndIndex() - positions.getStartIndex();
 	}
 
+	/**
+	 * Sort each edge list in the community hierarchy so that the edges are
+	 * sorted by what community they belong to. Edges in the same community are
+	 * grouped together.
+	 * 
+	 * @throws IOException
+	 */
 	public void writeSortedEdgeLists() throws IOException {
-		for (int i = 0 ; i < height; i++) {
+		for (int i = 0; i < height; i++) {
 			TreeSet<UndirectedEdge> edges = readInUnsortedEdgeList(i);
 			generateCommunityPositions(edges, i);
-			String sortedFilename = filename + (i != 0 ? "_pass_" + i : "") + "_sorted";
-			BufferedWriter bw = new BufferedWriter(new FileWriter(sortedFilename));
+			String sortedFilename = filename + (i != 0 ? "_pass_" + i : "")
+					+ "_sorted";
+			BufferedWriter bw = new BufferedWriter(new FileWriter(
+					sortedFilename));
 			Set<Integer> uniqueNodes = new HashSet<Integer>();
 			for (UndirectedEdge edge : edges) {
 				bw.write(edge.toString());
@@ -76,7 +118,8 @@ public class GraphResult implements Serializable {
 	}
 
 	private TreeSet<UndirectedEdge> readInUnsortedEdgeList(int level) throws IOException {
-		TreeSet<UndirectedEdge> edges = new TreeSet<UndirectedEdge>(new UndirectedEdgeComparator(hierarchy, level));
+		TreeSet<UndirectedEdge> edges = new TreeSet<UndirectedEdge>(
+				new UndirectedEdgeComparator(hierarchy, level));
 		String inputFilename = filename + (level != 0 ? "_pass_" + level : "");
 		BufferedReader br = new BufferedReader(new FileReader(inputFilename));
 		String line = null;
@@ -89,32 +132,35 @@ public class GraphResult implements Serializable {
 	}
 
 	private void generateCommunityPositions(TreeSet<UndirectedEdge> edges, int fromLevel) throws IOException {
-		Map<CommunityIdentity, CommunityEdgePositions> edgePositions = new HashMap<CommunityIdentity, CommunityEdgePositions>();
-		CommunityIdentity[] previousCommunities = new CommunityIdentity[height];
+		Map<CommunityID, CommunityEdgePositions> edgePositions = new HashMap<CommunityID, CommunityEdgePositions>();
+		CommunityID[] previousCommunities = new CommunityID[height];
 		UndirectedEdge firstEdge = edges.first();
 		for (int level = fromLevel; level < height; level++) {
-			CommunityIdentity communityAtLevel = getCommunityAtLevel(firstEdge, level);
+			CommunityID communityAtLevel = getCommunityAtLevel(firstEdge, level);
 			previousCommunities[level] = communityAtLevel;
-			edgePositions.put(communityAtLevel, new CommunityEdgePositions(0, 0));
+			edgePositions.put(communityAtLevel,
+					new CommunityEdgePositions(0, 0));
 		}
 		int setIndex = 0;
 		for (UndirectedEdge edge : edges) {
 			for (int level = fromLevel; level < height; level++) {
-				CommunityIdentity communityAtLevel = getCommunityAtLevel(edge, level);
-				CommunityIdentity previousCommunity = previousCommunities[level];
+				CommunityID communityAtLevel = getCommunityAtLevel(edge, level);
+				CommunityID previousCommunity = previousCommunities[level];
 				if (communityAtLevel.equals(previousCommunity)) {
 					if (previousCommunity.getId() != -1) {
 						break;
 					}
 				} else {
 					if (previousCommunity.getId() != -1) {
-						edgePositions.get(previousCommunity).setEndIndex(setIndex);
+						edgePositions.get(previousCommunity).setEndIndex(
+								setIndex);
 					}
 					previousCommunities[level] = communityAtLevel;
 					if (communityAtLevel.getId() == -1) {
 						continue;
 					} else {
-						edgePositions.put(communityAtLevel, new CommunityEdgePositions(setIndex, setIndex));
+						edgePositions.put(communityAtLevel,
+								new CommunityEdgePositions(setIndex, setIndex));
 					}
 				}
 			}
@@ -123,15 +169,15 @@ public class GraphResult implements Serializable {
 		allEdgePositions.add(edgePositions);
 	}
 
-	private CommunityIdentity getCommunityAtLevel(UndirectedEdge edge, int level) {
+	private CommunityID getCommunityAtLevel(UndirectedEdge edge, int level) {
 		int source = edge.getSource();
 		int target = edge.getTarget();
 		int sourceCommunity = hierarchy.get(source).get(level);
 		int targetCommunity = hierarchy.get(target).get(level);
 		if (sourceCommunity == targetCommunity) {
-			return new CommunityIdentity(sourceCommunity, level);
+			return new CommunityID(sourceCommunity, level);
 		} else {
-			return new CommunityIdentity(-1, level);
+			return new CommunityID(-1, level);
 		}
 	}
 
@@ -143,11 +189,11 @@ public class GraphResult implements Serializable {
 		return hierarchy;
 	}
 
-	public List<Map<CommunityIdentity, CommunityEdgePositions>> getAllEdgePositions() {
+	public List<Map<CommunityID, CommunityEdgePositions>> getAllEdgePositions() {
 		return allEdgePositions;
 	}
 
-	public Map<CommunityIdentity, Integer> getSizes() {
+	public Map<CommunityID, Integer> getSizes() {
 		return sizes;
 	}
 

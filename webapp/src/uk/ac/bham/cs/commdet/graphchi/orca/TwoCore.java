@@ -18,6 +18,9 @@ import edu.cmu.graphchi.engine.VertexInterval;
 import edu.cmu.graphchi.preprocessing.FastSharder;
 import edu.cmu.graphchi.preprocessing.VertexIdTranslate;
 
+/**
+ * Reduce a graph to its two core, with single degree nodes contracted their neighbouring node.
+ */
 public class TwoCore implements GraphChiProgram<Integer, Integer> {
 
 	private boolean twoCoreCompleted;
@@ -67,9 +70,9 @@ public class TwoCore implements GraphChiProgram<Integer, Integer> {
 				for (int i = 0; i < vertex.numEdges(); i++) {
 					int neighbourId = vertex.edge(i).getVertexId();
 					Node neighbour = status.getNodes()[neighbourId];
-					Community neighbourCommunity = status.getNodeToCommunity()[neighbourId];
+					Community neighbourCommunity = status.getCommunities()[neighbourId];
 					if (contracted[neighbourId]) {
-						Community currentCommunity = status.getNodeToCommunity()[vertex.getId()];
+						Community currentCommunity = status.getCommunities()[vertex.getId()];
 						status.removeNodeFromCommunity(neighbour, neighbourCommunity, 0);
 						status.insertNodeIntoCommunity(neighbour, currentCommunity, 0);
 						contracted[neighbourId] = false; //to prevent looping round adding tasks infintely
@@ -84,8 +87,8 @@ public class TwoCore implements GraphChiProgram<Integer, Integer> {
 		for (int i = 0; i < vertex.numOutEdges(); i++) {
 			int target = vertex.outEdge(i).getVertexId();
 			int weight = vertex.outEdge(i).getValue();
-			int sourceCommunityId = status.getNodeToCommunity()[vertex.getId()].getSeedNode();
-			int targetCommunityId = status.getNodeToCommunity()[target].getSeedNode();
+			int sourceCommunityId = status.getCommunities()[vertex.getId()].getSeedNode();
+			int targetCommunityId = status.getCommunities()[target].getSeedNode();
 			status.getUniqueCommunities().add(sourceCommunityId);
 			status.getUniqueCommunities().add(targetCommunityId);
 			status.setTotalGraphWeight(status.getTotalGraphWeight() + 2);
@@ -99,7 +102,7 @@ public class TwoCore implements GraphChiProgram<Integer, Integer> {
 		}
 		
 		//set selfloops for use in modularity connections by DenseRegion
-		Community community = status.getNodeToCommunity()[vertex.getId()];
+		Community community = status.getCommunities()[vertex.getId()];
 		int communitySelfLoops =  community.getTotalSize() - 1;
 		if (communitySelfLoops > 0) {
 			int actualNode = trans.backward(community.getSeedNode());
@@ -110,7 +113,7 @@ public class TwoCore implements GraphChiProgram<Integer, Integer> {
 	public void beginIteration(GraphChiContext ctx) {
 		if (ctx.getIteration() == 0) {
 			int noOfVertices = (int)ctx.getNumVertices();
-			status.setNodeToCommunity(new Community[noOfVertices]);
+			status.setCommunities(new Community[noOfVertices]);
 			status.setNodes(new Node[noOfVertices]);
 			status.setUniqueCommunities(new HashSet<Integer>());
 			nodeDegree = new int[noOfVertices];
