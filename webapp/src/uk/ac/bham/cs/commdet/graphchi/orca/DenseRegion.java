@@ -4,13 +4,16 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.TreeSet;
 
+import uk.ac.bham.cs.commdet.graphchi.all.Community;
 import uk.ac.bham.cs.commdet.graphchi.all.GraphStatus;
+import uk.ac.bham.cs.commdet.graphchi.all.Node;
 import uk.ac.bham.cs.commdet.graphchi.all.UndirectedEdge;
 import edu.cmu.graphchi.ChiVertex;
 import edu.cmu.graphchi.GraphChiContext;
@@ -23,13 +26,14 @@ import edu.cmu.graphchi.preprocessing.VertexIdTranslate;
 
 public class DenseRegion implements GraphChiProgram<Integer, Integer> {
 
-	private double maxDistance = 100;
+	private double maxDistance = 1000;
 	private double densityDegree = 2;
 	private Map<Integer, Map<Integer, Path>> pathsWithinD;
 	private Map<Integer, Neighbourhood> neighbourhoods;
 	private PriorityQueue<Neighbourhood> denseRegionsRanked;
 	private TreeSet<Neighbourhood> denseRegions;
 	private GraphStatus status = new GraphStatus();
+	private Map<UndirectedEdge, Integer> previousInterCommunityEdges;
 
 	private static final int ADD_INITIAL = 0;
 	private static final int SHORTEST_PATHS = 1;
@@ -42,7 +46,7 @@ public class DenseRegion implements GraphChiProgram<Integer, Integer> {
 	public synchronized void update(ChiVertex<Integer, Integer> vertex, GraphChiContext context) {
 		switch (context.getIteration()) {
 		case ADD_INITIAL:
-			addToInitialGraph(vertex);
+			addToInitialGraph(vertex, context.getVertexIdTranslate());
 			break;
 		case SHORTEST_PATHS:
 			addImmediateShortestPaths(vertex, context);
@@ -54,7 +58,7 @@ public class DenseRegion implements GraphChiProgram<Integer, Integer> {
 			rankDenseRegion(vertex, context);
 			break;
 		case CONTRACT_SINGULAR_NODES:
-			contractSingleNode(vertex, context);
+			contractSingleNode(vertex, context.getVertexIdTranslate());
 			break;
 		case ADD_TO_CONTRACTED:
 			addToContractedGraph(vertex, context.getVertexIdTranslate());
@@ -64,14 +68,26 @@ public class DenseRegion implements GraphChiProgram<Integer, Integer> {
 		}
 	}
 
-	private void addToInitialGraph(ChiVertex<Integer, Integer> vertex) {
-		int node = vertex.getId();
-		pathsWithinD.put(node, new HashMap<Integer, Path>());
-		neighbourhoods.put(node, new Neighbourhood(node));
-		//int nodeInternalDegree = 2 * vertex.getValue();
-		//status.getCommunityInternalEdges()[node] = nodeInternalDegree;
-		//status.getNodeWeightedDegree()[node] = nodeInternalDegree;
-		//status.getCommunityTotalEdges()[node] = nodeInternalDegree + vertex.numEdges();
+	private void addToInitialGraph(ChiVertex<Integer, Integer> vertex, VertexIdTranslate trans) {
+		Node node = new Node(vertex.getId());
+		int internalDegree = 2 * vertex.getValue();
+		int weightedDegree = internalDegree;
+		int actualSource = trans.backward(vertex.getId());
+		for (int i = 0; i < vertex.numEdges(); i++) {
+			int actualTarget = trans.backward(vertex.edge(i).getVertexId());
+			UndirectedEdge edge = new UndirectedEdge(actualSource, actualTarget);
+			int edgeWeight = previousInterCommunityEdges.get(edge);
+			weightedDegree += edgeWeight;
+		}
+		node.setSelfLoops(internalDegree);
+		node.setWeightedDegree(weightedDegree);
+		status.getNodes()[vertex.getId()] = node;
+
+		Community community = new Community(vertex.getId());
+		status.insertNodeIntoCommunity(node, community, 0);
+
+		pathsWithinD.put(vertex.getId(), new HashMap<Integer, Path>());
+		neighbourhoods.put(vertex.getId(), new Neighbourhood(vertex.getId()));
 	}
 
 	private void addImmediateShortestPaths(ChiVertex<Integer, Integer> vertex, GraphChiContext context) {
@@ -98,8 +114,6 @@ public class DenseRegion implements GraphChiProgram<Integer, Integer> {
 			}
 		}
 
-		//System.out.println("**PRE: " + neighbourhood);
-
 		int neighbourhoodSize = neighbourhood.getMembersSeenCount().size() + 1;
 		double seenCountRequirement = (neighbourhoodSize / densityDegree);
 
@@ -113,8 +127,6 @@ public class DenseRegion implements GraphChiProgram<Integer, Integer> {
 		}
 
 		neighbourhood.addMember(vertex.getId());
-
-		//System.out.println("post: " + neighbourhood);
 
 		int doubleTotalEdgeWeight = 0;
 		Set<Integer> members = neighbourhood.getMembersSeenCount().keySet();
@@ -130,11 +142,6 @@ public class DenseRegion implements GraphChiProgram<Integer, Integer> {
 		}
 		neighbourhood.setTotalEdgeWeight(doubleTotalEdgeWeight / 2);
 		neighbourhood.setEdgeCount(neighbourhood.getEdgeCount() / 2);
-
-		//System.out.println("seed: " + neighbourhood.getSeedNode() + 
-		//		", PrimarRank: " + neighbourhood.getPrimaryRankValue() + ", secondaryRank: " + neighbourhood.getSecondaryRankValue() +
-		//		", totalWeight: " + neighbourhood.getTotalEdgeWeight() + "\n");
-
 	}
 
 	private void rankDenseRegion(ChiVertex<Integer, Integer> vertex, GraphChiContext context) {
@@ -144,81 +151,101 @@ public class DenseRegion implements GraphChiProgram<Integer, Integer> {
 		}
 	}
 
-	private void assignNodesToCommunities() {
-		/*while(!denseRegionsRanked.isEmpty()) {
+	private void assignNodesToCommunities(VertexIdTranslate trans) {
+		Set<Integer> assignedNodes = new HashSet<Integer>();
+		while(!denseRegionsRanked.isEmpty()) {
 			Neighbourhood neighbourhood = denseRegionsRanked.poll();
-			int label = neighbourhood.getSeedNode();
+			int seed = neighbourhood.getSeedNode();
+			Community labelCommunity = status.getNodeToCommunity()[seed];
 			//flag that seed node is already assigned elsewhere and new label is therefore needed
-			label = status.getNodeToCommunity()[label] == -1 ? label : -1;
+			boolean newSeedNeeded = assignedNodes.contains(seed);
+			Set<Integer> neighbourhoodMembersAdded = new HashSet<Integer>();
 			for (Integer member : neighbourhood.getMembersSeenCount().keySet()) {
-				if (status.getNodeToCommunity()[member] == -1) {
+				if (assignedNodes.add(member)) {
 					//set label to first member if seed node was removed
-					label = (label == -1) ? member : label; 
-					status.insertNodeIntoCommunity(member, label);
+					if (newSeedNeeded) {
+						labelCommunity = status.getNodeToCommunity()[member];
+						seed = member;
+						newSeedNeeded = false;
+					}
+					neighbourhoodMembersAdded.add(seed);
+					if (member != seed) {
+						int noLinksToCommunity = 0;
+						int actualSource = trans.backward(member);
+						for (int target : neighbourhoodMembersAdded) {
+							int actualTarget = trans.backward(target);
+							UndirectedEdge edge = new UndirectedEdge(actualSource, actualTarget);
+							int linkCount = previousInterCommunityEdges.containsKey(edge) 
+									? previousInterCommunityEdges.get(edge)
+									: 0;
+							noLinksToCommunity += linkCount;
+						}
+						Node memberNode = status.getNodes()[member];
+						status.insertNodeIntoCommunity(memberNode, labelCommunity, noLinksToCommunity);
+					}
+					neighbourhoodMembersAdded.add(member);
 				}
 			}
-		}*/
+		}
 	}
 
-	private void contractSingleNode(ChiVertex<Integer, Integer> vertex, GraphChiContext context) {
-		/*
-		if (status.getCommunitySizeAtThisLevel()[vertex.getId()] == 1) {
+	private void contractSingleNode(ChiVertex<Integer, Integer> vertex, VertexIdTranslate trans) {
 
-			//System.out.println("!!!!!!CONTRACTING NODE: " + vertex.getId());
+		Community currentCommunity = status.getNodeToCommunity()[vertex.getId()];
+		Node node = status.getNodes()[vertex.getId()];
 
-			int currentCommunity = status.getNodeToCommunity()[vertex.getId()];
+		if (currentCommunity.getLevelSize() == 1) {
 
-			Map<Integer, Integer> visitedCommunities = new HashMap<Integer, Integer>();
-			visitedCommunities.put(currentCommunity, 0);
+			int actualSource = trans.backward(vertex.getId());
+			Map<Community, Integer> neighbourCommunities = new HashMap<Community, Integer>();
 			for (int i = 0; i < vertex.numEdges(); i++) {
 				int targetId = vertex.edge(i).getVertexId();
-				int weight = vertex.edge(i).getValue();
-				int targetCommunity = status.getNodeToCommunity()[targetId];
-				if (targetCommunity != currentCommunity) {
-					if (visitedCommunities.containsKey(targetCommunity)) {
-						int previousWeight = visitedCommunities.get(targetCommunity);
-						visitedCommunities.put(targetCommunity, weight + previousWeight);
-					} else {
-						visitedCommunities.put(targetCommunity, weight);
-					}
+				Community targetCommunity = status.getNodeToCommunity()[targetId];
+				int actualTarget = trans.backward(targetId);
+				UndirectedEdge previousEdge = new UndirectedEdge(actualSource, actualTarget);
+				int linkCount = previousInterCommunityEdges.get(previousEdge);
+				if (neighbourCommunities.containsKey(targetCommunity)) {
+					int previousCount = neighbourCommunities.get(targetCommunity);
+					neighbourCommunities.put(targetCommunity, linkCount + previousCount);
+				} else {
+					neighbourCommunities.put(targetCommunity, linkCount);
 				}
 			}
 
-			final Iterator<Integer> iterator = visitedCommunities.keySet().iterator();
-			double closestWeight = Integer.MIN_VALUE;
-			int closestCommunity = -1;
-			while(iterator.hasNext()) {
-				int neighbourCommunity = iterator.next();
-				if (neighbourCommunity != currentCommunity) {
-					int weight = visitedCommunities.get(neighbourCommunity);
-					int targetSize = status.getCommunitySizeAtThisLevel()[neighbourCommunity];
-					double adjacencyRanking = weight / (0.05*targetSize);
-					if (adjacencyRanking > closestWeight) {
-						closestWeight = adjacencyRanking;
-						closestCommunity = neighbourCommunity;
-					}
+			status.removeNodeFromCommunity(node, currentCommunity, 0);
+			
+			Community bestCommunity = currentCommunity;
+			int bestNoOfLinks = 0;
+			double bestModularityGain = 0.;
+			for (Map.Entry<Community, Integer> entry : neighbourCommunities.entrySet()) {	
+				double gain = status.modularityGain(node, entry.getKey(), entry.getValue());
+				if (gain > bestModularityGain || (gain == bestModularityGain && entry.getKey().equals(currentCommunity))) {
+					bestCommunity = entry.getKey();
+					bestNoOfLinks = entry.getValue();
+					bestModularityGain = gain;
 				}
 			}
-			status.removeNodeFromCommunity(vertex.getId(), currentCommunity);
-			status.insertNodeIntoCommunity(vertex.getId(), closestCommunity);
+
+			status.insertNodeIntoCommunity(node, bestCommunity, bestNoOfLinks);
 		}
-		//*/
 
 	}
 
 	private void addToContractedGraph(ChiVertex<Integer, Integer> vertex, VertexIdTranslate trans) {
-		/*for (int i = 0; i < vertex.numOutEdges(); i++) {
+		int actualSource = trans.backward(vertex.getId());
+		for (int i = 0; i < vertex.numOutEdges(); i++) {
 			int target = vertex.outEdge(i).getVertexId();
-			int sourceCommunity = status.getNodeToCommunity()[vertex.getId()];
-			int targetCommunity = status.getNodeToCommunity()[target];
+			int actualTarget = trans.backward(target);
+			int sourceCommunityId = status.getNodeToCommunity()[vertex.getId()].getSeedNode();
+			int targetCommunityId = status.getNodeToCommunity()[target].getSeedNode();
 			int weight = vertex.outEdge(i).getValue();
 
-			status.getCommunities().add(sourceCommunity);
-			status.getCommunities().add(targetCommunity);
+			status.getUniqueCommunities().add(sourceCommunityId);
+			status.getUniqueCommunities().add(targetCommunityId);
 
-			int actualSourceCommunity = trans.backward(sourceCommunity);
-			int actualTargetCommunity = trans.backward(targetCommunity);
-			if (sourceCommunity != targetCommunity) {
+			int actualSourceCommunity = trans.backward(sourceCommunityId);
+			int actualTargetCommunity = trans.backward(targetCommunityId);
+			if (sourceCommunityId != targetCommunityId) {
 				UndirectedEdge edge = new UndirectedEdge(actualSourceCommunity, actualTargetCommunity);
 				if (status.getContractedGraph().containsKey(edge)) {
 					int oldWeight = status.getContractedGraph().get(edge);
@@ -226,14 +253,28 @@ public class DenseRegion implements GraphChiProgram<Integer, Integer> {
 				} else {
 					status.getContractedGraph().put(edge, weight);
 				}
+				UndirectedEdge previousEdge = new UndirectedEdge(actualSource, actualTarget);
+				int edgeCount = previousInterCommunityEdges.get(previousEdge);
+				status.addEdgeToInterCommunityEdges(edge, edgeCount);
 			}
-		}*/
+		}
+
+		Community community = status.getNodeToCommunity()[vertex.getId()];
+		int communitySelfLoops =  community.getInternalEdges();
+		if (communitySelfLoops > 0) {
+			int actualNode = trans.backward(community.getSeedNode());
+			status.getContractedGraph().put(new UndirectedEdge(actualNode, actualNode), communitySelfLoops / 2);
+		}
 	}
 
 	public void beginIteration(GraphChiContext ctx) {
 		if (ctx.getIteration() == ADD_INITIAL) {
 			int noOfVertices = (int)ctx.getNumVertices();
-			//status.setFromNodeCount(noOfVertices);
+			status.setNodeToCommunity(new Community[noOfVertices]);
+			status.setNodes(new Node[noOfVertices]);
+			status.setUniqueCommunities(new HashSet<Integer>());
+			previousInterCommunityEdges = status.getInterCommunityEdgeCounts();
+			status.setInterCommunityEdgeCounts(new HashMap<UndirectedEdge, Integer>());
 
 			pathsWithinD = new HashMap<Integer, Map<Integer, Path>>();
 			neighbourhoods = new HashMap<Integer, Neighbourhood>();
@@ -266,10 +307,10 @@ public class DenseRegion implements GraphChiProgram<Integer, Integer> {
 			status.setUpdatedVertexTrans(ctx.getVertexIdTranslate());
 		}
 		if (ctx.getIteration() == RANK_DENSE_REGIONS) {
-			assignNodesToCommunities();
+			assignNodesToCommunities(ctx.getVertexIdTranslate());
 		} 
 		if (ctx.getIteration() == CONTRACT_SINGULAR_NODES) {
-			status.getModularities().put(status.getHierarchyHeight(), -1.);
+			status.updateModularity(status.getHierarchyHeight());
 			status.updateSizesMap();
 			status.updateCommunitiesMap();
 		}
@@ -282,11 +323,16 @@ public class DenseRegion implements GraphChiProgram<Integer, Integer> {
 		final Iterator<UndirectedEdge> iterator = status.getContractedGraph().keySet().iterator();
 		while(iterator.hasNext()) {
 			UndirectedEdge edge = iterator.next();
+			if (edge.getSource() == edge.getTarget()) {
+				continue;
+			}
 			int interCommunityEdgeWeight = status.getContractedGraph().get(edge);
-			//int sourceSize = status.getCommunitySizeAtThisLevel()[edge.getSource()];
-			//int targetSize = status.getCommunitySizeAtThisLevel()[edge.getTarget()];
-			//int averageAdjacency = interCommunityEdgeWeight / (sourceSize + targetSize);
-			//status.getContractedGraph().put(edge, Math.max(1, averageAdjacency));
+			Community sourceCommunity = status.getNodeToCommunity()[edge.getSource()];
+			Community targetCommunity = status.getNodeToCommunity()[edge.getTarget()];
+			int sourceSize = sourceCommunity.getLevelSize();
+			int targetSize = targetCommunity.getLevelSize();
+			int averageAdjacency = interCommunityEdgeWeight / (sourceSize + targetSize);
+			status.getContractedGraph().put(edge, Math.max(1, averageAdjacency));
 		}
 	}
 
@@ -297,7 +343,7 @@ public class DenseRegion implements GraphChiProgram<Integer, Integer> {
 
 	public void run(String filename, int nShards, GraphStatus status) throws  Exception {
 		this.status = status;
-		FastSharder sharder = OrcaProgram.createSharder(filename, 1);
+		FastSharder<Integer, Integer> sharder = OrcaProgram.createSharder(filename, 1);
 		sharder.shard(new FileInputStream(new File(filename)), "edgelist");
 		GraphChiEngine<Integer, Integer> engine = new GraphChiEngine<Integer, Integer>(filename, 1);
 		engine.setEdataConverter(new IntConverter());

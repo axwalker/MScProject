@@ -2,14 +2,12 @@ package uk.ac.bham.cs.commdet.graphchi.all;
 
 import java.util.*;
 
-
-
-public class EdgeComparator implements Comparator<UndirectedEdge> {
+public class UndirectedEdgeComparator implements Comparator<UndirectedEdge> {
 
 	private Map<Integer, List<Integer>> nodeToCommunities;
 	private int level;
 	
-	public EdgeComparator(Map<Integer, List<Integer>> nodeToCommunities, int level) {
+	public UndirectedEdgeComparator(Map<Integer, List<Integer>> nodeToCommunities, int level) {
 		this.nodeToCommunities = nodeToCommunities;
 		this.level = level;
 	}
@@ -112,7 +110,7 @@ public class EdgeComparator implements Comparator<UndirectedEdge> {
 		UndirectedEdge e14 = new UndirectedEdge(6, 7, 1);
 		UndirectedEdge e15 = new UndirectedEdge(7, 9, 1);
 		
-		TreeSet<UndirectedEdge> edges = new TreeSet<UndirectedEdge>(new EdgeComparator(lists, 0));
+		TreeSet<UndirectedEdge> edges = new TreeSet<UndirectedEdge>(new UndirectedEdgeComparator(lists, 0));
 		
 		edges.add(e1);
 		edges.add(e2);

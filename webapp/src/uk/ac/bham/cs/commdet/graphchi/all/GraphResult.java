@@ -76,7 +76,7 @@ public class GraphResult implements Serializable {
 	}
 
 	private TreeSet<UndirectedEdge> readInUnsortedEdgeList(int level) throws IOException {
-		TreeSet<UndirectedEdge> edges = new TreeSet<UndirectedEdge>(new EdgeComparator(hierarchy, level));
+		TreeSet<UndirectedEdge> edges = new TreeSet<UndirectedEdge>(new UndirectedEdgeComparator(hierarchy, level));
 		String inputFilename = filename + (level != 0 ? "_pass_" + level : "");
 		BufferedReader br = new BufferedReader(new FileReader(inputFilename));
 		String line = null;

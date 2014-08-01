@@ -35,6 +35,14 @@ public class Community {
 	public void decreaseTotalSize(int decrease) {
 		this.totalSize -= decrease;
 	}
+	
+	public void increaseLevelSize(int increase) {
+		this.levelSize += increase;
+	}
+	
+	public void decreaseLevelSize(int decrease) {
+		this.levelSize -= decrease;
+	}
 
 	public int getSeedNode() {
 		return seedNode;

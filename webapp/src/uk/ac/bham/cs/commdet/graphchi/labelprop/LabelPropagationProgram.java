@@ -37,10 +37,10 @@ public class LabelPropagationProgram implements GraphChiProgram<Integer, Integer
 		if (context.getIteration() == 0) {
 			Community community = new Community(vertex.getId());
 			community.setTotalSize(1);
-			status.getNodeToCommunityMap()[vertex.getId()] = community;
+			status.getNodeToCommunity()[vertex.getId()] = community;
 			context.getScheduler().addTask(vertex.getId());
 		} else {
-			Community currentCommunity = status.getNodeToCommunityMap()[vertex.getId()];
+			Community currentCommunity = status.getNodeToCommunity()[vertex.getId()];
 			Community mostFrequentNeighbour = mostFrequentNeighbourCommunity(vertex);
 			if (mostFrequentNeighbour != currentCommunity) {
 				for (int i = 0; i < vertex.numEdges(); i++) {
@@ -50,7 +50,7 @@ public class LabelPropagationProgram implements GraphChiProgram<Integer, Integer
 					currentCommunity.decreaseTotalSize(1);
 					mostFrequentNeighbour.increaseTotalSize(1);
 				}
-				status.getNodeToCommunityMap()[vertex.getId()] = mostFrequentNeighbour;
+				status.getNodeToCommunity()[vertex.getId()] = mostFrequentNeighbour;
 			}
 		}
 		if (finalUpdate) {
@@ -64,7 +64,7 @@ public class LabelPropagationProgram implements GraphChiProgram<Integer, Integer
 		Map<Community, Integer> labelCounts = new HashMap<Community, Integer>();
 		for (int i = 0; i < vertex.numEdges(); i++) {
 			int neighbour = vertex.edge(i).getVertexId();
-			Community neighbourCommunity = status.getNodeToCommunityMap()[neighbour];
+			Community neighbourCommunity = status.getNodeToCommunity()[neighbour];
 			if (labelCounts.containsKey(neighbourCommunity)) {
 				int previousCount = labelCounts.get(neighbourCommunity);
 				labelCounts.put(neighbourCommunity, previousCount + 1);
@@ -88,8 +88,8 @@ public class LabelPropagationProgram implements GraphChiProgram<Integer, Integer
 		int source = vertex.getId();
 		for (int i = 0; i < vertex.numOutEdges(); i++) {
 			int target = vertex.outEdge(i).getVertexId();
-			Community sourceCommunity = status.getNodeToCommunityMap()[source];
-			Community targetCommunity = status.getNodeToCommunityMap()[target];
+			Community sourceCommunity = status.getNodeToCommunity()[source];
+			Community targetCommunity = status.getNodeToCommunity()[target];
 			int sourceCommunityId = sourceCommunity.getSeedNode();
 			int targetCommunityId = targetCommunity.getSeedNode();
 			int weight = vertex.outEdge(i).getValue();
@@ -117,7 +117,7 @@ public class LabelPropagationProgram implements GraphChiProgram<Integer, Integer
 		if (ctx.getIteration() == 0) {
 			trans = ctx.getVertexIdTranslate();
 			int noOfVertices = (int)ctx.getNumVertices();
-			status.setNodeToCommunityMap(new Community[noOfVertices]);
+			status.setNodeToCommunity(new Community[noOfVertices]);
 		}
 	}
 	
@@ -142,7 +142,7 @@ public class LabelPropagationProgram implements GraphChiProgram<Integer, Integer
 	public void beginSubInterval(GraphChiContext ctx, VertexInterval interval) {}
 	public void endSubInterval(GraphChiContext ctx, VertexInterval interval) {}
 
-	protected FastSharder createSharder(String graphName, int numShards) throws IOException {
+	protected FastSharder<Integer, Integer> createSharder(String graphName, int numShards) throws IOException {
 		return new FastSharder<Integer, Integer>(graphName, numShards, new VertexProcessor<Integer>() {
 			public Integer receiveVertexValue(int vertexId, String token) {
 				return token != null ? Integer.parseInt(token) : 0;
@@ -155,7 +155,7 @@ public class LabelPropagationProgram implements GraphChiProgram<Integer, Integer
 	}
 
 	public GraphResult run(String baseFilename, int nShards) throws  Exception {
-		FastSharder sharder = this.createSharder(baseFilename, nShards);
+		FastSharder<Integer, Integer> sharder = this.createSharder(baseFilename, nShards);
 		sharder.shard(new FileInputStream(new File(baseFilename)), "edgelist");
 		GraphChiEngine<Integer, Integer> engine = new GraphChiEngine<Integer, Integer>(baseFilename, nShards);
 		engine.setEdataConverter(new IntConverter());

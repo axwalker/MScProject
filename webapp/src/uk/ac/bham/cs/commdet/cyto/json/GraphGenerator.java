@@ -3,17 +3,17 @@ package uk.ac.bham.cs.commdet.cyto.json;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig.Feature;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 import uk.ac.bham.cs.commdet.gml.GMLMapper;
 import uk.ac.bham.cs.commdet.gml.GMLWriter;
-import uk.ac.bham.cs.commdet.graphchi.all.CommunityIdentity;
 import uk.ac.bham.cs.commdet.graphchi.all.CommunityEdgePositions;
+import uk.ac.bham.cs.commdet.graphchi.all.CommunityIdentity;
 import uk.ac.bham.cs.commdet.graphchi.all.GraphResult;
 import uk.ac.bham.cs.commdet.graphchi.all.UndirectedEdge;
 
@@ -89,7 +89,7 @@ public class GraphGenerator {
 			} else {
 				parentId = result.getHierarchy().get(nodeId).get(colourLevel - 1);
 			}
-			node.setColour(getColour(parentId + ""));
+			node.setColour(toColour(parentId + ""));
 		}
 	}
 
@@ -210,7 +210,7 @@ public class GraphGenerator {
 	}
 
 	//http://stackoverflow.com/questions/3816466/evenly-distributed-hash-function
-	private static String getColour(String id) {
+	private static String toColour(String id) {
 		char[] chars = id.toCharArray();
 		int Q = 433494437;
 		int result = 0;

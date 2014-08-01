@@ -1,15 +1,18 @@
 package uk.ac.bham.cs.commdet.graphchi.all;
 
-import java.util.*;
-
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import edu.cmu.graphchi.preprocessing.VertexIdTranslate;
 
 public class GraphStatus {
 	
-	private Community[] nodeToCommunityMap;
+	private Community[] nodeToCommunity;
 	private Node[] nodes;
-
 	private long totalGraphWeight;
 	private int hierarchyHeight = 0;
 	private VertexIdTranslate originalVertexTrans;
@@ -18,12 +21,13 @@ public class GraphStatus {
 	private Map<Integer, List<Integer>> communityHierarchy = new HashMap<Integer, List<Integer>>();
 	private Map<CommunityIdentity, Integer> allCommunitySizes = new HashMap<CommunityIdentity, Integer>();
 	private HashMap<UndirectedEdge, Integer> contractedGraph = new HashMap<UndirectedEdge, Integer>();
-	private Set<Integer> communities;
+	private Set<Integer> uniqueCommunities;
+	private Map<UndirectedEdge, Integer> interCommunityEdgeCounts;
 
 	public void initialiseCommunitiesMap() {
-		for (int i = 0; i < nodeToCommunityMap.length; i++) {
-			if (nodeToCommunityMap[i] != null) {
-				int community = nodeToCommunityMap[i].getSeedNode();
+		for (int i = 0; i < nodeToCommunity.length; i++) {
+			if (nodeToCommunity[i] != null) {
+				int community = nodeToCommunity[i].getSeedNode();
 				communityHierarchy.put(originalVertexTrans.backward(community), new ArrayList<Integer>());
 			}
 		}
@@ -31,10 +35,10 @@ public class GraphStatus {
 
 	public void updateCommunitiesMap() {
 		if (hierarchyHeight == 0) {
-			for (int i = 0; i < nodeToCommunityMap.length; i++) {
+			for (int i = 0; i < nodeToCommunity.length; i++) {
 				if (communityHierarchy.containsKey(originalVertexTrans.backward(i))) {
 					List<Integer> communities = communityHierarchy.get(originalVertexTrans.backward(i));
-					communities.add(originalVertexTrans.backward(nodeToCommunityMap[i].getSeedNode()));
+					communities.add(originalVertexTrans.backward(nodeToCommunity[i].getSeedNode()));
 				}
 			}
 		} else {
@@ -42,13 +46,13 @@ public class GraphStatus {
 				int nodeId = node.getKey();
 				List<Integer> communities = node.getValue();
 				int currentGcId = updatedVertexTrans.forward(nodeId);
-				if (nodeId < nodeToCommunityMap.length && nodeToCommunityMap[currentGcId] != null) {
-					int latestCommunity = updatedVertexTrans.backward(nodeToCommunityMap[currentGcId].getSeedNode());
+				if (nodeId < nodeToCommunity.length && nodeToCommunity[currentGcId] != null) {
+					int latestCommunity = updatedVertexTrans.backward(nodeToCommunity[currentGcId].getSeedNode());
 					communities.add(latestCommunity);
 				} else {
 					int previousCommunity = communities.get(hierarchyHeight - 1);
 					int previousCommunityGcId = updatedVertexTrans.forward(previousCommunity);
-					int latestCommunityGcId = nodeToCommunityMap[previousCommunityGcId].getSeedNode();
+					int latestCommunityGcId = nodeToCommunity[previousCommunityGcId].getSeedNode();
 					if (updatedVertexTrans.backward(latestCommunityGcId) == -1) {
 						System.out.println("This is not a connected graph: " + previousCommunityGcId);
 						// this happens when graph is not connected, resulting in single disjoint communities
@@ -63,8 +67,8 @@ public class GraphStatus {
 
 	public void updateSizesMap() {
 		Set<Community> seenCommunites = new HashSet<Community>();
-		for (int i = 0; i < nodeToCommunityMap.length; i++) {
-			Community community = nodeToCommunityMap[i];
+		for (int i = 0; i < nodeToCommunity.length; i++) {
+			Community community = nodeToCommunity[i];
 			if (community != null && !seenCommunites.contains(community) && community.getTotalSize() > 0) {
 				allCommunitySizes.put(new CommunityIdentity(updatedVertexTrans.backward(community.getSeedNode()),
 						hierarchyHeight), community.getTotalSize());
@@ -72,33 +76,49 @@ public class GraphStatus {
 			}
 		}
 	}
-
-	/*public void insertNodeIntoCommunity(int nodeId, int communityId) {
-		nodeToCommunity[nodeId] = communityId;
+	
+	public void removeNodeFromCommunity(Node node, Community community, int noNodeLinksToComm) {
+		nodeToCommunity[node.getId()] = community;
 		if (hierarchyHeight == 0) {
-			communitySize[communityId]++;
+			community.decreaseTotalSize(1);
 		} else {
-			communitySize[communityId] += allCommunitySizes.get(new CommunityIdentity(updatedVertexTrans.backward(nodeId), hierarchyHeight - 1));
+			int nodeSize = allCommunitySizes.get(new CommunityIdentity(updatedVertexTrans.backward(node.getId()), hierarchyHeight - 1));
+			community.decreaseTotalSize(nodeSize);
 		}
-		communitySizeAtThisLevel[communityId]++;
+		community.decreaseLevelSize(1);
+		
+		community.setTotalEdges(community.getTotalEdges() - node.getWeightedDegree());
+		community.setInternalEdges(community.getInternalEdges() - (2*noNodeLinksToComm + node.getSelfLoops()));
 	}
 
-	public void removeNodeFromCommunity(int nodeId, int communityId) {
-		nodeToCommunity[nodeId] = -1;
+	public void insertNodeIntoCommunity(Node node, Community community, int noNodeLinksToComm) {
+		nodeToCommunity[node.getId()] = community;
 		if (hierarchyHeight == 0) {
-			communitySize[communityId]--;
+			community.increaseTotalSize(1);
 		} else {
-			communitySize[communityId] -= allCommunitySizes.get(new CommunityIdentity(updatedVertexTrans.backward(nodeId), hierarchyHeight - 1));
+			int nodeSize = allCommunitySizes.get(new CommunityIdentity(updatedVertexTrans.backward(node.getId()), hierarchyHeight - 1));
+			community.increaseTotalSize(nodeSize);
 		}
-		communitySizeAtThisLevel[communityId]--;
-	}*/
+		community.increaseLevelSize(1);
+		
+		community.setTotalEdges(community.getTotalEdges() + node.getWeightedDegree());
+		community.setInternalEdges(community.getInternalEdges() + (2*noNodeLinksToComm + node.getSelfLoops()));
+	}
 	
+	public double modularityGain(Node node, Community community, int noNodeLinksToComm) {
+		double totc = (double)community.getTotalEdges();
+		double degc = (double)node.getWeightedDegree();
+		double m2 = (double)totalGraphWeight;
+		double dnc = (double)noNodeLinksToComm;
+
+		return (dnc - (totc*degc)/m2) / (m2/2); 
+	}
 	
 	public void updateModularity(int level) {
 		Set<Community> seenCommunites = new HashSet<Community>();
 		double q = 0.;
-		for (int i = 0; i < nodeToCommunityMap.length; i++) {
-			Community community = nodeToCommunityMap[i];
+		for (int i = 0; i < nodeToCommunity.length; i++) {
+			Community community = nodeToCommunity[i];
 			if (community != null && !seenCommunites.contains(community) && community.getTotalEdges() > 0) {
 				q += (community.getInternalEdges() / (double)totalGraphWeight);
 				q -= Math.pow(community.getTotalEdges() / (double)totalGraphWeight, 2);
@@ -107,13 +127,19 @@ public class GraphStatus {
 		}
 		modularities.put(level, q);
 	}
-	
-	public int nodeSize(int node) {
-		return allCommunitySizes.get(new CommunityIdentity(updatedVertexTrans.backward(node), hierarchyHeight - 1));
-	}
 
+	public void addEdgeToInterCommunityEdges(UndirectedEdge edge, int edgeCount) {
+		if (interCommunityEdgeCounts.containsKey(edge)) {
+			int oldCount = interCommunityEdgeCounts.get(edge);
+			interCommunityEdgeCounts.put(edge, oldCount + edgeCount);
+		} else {
+			interCommunityEdgeCounts.put(edge, edgeCount);
+		}
+		
+	}
+	
 	public int getNodeCount() {
-		return communities.size();
+		return uniqueCommunities.size();
 	}
 	
 	public void increaseTotalGraphWeight(int increase) {
@@ -172,20 +198,28 @@ public class GraphStatus {
 		this.contractedGraph = contractedGraph;
 	}
 
-	public Set<Integer> getCommunities() {
-		return communities;
+	public Set<Integer> getUniqueCommunities() {
+		return uniqueCommunities;
 	}
 
-	public void setCommunities(Set<Integer> communities) {
-		this.communities = communities;
+	public void setUniqueCommunities(Set<Integer> communities) {
+		this.uniqueCommunities = communities;
 	}
 
-	public Community[] getNodeToCommunityMap() {
-		return nodeToCommunityMap;
+	public Community[] getNodeToCommunity() {
+		return nodeToCommunity;
 	}
 
-	public void setNodeToCommunityMap(Community[] nodeToCommunityMap) {
-		this.nodeToCommunityMap = nodeToCommunityMap;
+	public void setNodeToCommunity(Community[] nodeToCommunity) {
+		this.nodeToCommunity = nodeToCommunity;
+	}
+
+	public Map<UndirectedEdge, Integer> getInterCommunityEdgeCounts() {
+		return interCommunityEdgeCounts;
+	}
+
+	public void setInterCommunityEdgeCounts(Map<UndirectedEdge, Integer> interCommunityEdgeCounts) {
+		this.interCommunityEdgeCounts = interCommunityEdgeCounts;
 	}
 
 }
