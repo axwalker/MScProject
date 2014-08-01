@@ -40,6 +40,7 @@ public class LouvainProgram implements GraphChiProgram<Integer, Integer>, Detect
 	private GraphStatus status = new GraphStatus();
 	private VertexIdTranslate trans;
 
+	@Override
 	public synchronized void update(ChiVertex<Integer, Integer> vertex, GraphChiContext context) {
 		if (context.getIteration() == 0) {
 			addToInitialGraphStatus(vertex);
@@ -211,6 +212,10 @@ public class LouvainProgram implements GraphChiProgram<Integer, Integer>, Detect
 		engine.run(this, 1000);
 	}
 
+	/*
+	 * Uses contracted graph from previous iteration to write edge list to a file
+	 * for use as input in to the next iteration's engine.
+	 */
 	private String writeNextLevelEdgeList(String baseFilename) throws IOException {
 		String base;
 		if (passIndex > 1) {
@@ -230,7 +235,7 @@ public class LouvainProgram implements GraphChiProgram<Integer, Integer>, Detect
 		return newFilename;
 	}
 
-	protected static FastSharder<Integer, Integer> createSharder(String graphName, int numShards) throws IOException {
+	private static FastSharder<Integer, Integer> createSharder(String graphName, int numShards) throws IOException {
 		return new FastSharder<Integer, Integer>(graphName, numShards, new VertexProcessor<Integer>() {
 			public Integer receiveVertexValue(int vertexId, String token) {
 				return token != null ? Integer.parseInt(token) : -1;

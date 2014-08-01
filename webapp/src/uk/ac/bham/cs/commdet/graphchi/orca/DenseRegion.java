@@ -42,7 +42,7 @@ public class DenseRegion implements GraphChiProgram<Integer, Integer> {
 	private static final int CONTRACT_SINGULAR_NODES = 4;
 	private static final int ADD_TO_CONTRACTED = 5;
 
-
+	@Override
 	public synchronized void update(ChiVertex<Integer, Integer> vertex, GraphChiContext context) {
 		switch (context.getIteration()) {
 		case ADD_INITIAL:

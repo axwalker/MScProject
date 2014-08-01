@@ -127,6 +127,16 @@ public class GraphStatus {
 		}
 		modularities.put(level, q);
 	}
+	
+	public void addEdgeToContractedGraph(UndirectedEdge edge, int weight) {
+		if (contractedGraph.containsKey(edge)) {
+			int oldWeight = contractedGraph.get(edge);
+			contractedGraph.put(edge, oldWeight + weight);
+		} else {
+			contractedGraph.put(edge, weight);
+		}
+		
+	}
 
 	public void addEdgeToInterCommunityEdges(UndirectedEdge edge, int edgeCount) {
 		if (interCommunityEdgeCounts.containsKey(edge)) {

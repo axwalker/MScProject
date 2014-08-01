@@ -29,7 +29,7 @@ public class TwoCore implements GraphChiProgram<Integer, Integer> {
 	private boolean finalUpdate;
 	private GraphStatus status = new GraphStatus();
 
-
+	@Override
 	public synchronized void update(ChiVertex<Integer, Integer> vertex, GraphChiContext context) {
 		if (!twoCoreCompleted && !finalUpdate) {
 			twoCoreUpdate(vertex, context);

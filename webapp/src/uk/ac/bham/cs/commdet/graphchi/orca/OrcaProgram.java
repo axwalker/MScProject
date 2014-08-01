@@ -38,7 +38,8 @@ public class OrcaProgram implements DetectionProgram {
 	}
 
 	/*
-	 * 
+	 * Uses contracted graph from previous iteration to write edge list to a file
+	 * for use as input in to the next iteration's engine.
 	 */
 	private String writeNextLevelEdgeList(String baseFilename) throws IOException {
 		String base;
