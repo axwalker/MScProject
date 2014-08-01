@@ -1,51 +1,94 @@
 package uk.ac.bham.cs.commdet.graphchi.all;
 
 public class Community {
-
-	private int id;
-	private int level;
 	
-	public Community(int id, int level) {
-		this.id = id;
-		this.level = level;
-	}
-
-	public int getId() {
-		return id;
+	private int seedNode;
+	private int internalEdges;
+	private int totalEdges;
+	private int totalSize;
+	private int levelSize;
+	
+	public Community(int seedNode) {
+		this.seedNode = seedNode;
 	}
 	
-	public int getLevel() {
-		return level;
+	public void increaseInternalEdges(int increase) {
+		this.internalEdges += increase;
+	}
+	
+	public void decreaseInternalEdges(int decrease) {
+		this.internalEdges -= decrease;
+	}
+	
+	public void increaseTotalEdges(int increase) {
+		this.totalEdges += increase;
+	}
+	
+	public void decreaseTotalEdges(int decrease) {
+		this.totalEdges -= decrease;
+	}
+	
+	public void increaseTotalSize(int increase) {
+		this.totalSize += increase;
+	}
+	
+	public void decreaseTotalSize(int decrease) {
+		this.totalSize -= decrease;
+	}
+	
+	public void increaseLevelSize(int increase) {
+		this.levelSize += increase;
+	}
+	
+	public void decreaseLevelSize(int decrease) {
+		this.levelSize -= decrease;
+	}
+
+	public int getSeedNode() {
+		return seedNode;
+	}
+
+	public void setSeedNode(int seedNode) {
+		this.seedNode = seedNode;
+	}
+
+	public int getInternalEdges() {
+		return internalEdges;
+	}
+
+	public void setInternalEdges(int internalEdges) {
+		this.internalEdges = internalEdges;
+	}
+
+	public int getTotalEdges() {
+		return totalEdges;
+	}
+
+	public void setTotalEdges(int totalEdges) {
+		this.totalEdges = totalEdges;
+	}
+
+	public int getTotalSize() {
+		return totalSize;
+	}
+
+	public void setTotalSize(int totalSize) {
+		this.totalSize = totalSize;
+	}
+
+	public int getLevelSize() {
+		return levelSize;
+	}
+
+	public void setLevelSize(int levelSize) {
+		this.levelSize = levelSize;
 	}
 
 	@Override
 	public String toString() {
-		return "[id=" + id + ", level=" + level + "]";
-	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + id;
-		result = prime * result + level;
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		Community other = (Community) obj;
-		if (id != other.id)
-			return false;
-		if (level != other.level)
-			return false;
-		return true;
+		return "Community [seedNode=" + seedNode + ", internalEdges="
+				+ internalEdges + ", totalEdges=" + totalEdges + ", totalSize="
+				+ totalSize + ", levelSize=" + levelSize + "]";
 	}
 	
 }

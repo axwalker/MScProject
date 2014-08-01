@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import uk.ac.bham.cs.commdet.graphchi.all.Community;
 import uk.ac.bham.cs.commdet.graphchi.all.DetectionProgram;
 import uk.ac.bham.cs.commdet.graphchi.all.GraphResult;
 import uk.ac.bham.cs.commdet.graphchi.all.GraphStatus;
@@ -24,133 +25,170 @@ import edu.cmu.graphchi.preprocessing.FastSharder;
 import edu.cmu.graphchi.preprocessing.VertexIdTranslate;
 import edu.cmu.graphchi.preprocessing.VertexProcessor;
 
+/**
+ * Given an edge list file, used to generate a GraphResult object with a
+ * corresponding edge list file that groups nodes into communities.
+ * 
+ * Algorithm as described by Raghavan et al (http://arxiv.org/pdf/0709.2938.pdf)
+ */
 public class LabelPropagationProgram implements GraphChiProgram<Integer, Integer>, DetectionProgram  {
-	
-	private boolean finalUpdate;
+
+	private boolean hasFinishedPropagation;
 	private GraphStatus status = new GraphStatus();
-	private HashMap<UndirectedEdge, Integer> contractedGraph = new HashMap<UndirectedEdge, Integer>();
-	private VertexIdTranslate trans;
 
 	@Override
-	public void update(ChiVertex<Integer, Integer> vertex, GraphChiContext context) {
-		int newLabel;
+	public synchronized void update(ChiVertex<Integer, Integer> vertex, GraphChiContext context) {
 		if (context.getIteration() == 0) {
-			newLabel = vertex.getId();
-			status.getCommunitySize()[vertex.getId()] = 1;
-			status.getNodeToCommunity()[vertex.getId()] = newLabel;
-			context.getScheduler().addTask(vertex.getId());
-			vertex.setValue(newLabel);
+			addToInitialGraphStatus(vertex, context);
+		} else if (!hasFinishedPropagation) {
+			updateLabelFromNeighbours(vertex, context);
 		} else {
-			newLabel = mostFrequentNeighbourLabel(vertex);
-			if (newLabel != vertex.getValue()) {
-				for (int i = 0; i < vertex.numEdges(); i++) {
-					if (context.getIteration() > 0) {
-						context.getScheduler().addTask(vertex.edge(i).getVertexId());
-					}
-				}
-				int oldLabel = vertex.getValue();
-				synchronized(status) {
-					status.getCommunitySize()[oldLabel]--;
-					status.getCommunitySize()[newLabel]++;
-				}
-				status.getNodeToCommunity()[vertex.getId()] = newLabel;
-				vertex.setValue(newLabel);
-				
-			}
+			addToContractedGraph(vertex, context.getVertexIdTranslate());
 		}
-		if (finalUpdate) {
-			synchronized (contractedGraph) {
-				addToContractedGraph(vertex);
-			}
-		}
-	}
-	
-	private int mostFrequentNeighbourLabel(ChiVertex<Integer, Integer> vertex) {
-		Map<Integer, Integer> labelCounts = new HashMap<Integer, Integer>();
-		for (int i = 0; i < vertex.numEdges(); i++) {
-			int neighbourLabel = status.getNodeToCommunity()[vertex.edge(i).getVertexId()];
-			if (labelCounts.containsKey(neighbourLabel)) {
-				int previousCount = labelCounts.get(neighbourLabel);
-				labelCounts.put(neighbourLabel, previousCount + 1);
-			} else {
-				labelCounts.put(neighbourLabel, 1);
-			}
-		}
-		int maxCount = -1;
-		int maxLabel = -1;
-		for (Map.Entry<Integer, Integer> entry : labelCounts.entrySet()) {
-			if (entry.getValue() > maxCount || (entry.getValue() == maxCount && entry.getKey() > maxLabel)) {
-				maxCount = entry.getValue();
-				maxLabel = entry.getKey();
-			}
-		}
-		return maxLabel;
 	}
 
-	private void addToContractedGraph(ChiVertex<Integer, Integer> vertex) {
-		int node = vertex.getId();
+	private void addToInitialGraphStatus(ChiVertex<Integer, Integer> vertex, GraphChiContext context) {
+		Community community = new Community(vertex.getId());
+		community.setTotalSize(1);
+		status.getCommunities()[vertex.getId()] = community;
+		context.getScheduler().addTask(vertex.getId());
+	}
+
+	private void updateLabelFromNeighbours(ChiVertex<Integer, Integer> vertex, GraphChiContext context) {
+		Community mostFrequentNeighbour = mostFrequentNeighbourCommunity(vertex);
+		Community currentCommunity = status.getCommunities()[vertex.getId()];
+		if (mostFrequentNeighbour != currentCommunity) {
+			currentCommunity.decreaseTotalSize(1);
+			mostFrequentNeighbour.increaseTotalSize(1);
+			status.getCommunities()[vertex.getId()] = mostFrequentNeighbour;
+			for (int i = 0; i < vertex.numEdges(); i++) {
+				//neighbours will need to check again for their own most frequent neighbour labels
+				context.getScheduler().addTask(vertex.edge(i).getVertexId());
+			}
+		}
+	}
+
+	private Community mostFrequentNeighbourCommunity(ChiVertex<Integer, Integer> vertex) {
+		Map<Community, Integer> labelCounts = generateNeighbourLabelCounts(vertex);
+		Community mostFrequentNeighbour = new Community(-1);
+		int maxFrequency = -1;
+		for (Map.Entry<Community, Integer> neighbour : labelCounts.entrySet()) {
+			boolean hasGreaterFrequency = neighbour.getValue() > maxFrequency;
+			boolean hasEqualFrequency = neighbour.getValue() == maxFrequency;
+			boolean seedNodeHasHigherValue = neighbour.getKey().getSeedNode() > mostFrequentNeighbour.getSeedNode();
+			if (hasGreaterFrequency || (hasEqualFrequency && seedNodeHasHigherValue)) {
+				maxFrequency = neighbour.getValue();
+				mostFrequentNeighbour = neighbour.getKey();
+			}
+		}
+		return mostFrequentNeighbour;
+	}
+
+	private Map<Community, Integer> generateNeighbourLabelCounts(ChiVertex<Integer, Integer> vertex) {
+		Map<Community, Integer> labelCounts = new HashMap<Community, Integer>();
+		for (int i = 0; i < vertex.numEdges(); i++) {
+			int neighbour = vertex.edge(i).getVertexId();
+			Community neighbourCommunity = status.getCommunities()[neighbour];
+			if (labelCounts.containsKey(neighbourCommunity)) {
+				int previousCount = labelCounts.get(neighbourCommunity);
+				labelCounts.put(neighbourCommunity, previousCount + 1);
+			} else {
+				labelCounts.put(neighbourCommunity, 1);
+			}
+		}
+		return labelCounts;
+	}
+
+	/*
+	 * contracted graph used to write final edge list with vertices grouped into respective communities
+	 */
+	private void addToContractedGraph(ChiVertex<Integer, Integer> vertex, VertexIdTranslate trans) {
+		int source = vertex.getId();
 		for (int i = 0; i < vertex.numOutEdges(); i++) {
 			int target = vertex.outEdge(i).getVertexId();
-			int sourceCommunity = status.getNodeToCommunity()[node];
-			int targetCommunity = status.getNodeToCommunity()[target];
 			int weight = vertex.outEdge(i).getValue();
-			status.setTotalGraphWeight(status.getTotalGraphWeight() + weight*2);
+			Community sourceCommunity = status.getCommunities()[source];
+			Community targetCommunity = status.getCommunities()[target];
 			if (sourceCommunity != targetCommunity) {
-				int actualSourceCommunity = trans.backward(sourceCommunity);
-				int actualTargetCommunity = trans.backward(targetCommunity);
-				UndirectedEdge edge = new UndirectedEdge(actualSourceCommunity, actualTargetCommunity);
-				if (contractedGraph.containsKey(edge)) {
-					int oldWeight = contractedGraph.get(edge);
-					contractedGraph.put(edge, oldWeight + weight);
-				} else {
-					contractedGraph.put(edge, weight);
-				}
-				status.getCommunityTotalEdges()[sourceCommunity]+= weight;
-				status.getCommunityTotalEdges()[targetCommunity]+= weight;
+				int externalSourceCommunityId = trans.backward(sourceCommunity.getSeedNode());
+				int externalTargetCommunityId = trans.backward(targetCommunity.getSeedNode());
+				UndirectedEdge edge = new UndirectedEdge(externalSourceCommunityId, externalTargetCommunityId);
+				status.addEdgeToContractedGraph(edge, weight);
+
+				//update data for modularity calculation
+				sourceCommunity.increaseTotalEdges(weight);
+				targetCommunity.increaseTotalEdges(weight);
 			} else {
-				status.getCommunityInternalEdges()[sourceCommunity] += weight*2;
-				status.getCommunityTotalEdges()[sourceCommunity]+= weight*2;
+				sourceCommunity.increaseInternalEdges(weight * 2);
+				sourceCommunity.increaseTotalEdges(weight * 2);
 			}
+			status.setTotalGraphWeight(status.getTotalGraphWeight() + weight*2);
 		}
 	}
-		
+
 	public void beginIteration(GraphChiContext ctx) {
 		if (ctx.getIteration() == 0) {
-			trans = ctx.getVertexIdTranslate();
 			int noOfVertices = (int)ctx.getNumVertices();
-			status.setNodeToCommunity(new int[noOfVertices]);
-			for (int i = 0; i < noOfVertices; i++) {
-				status.getNodeToCommunity()[i] = -1;
-			}
-			status.setCommunityInternalEdges(new int[noOfVertices]);
-			status.setCommunityTotalEdges(new int[noOfVertices]);
-			status.setTotalGraphWeight(0);
-			status.setCommunitySize(new int[noOfVertices]);
+			status.setCommunities(new Community[noOfVertices]);
 		}
 	}
-	
+
 	public void endIteration(GraphChiContext ctx) {
 		if (ctx.getIteration() == 0) {
 			status.setOriginalVertexTrans(ctx.getVertexIdTranslate());
 			status.setUpdatedVertexTrans(ctx.getVertexIdTranslate());
 			status.initialiseCommunitiesMap();
 		}
-		if (!finalUpdate && !ctx.getScheduler().hasTasks()) {
-			ctx.getScheduler().addAllTasks();
-			finalUpdate = true;
+		if (!hasFinishedPropagation && !ctx.getScheduler().hasTasks()) {
 			status.updateSizesMap();
 			status.updateCommunitiesMap();
+			hasFinishedPropagation = true;
+			ctx.getScheduler().addAllTasks();
 		} else {
-			status.updateModularity(0);
+			int currentHierarchyLevel = 0;
+			status.updateModularity(currentHierarchyLevel);
 		}
 	}
-	
+
 	public void beginInterval(GraphChiContext ctx, VertexInterval interval) {}
 	public void endInterval(GraphChiContext ctx, VertexInterval interval) {}
 	public void beginSubInterval(GraphChiContext ctx, VertexInterval interval) {}
 	public void endSubInterval(GraphChiContext ctx, VertexInterval interval) {}
 
-	protected FastSharder createSharder(String graphName, int numShards) throws IOException {
+	public GraphResult run(String baseFilename, int nShards) throws  Exception {
+		FastSharder<Integer, Integer> sharder = createSharder(baseFilename, nShards);
+		sharder.shard(new FileInputStream(new File(baseFilename)), "edgelist");
+		GraphChiEngine<Integer, Integer> engine = new GraphChiEngine<Integer, Integer>(baseFilename, nShards);
+		engine.setEdataConverter(new IntConverter());
+		engine.setVertexDataConverter(new IntConverter());
+		engine.setEnableScheduler(true);
+		engine.setSkipZeroDegreeVertices(true);
+		engine.run(this, 200);
+
+		writeNextLevelEdgeList(baseFilename);
+
+		int hierarchyHeight = 1;
+		return new GraphResult(baseFilename, status.getCommunityHierarchy(), 
+				status.getCommunitySizes(), status.getModularities(), hierarchyHeight);
+	}
+
+	/*
+	 * Uses contracted graph to write final edge list
+	 */
+	private String writeNextLevelEdgeList(String baseFilename) throws IOException {
+		String newFilename = baseFilename + "_pass_" + 1;
+
+		BufferedWriter bw = new BufferedWriter(new FileWriter(newFilename));
+		for (Entry<UndirectedEdge, Integer> entry : status.getContractedGraph().entrySet()) {
+			bw.write(entry.getKey().toStringWeightless() + " " + entry.getValue() + "\n");
+		}
+		bw.close();
+
+		status.setContractedGraph(new HashMap<UndirectedEdge, Integer>());
+		return newFilename;
+	}
+
+	private static FastSharder<Integer, Integer> createSharder(String graphName, int numShards) throws IOException {
 		return new FastSharder<Integer, Integer>(graphName, numShards, new VertexProcessor<Integer>() {
 			public Integer receiveVertexValue(int vertexId, String token) {
 				return token != null ? Integer.parseInt(token) : 0;
@@ -161,34 +199,4 @@ public class LabelPropagationProgram implements GraphChiProgram<Integer, Integer
 			}
 		}, new IntConverter(), new IntConverter());
 	}
-
-	public GraphResult run(String baseFilename, int nShards) throws  Exception {
-		FastSharder sharder = this.createSharder(baseFilename, nShards);
-		sharder.shard(new FileInputStream(new File(baseFilename)), "edgelist");
-		GraphChiEngine<Integer, Integer> engine = new GraphChiEngine<Integer, Integer>(baseFilename, nShards);
-		engine.setEdataConverter(new IntConverter());
-		engine.setVertexDataConverter(new IntConverter());
-		engine.setEnableScheduler(true);
-		engine.run(this, 100);
-		
-		writeNextLevelEdgeList(baseFilename);
-		
-		int hierarchyHeight = 1;
-		return new GraphResult(baseFilename, status.getCommunityHierarchy(), 
-				status.getCommunitySizes(), status.getModularities(), hierarchyHeight);
-	}
-	
-	public String writeNextLevelEdgeList(String baseFilename) throws IOException {
-		String newFilename = baseFilename + "_pass_" + 1;
-
-		BufferedWriter bw = new BufferedWriter(new FileWriter(newFilename));
-		for (Entry<UndirectedEdge, Integer> entry : contractedGraph.entrySet()) {
-			bw.write(entry.getKey().toStringWeightless() + " " + entry.getValue() + "\n");
-		}
-		bw.close();
-
-		contractedGraph = new HashMap<UndirectedEdge, Integer>();
-		return newFilename;
-	}
-
 }

@@ -1,4 +1,4 @@
-package uk.ac.bham.cs.commdet.gml;
+package uk.ac.bham.cs.commdet.fileutils.gml;
 
 /**
  * A collection of tokens used for GML related data.

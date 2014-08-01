@@ -1,4 +1,4 @@
-package uk.ac.bham.cs.commdet.gml;
+package uk.ac.bham.cs.commdet.fileutils.gml;
 
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;
@@ -25,6 +25,7 @@ import uk.ac.bham.cs.commdet.cyto.json.NodeData;
  * (http://www.fim.uni-passau.de/fileadmin/files/lehrstuhl/brandenburg/projekte/gml/gml-documentation.tar.gz)
  *
  * @author Stuart Hendren (http://stuarthendren.net)
+ * @author limited adjustments made by Andrew Walker
  */
 public class GMLWriter {
 

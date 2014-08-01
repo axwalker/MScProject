@@ -1,4 +1,4 @@
-package uk.ac.bham.cs.commdet.gml;
+package uk.ac.bham.cs.commdet.fileutils.gml;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -15,18 +15,16 @@ import java.io.Writer;
 import java.nio.charset.Charset;
 import java.util.*;
 
+import uk.ac.bham.cs.commdet.fileutils.FileMapper;
+
 /**
  * @author Stuart Hendren (http://stuarthendren.net)
  * @author Stephen Mallette
+ * 
+ * @author limited adjustments made by Andrew Walker
  */
 
-public class GMLMapper {
-
-	//public static final String DEFAULT_LABEL = "undefined";
-
-	//private static final int DEFAULT_BUFFER_SIZE = 1000;
-
-	//private final String vertexIdKey;
+public class GMLMapper implements FileMapper {
 
 	private int nodeCount = 1;
 
@@ -36,13 +34,12 @@ public class GMLMapper {
 	
 	private Writer writer;
 
-	public GMLMapper() {//final String vertexIdKey) {
+	public GMLMapper() {
 		this.internalToGml = new HashMap<Integer, Map<String, Object>>();
 		this.gmlToInternal = new HashMap<String, Integer>();
-		//this.vertexIdKey = vertexIdKey;
 	}
 	
-	public String getGMLid(int internalId) {
+	public String getExternalid(int internalId) {
 		Map<String, Object> gmlProperties = internalToGml.get(internalId);
 		return (int)gmlProperties.get(GMLTokens.ID) + "";
 	}
@@ -70,7 +67,6 @@ public class GMLMapper {
 	private void parseGraph(final StreamTokenizer st) throws IOException {
 		checkValid(st, GMLTokens.GRAPH);
 		while (hasNext(st)) {
-			// st.nextToken();
 			final int type = st.ttype;
 			if (notLineBreak(type)) {
 				if (type == ']') {
@@ -127,14 +123,9 @@ public class GMLMapper {
 			throw new IOException("Edge target " + target + " not found");
 		}
 		
-		//TODO write edge to file instead
 		if (sourceId != null && targetId != null) {
 			writer.write(sourceId + " " + targetId + "\n");
 		}
-		
-		/*if (sourceId != null && targetId != null) {
-			System.out.println(sourceId + " " + targetId);
-		}*/
 
 	}
 
@@ -205,11 +196,7 @@ public class GMLMapper {
 		return type != StreamTokenizer.TT_EOL;
 	}
 
-	public Map<String, Integer> getGmlToInternal() {
-		return gmlToInternal;
-	}
-
-	public Map<Integer, Map<String, Object>> getInternalToGml() {
+	public Map<Integer, Map<String, Object>> getInternalToExternal() {
 		return internalToGml;
 	}
 
@@ -261,8 +248,8 @@ public class GMLMapper {
 		
 		GMLMapper mapper = new GMLMapper();
 		mapper.inputGraph("testOut", in);
-		System.out.println(mapper.getGmlToInternal());
-		System.out.println(mapper.getInternalToGml());
+		//System.out.println(mapper.getGmlToInternal());
+		//System.out.println(mapper.getInternalToGml());
 	}
 
 }

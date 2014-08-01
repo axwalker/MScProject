@@ -3,35 +3,28 @@ package uk.ac.bham.cs.commdet.graphchi.orca;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
 import java.util.Map.Entry;
 
-import uk.ac.bham.cs.commdet.cyto.json.GraphGenerator;
 import uk.ac.bham.cs.commdet.graphchi.all.DetectionProgram;
 import uk.ac.bham.cs.commdet.graphchi.all.GraphResult;
 import uk.ac.bham.cs.commdet.graphchi.all.GraphStatus;
 import uk.ac.bham.cs.commdet.graphchi.all.UndirectedEdge;
-
 import edu.cmu.graphchi.datablocks.IntConverter;
 import edu.cmu.graphchi.preprocessing.EdgeProcessor;
 import edu.cmu.graphchi.preprocessing.FastSharder;
 import edu.cmu.graphchi.preprocessing.VertexProcessor;
 
+/**
+ * Given an edge list file, used to generate a GraphResult object with corresponding edge list
+ * files that progressively group nodes into fewer larger communities.
+ * 
+ * Based on algorithm as described by Delling et al 
+ * (http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.164.2905&rep=rep1&type=pdf)
+ */
 public class OrcaProgram implements DetectionProgram {
 
 	private GraphStatus status = new GraphStatus();
-
-	protected static FastSharder createSharder(String graphName, int numShards) throws IOException {
-		return new FastSharder<Integer, Integer>(graphName, numShards, new VertexProcessor<Integer>() {
-			public Integer receiveVertexValue(int vertexId, String token) {
-				return token != null ? Integer.parseInt(token) : 0;
-			}
-		}, new EdgeProcessor<Integer>() {
-			public Integer receiveEdge(int from, int to, String token) {
-				return (token != null ? Integer.parseInt(token) : 100);
-			}
-		}, new IntConverter(), new IntConverter());
-	}
 
 	public GraphResult run(final String baseFilename, int nShards) throws  Exception {
 		new TwoCore().run(baseFilename, nShards, status);
@@ -42,14 +35,17 @@ public class OrcaProgram implements DetectionProgram {
 			newFilename = writeNextLevelEdgeList(newFilename);
 			new DenseRegion().run(newFilename, nShards, status);
 			nodeCount = status.getNodeCount();
-			System.out.println("NODE COUNT: " + nodeCount);
 		}
 
 		return new GraphResult(baseFilename, status.getCommunityHierarchy(), 
 				status.getCommunitySizes(), status.getModularities(), status.getHierarchyHeight());
 	}
 
-	public String writeNextLevelEdgeList(String baseFilename) throws IOException {
+	/*
+	 * Uses contracted graph from previous iteration to write edge list to a file
+	 * for use as input in to the next iteration's engine.
+	 */
+	private String writeNextLevelEdgeList(String baseFilename) throws IOException {
 		String base;
 		if (status.getHierarchyHeight() > 1) {
 			base = baseFilename.substring(0, baseFilename.indexOf("_pass_"));
@@ -59,7 +55,6 @@ public class OrcaProgram implements DetectionProgram {
 		String newFilename = base + "_pass_" + status.getHierarchyHeight();
 
 		BufferedWriter bw = new BufferedWriter(new FileWriter(newFilename));
-		System.out.println("Contracted graph: " + status.getContractedGraph());
 		for (Entry<UndirectedEdge, Integer> entry : status.getContractedGraph().entrySet()) {
 			bw.write(entry.getKey().toStringWeightless() + " " + entry.getValue() + "\n");
 		}
@@ -68,26 +63,17 @@ public class OrcaProgram implements DetectionProgram {
 		status.setContractedGraph(new HashMap<UndirectedEdge, Integer>());
 		return newFilename;
 	}
-
-	public static void main(String[] args) throws Exception {
-		String folder = "sampledata/"; 
-		String file = "karate.edg";
-		OrcaProgram program = new OrcaProgram();
-		GraphResult result = program.run(folder + file, 1);
-		//System.out.println("FINAL MODULARITY: " + program.getModularity());
-		result.writeSortedEdgeLists();
-		GraphGenerator generator = new GraphGenerator(result);
-		System.out.println("hierarchy: " + result.getHierarchy());
-		System.out.println(result.getSizes());
-		System.out.println(result.getHeight());
-		System.out.println(result.getAllEdgePositions());
-		System.out.println(program.status.getModularities());
-		//System.out.println(generator.getCommunityJson(36, 1, 1));
-		System.out.println(generator.getParentGraphJson());
-		//System.out.println(generator.getGraphJson(1));
-
-		//System.out.println(Arrays.toString(program.status.getCommunitySize()));
-		//System.out.println(result.getEdgePositions());
+	
+	protected static FastSharder<Integer, Integer> createSharder(String graphName, int numShards) throws IOException {
+		return new FastSharder<Integer, Integer>(graphName, numShards, new VertexProcessor<Integer>() {
+			public Integer receiveVertexValue(int vertexId, String token) {
+				return token != null ? Integer.parseInt(token) : 0;
+			}
+		}, new EdgeProcessor<Integer>() {
+			public Integer receiveEdge(int from, int to, String token) {
+				return (token != null ? Integer.parseInt(token) : 1000);
+			}
+		}, new IntConverter(), new IntConverter());
 	}
 
 }

@@ -2,6 +2,10 @@ package uk.ac.bham.cs.commdet.graphchi.orca;
 
 import java.util.*;
 
+/**
+ * A neighbourhood is a collection of nodes within some distance of a seed node along with
+ * how many neighbours each member has within this region.
+ */
 public class Neighbourhood {
 	
 	private int seedNode;
@@ -25,10 +29,16 @@ public class Neighbourhood {
 		}
 	}
 
+	/**
+	 * @return the average weight of an edge in the region
+	 */
 	public double getPrimaryRankValue() {
 		return (edgeCount == 0) ? 0 : totalEdgeWeight / edgeCount;
 	}
 	
+	/**
+	 * @return the total edge weight divided by the number of nodes in the region
+	 */
 	public double getSecondaryRankValue() {
 		return totalEdgeWeight / membersSeenCount.size();
 	}
