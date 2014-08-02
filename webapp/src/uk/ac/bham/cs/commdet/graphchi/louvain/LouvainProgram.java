@@ -21,7 +21,6 @@ import edu.cmu.graphchi.ChiVertex;
 import edu.cmu.graphchi.GraphChiContext;
 import edu.cmu.graphchi.GraphChiProgram;
 import edu.cmu.graphchi.datablocks.FloatConverter;
-import edu.cmu.graphchi.datablocks.IntConverter;
 import edu.cmu.graphchi.engine.GraphChiEngine;
 import edu.cmu.graphchi.engine.VertexInterval;
 import edu.cmu.graphchi.preprocessing.EdgeProcessor;

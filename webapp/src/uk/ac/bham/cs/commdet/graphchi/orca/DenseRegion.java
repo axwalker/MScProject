@@ -166,8 +166,7 @@ public class DenseRegion implements GraphChiProgram<Float, Float> {
 			Neighbourhood neighbourhood = denseRegionsRanked.poll();
 			int seed = neighbourhood.getSeedNode();
 			Community labelCommunity = status.getCommunities()[seed];
-			// flag that seed node is already assigned elsewhere and new label
-			// is therefore needed
+			// flag that seed node is already assigned elsewhere and new label is therefore needed
 			boolean newSeedNeeded = assignedNodes.contains(seed);
 			Set<Integer> neighbourhoodMembersAdded = new HashSet<Integer>();
 			for (Integer member : neighbourhood.getMembersSeenCount().keySet()) {
@@ -180,7 +179,7 @@ public class DenseRegion implements GraphChiProgram<Float, Float> {
 					}
 					neighbourhoodMembersAdded.add(seed);
 					if (member != seed) {
-						int noLinksToCommunity = 0;
+						double noLinksToCommunity = 0.;
 						int actualSource = trans.backward(member);
 						for (int target : neighbourhoodMembersAdded) {
 							int actualTarget = trans.backward(target);
@@ -334,7 +333,7 @@ public class DenseRegion implements GraphChiProgram<Float, Float> {
 			status.updateCommunitiesMap();
 		}
 		if (ctx.getIteration() == ADD_TO_CONTRACTED) {
-			//setAverageAdjacencies();
+			setAverageAdjacencies();
 		}
 	}
 

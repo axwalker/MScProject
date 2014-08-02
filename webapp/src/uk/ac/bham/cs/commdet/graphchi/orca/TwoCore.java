@@ -92,7 +92,7 @@ public class TwoCore implements GraphChiProgram<Float, Float> {
 			int targetCommunityId = status.getCommunities()[target].getSeedNode();
 			status.getUniqueCommunities().add(sourceCommunityId);
 			status.getUniqueCommunities().add(targetCommunityId);
-			status.setTotalGraphWeight(status.getTotalGraphWeight() + 2);
+			status.setTotalGraphWeight(status.getTotalGraphWeight() + 2*weight);
 			if (sourceCommunityId != targetCommunityId) {
 				int actualSourceCommunity = trans.backward(sourceCommunityId);
 				int actualTargetCommunity = trans.backward(targetCommunityId);

@@ -123,8 +123,8 @@ public class GraphStatus {
 	public double modularityGain(Node node, Community community, double noNodeLinksToComm) {
 		double totc = community.getTotalEdges();
 		double degc = node.getWeightedDegree();
-		double m2 = (double)totalGraphWeight;
-		double dnc = (double)noNodeLinksToComm;
+		double m2 = totalGraphWeight;
+		double dnc = noNodeLinksToComm;
 
 		return (dnc - (totc*degc)/m2) / (m2/2); 
 	}

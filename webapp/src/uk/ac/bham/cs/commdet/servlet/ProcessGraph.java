@@ -93,10 +93,9 @@ public class ProcessGraph extends HttpServlet {
 			} else {
 				mapper = new EdgelistMapper();
 			}
-			//mapper.inputGraph(tempFolderPath + filename);
-			//result = GCprogram.run(tempFolderPath + filename + "_fromGML", 1);
-			result = GCprogram.run(tempFolderPath + filename, 1);
-			//result.setMapper(mapper);
+			mapper.inputGraph(tempFolderPath + filename);
+			result = GCprogram.run(tempFolderPath + filename + "_mapped", 1);
+			result.setMapper(mapper);
 			result.writeSortedEdgeLists();
 			GraphGenerator generator = new GraphGenerator(result);
 			generator.setIncludeEdges(true);

@@ -11,7 +11,6 @@ import uk.ac.bham.cs.commdet.graphchi.all.GraphResult;
 import uk.ac.bham.cs.commdet.graphchi.all.GraphStatus;
 import uk.ac.bham.cs.commdet.graphchi.all.UndirectedEdge;
 import edu.cmu.graphchi.datablocks.FloatConverter;
-import edu.cmu.graphchi.datablocks.IntConverter;
 import edu.cmu.graphchi.preprocessing.EdgeProcessor;
 import edu.cmu.graphchi.preprocessing.FastSharder;
 import edu.cmu.graphchi.preprocessing.VertexProcessor;
@@ -31,7 +30,7 @@ public class OrcaProgram implements DetectionProgram {
 		new TwoCore().run(baseFilename, nShards, status);
 		String newFilename = baseFilename;
 		int nodeCount = status.getNodeCount();
-		while (nodeCount >= 2 && status.getHierarchyHeight() < 10) {
+		while (nodeCount >= 2 && status.getHierarchyHeight() < 15) {
 			status.incrementHeight();
 			newFilename = writeNextLevelEdgeList(newFilename);
 			new DenseRegion().run(newFilename, nShards, status);
