@@ -1,4 +1,4 @@
-package uk.ac.bham.cs.commdet.cyto.json;
+package uk.ac.bham.cs.commdet.cyto.graph;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,11 +12,11 @@ import org.apache.commons.io.FileUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
-import uk.ac.bham.cs.commdet.fileutils.gml.GMLWriter;
 import uk.ac.bham.cs.commdet.graphchi.all.CommunityEdgePositions;
 import uk.ac.bham.cs.commdet.graphchi.all.CommunityID;
 import uk.ac.bham.cs.commdet.graphchi.all.GraphResult;
 import uk.ac.bham.cs.commdet.graphchi.all.UndirectedEdge;
+import uk.ac.bham.cs.commdet.mapper.GMLWriter;
 
 /**
  * Generate strings in GML or JSON for a given graph result produced by a
@@ -29,7 +29,7 @@ public class GraphGenerator {
 	private Graph graph;
 	private int maxCommunitySize;
 	private int minCommunitySize = Integer.MAX_VALUE;
-	private int maxEdgeConnection;
+	private double maxEdgeConnection;
 	private boolean includeEdges;
 
 	public GraphGenerator(GraphResult result) {
@@ -168,7 +168,7 @@ public class GraphGenerator {
 		UndirectedEdge edge = UndirectedEdge.getEdge(line);
 		int source = edge.getSource();
 		int target = edge.getTarget();
-		int weight = edge.getWeight();
+		double weight = edge.getWeight();
 		if (includeEdges) {
 			if (source != target) {
 				graph.getEdges().add(
@@ -183,7 +183,7 @@ public class GraphGenerator {
 			addNode(level, target, nodesAdded);
 		}
 	}
-	
+
 	private void addNode(int level, int nodeId, Set<Integer> nodesAdded) {
 		int size = (level == 0 ? 1 : result.getSizes().get(new CommunityID(nodeId, level - 1)));
 		Node node = new Node(mapNode(nodeId), size);
@@ -206,6 +206,10 @@ public class GraphGenerator {
 		}
 	}
 
+	/*private double mapWeight(int edgeWeight) {
+		
+	}*/
+	
 	private String serializeJson() {
 		ObjectMapper mapper = new ObjectMapper();
 		// mapper.getSerializationConfig().enable(Feature.INDENT_OUTPUT);

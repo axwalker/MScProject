@@ -1,4 +1,4 @@
-package uk.ac.bham.cs.commdet.fileutils.gml;
+package uk.ac.bham.cs.commdet.mapper;
 
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;
@@ -12,11 +12,11 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
 
-import uk.ac.bham.cs.commdet.cyto.json.Edge;
-import uk.ac.bham.cs.commdet.cyto.json.EdgeData;
-import uk.ac.bham.cs.commdet.cyto.json.Graph;
-import uk.ac.bham.cs.commdet.cyto.json.Node;
-import uk.ac.bham.cs.commdet.cyto.json.NodeData;
+import uk.ac.bham.cs.commdet.cyto.graph.Edge;
+import uk.ac.bham.cs.commdet.cyto.graph.EdgeData;
+import uk.ac.bham.cs.commdet.cyto.graph.Graph;
+import uk.ac.bham.cs.commdet.cyto.graph.Node;
+import uk.ac.bham.cs.commdet.cyto.graph.NodeData;
 
 /**
  * GMLWriter writes a Graph to a GML OutputStream.

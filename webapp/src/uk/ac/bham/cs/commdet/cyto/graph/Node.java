@@ -1,4 +1,4 @@
-package uk.ac.bham.cs.commdet.cyto.json;
+package uk.ac.bham.cs.commdet.cyto.graph;
 
 import java.io.Serializable;
 import java.util.HashMap;

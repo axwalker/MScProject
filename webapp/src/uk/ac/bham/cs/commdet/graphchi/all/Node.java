@@ -3,8 +3,8 @@ package uk.ac.bham.cs.commdet.graphchi.all;
 public class Node {
 
 	private int id;
-	private int selfLoops;
-	private int weightedDegree;
+	private double selfLoops;
+	private double weightedDegree;
 	
 	public Node(int id) {
 		this.id = id;
@@ -18,19 +18,19 @@ public class Node {
 		this.id = id;
 	}
 	
-	public int getSelfLoops() {
+	public double getSelfLoops() {
 		return selfLoops;
 	}
 	
-	public void setSelfLoops(int selfLoops) {
+	public void setSelfLoops(double selfLoops) {
 		this.selfLoops = selfLoops;
 	}
 	
-	public int getWeightedDegree() {
+	public double getWeightedDegree() {
 		return weightedDegree;
 	}
 	
-	public void setWeightedDegree(int weightedDegree) {
+	public void setWeightedDegree(double weightedDegree) {
 		this.weightedDegree = weightedDegree;
 	}
 

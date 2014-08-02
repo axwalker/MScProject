@@ -1,4 +1,4 @@
-package uk.ac.bham.cs.commdet.cyto.json;
+package uk.ac.bham.cs.commdet.cyto.graph;
 
 import java.io.Serializable;
 
@@ -9,7 +9,7 @@ public class Metadata implements Serializable {
 	private int avgCommunitySize;
 	private int minCommunitySize;
 	private double modularity;
-	private int maxEdgeConnection;
+	private double maxEdgeConnection;
 	private int hierarchyHeight;
 	private int currentLevel;
 	
@@ -54,11 +54,11 @@ public class Metadata implements Serializable {
 		this.modularity = modularity;
 	}
 
-	public int getMaxEdgeConnection() {
+	public double getMaxEdgeConnection() {
 		return maxEdgeConnection;
 	}
 
-	public void setMaxEdgeConnection(int maxEdgeConnection) {
+	public void setMaxEdgeConnection(double maxEdgeConnection) {
 		this.maxEdgeConnection = maxEdgeConnection;
 	}
 

@@ -19,16 +19,16 @@ public class GraphStatus {
 	
 	private Community[] communities;
 	private Node[] nodes;
-	private long totalGraphWeight;
+	private double totalGraphWeight;
 	private int hierarchyHeight = 0;
 	private VertexIdTranslate originalVertexTrans;
 	private VertexIdTranslate updatedVertexTrans;
 	private Map<Integer, Double> modularities = new HashMap<Integer, Double>();
 	private Map<Integer, List<Integer>> communityHierarchy = new HashMap<Integer, List<Integer>>();
 	private Map<CommunityID, Integer> allCommunitySizes = new HashMap<CommunityID, Integer>();
-	private HashMap<UndirectedEdge, Integer> contractedGraph = new HashMap<UndirectedEdge, Integer>();
+	private HashMap<UndirectedEdge, Double> contractedGraph = new HashMap<UndirectedEdge, Double>();
 	private Set<Integer> uniqueCommunities;
-	private Map<UndirectedEdge, Integer> interCommunityEdgeCounts;
+	private Map<UndirectedEdge, Double> interCommunityEdgeCounts;
 
 	/**
 	 * Add each node in an initial input graph to the community hierarchy map
@@ -92,7 +92,7 @@ public class GraphStatus {
 		}
 	}
 	
-	public void removeNodeFromCommunity(Node node, Community community, int noNodeLinksToComm) {
+	public void removeNodeFromCommunity(Node node, Community community, double noNodeLinksToComm) {
 		communities[node.getId()] = community;
 		if (hierarchyHeight == 0) {
 			community.decreaseTotalSize(1);
@@ -106,7 +106,7 @@ public class GraphStatus {
 		community.setInternalEdges(community.getInternalEdges() - (2*noNodeLinksToComm + node.getSelfLoops()));
 	}
 
-	public void insertNodeIntoCommunity(Node node, Community community, int noNodeLinksToComm) {
+	public void insertNodeIntoCommunity(Node node, Community community, double noNodeLinksToComm) {
 		communities[node.getId()] = community;
 		if (hierarchyHeight == 0) {
 			community.increaseTotalSize(1);
@@ -120,9 +120,9 @@ public class GraphStatus {
 		community.setInternalEdges(community.getInternalEdges() + (2*noNodeLinksToComm + node.getSelfLoops()));
 	}
 	
-	public double modularityGain(Node node, Community community, int noNodeLinksToComm) {
-		double totc = (double)community.getTotalEdges();
-		double degc = (double)node.getWeightedDegree();
+	public double modularityGain(Node node, Community community, double noNodeLinksToComm) {
+		double totc = community.getTotalEdges();
+		double degc = node.getWeightedDegree();
 		double m2 = (double)totalGraphWeight;
 		double dnc = (double)noNodeLinksToComm;
 
@@ -143,9 +143,9 @@ public class GraphStatus {
 		modularities.put(level, q);
 	}
 	
-	public void addEdgeToContractedGraph(UndirectedEdge edge, int weight) {
+	public void addEdgeToContractedGraph(UndirectedEdge edge, double weight) {
 		if (contractedGraph.containsKey(edge)) {
-			int oldWeight = contractedGraph.get(edge);
+			double oldWeight = contractedGraph.get(edge);
 			contractedGraph.put(edge, oldWeight + weight);
 		} else {
 			contractedGraph.put(edge, weight);
@@ -153,9 +153,9 @@ public class GraphStatus {
 		
 	}
 
-	public void addEdgeToInterCommunityEdges(UndirectedEdge edge, int edgeCount) {
+	public void addEdgeToInterCommunityEdges(UndirectedEdge edge, double edgeCount) {
 		if (interCommunityEdgeCounts.containsKey(edge)) {
-			int oldCount = interCommunityEdgeCounts.get(edge);
+			double oldCount = interCommunityEdgeCounts.get(edge);
 			interCommunityEdgeCounts.put(edge, oldCount + edgeCount);
 		} else {
 			interCommunityEdgeCounts.put(edge, edgeCount);
@@ -167,7 +167,7 @@ public class GraphStatus {
 		return uniqueCommunities.size();
 	}
 	
-	public void increaseTotalGraphWeight(int increase) {
+	public void increaseTotalGraphWeight(double increase) {
 		this.totalGraphWeight += increase;
 	}
 	
@@ -215,19 +215,19 @@ public class GraphStatus {
 		return hierarchyHeight;
 	}
 
-	public long getTotalGraphWeight() {
+	public double getTotalGraphWeight() {
 		return totalGraphWeight;
 	}
 
-	public void setTotalGraphWeight(long totalGraphWeight) {
+	public void setTotalGraphWeight(double totalGraphWeight) {
 		this.totalGraphWeight = totalGraphWeight;
 	}
 
-	public HashMap<UndirectedEdge, Integer> getContractedGraph() {
+	public HashMap<UndirectedEdge, Double> getContractedGraph() {
 		return contractedGraph;
 	}
 
-	public void setContractedGraph(HashMap<UndirectedEdge, Integer> contractedGraph) {
+	public void setContractedGraph(HashMap<UndirectedEdge, Double> contractedGraph) {
 		this.contractedGraph = contractedGraph;
 	}
 
@@ -239,11 +239,11 @@ public class GraphStatus {
 		this.uniqueCommunities = communities;
 	}
 
-	public Map<UndirectedEdge, Integer> getInterCommunityEdgeCounts() {
+	public Map<UndirectedEdge, Double> getInterCommunityEdgeCounts() {
 		return interCommunityEdgeCounts;
 	}
 
-	public void setInterCommunityEdgeCounts(Map<UndirectedEdge, Integer> interCommunityEdgeCounts) {
+	public void setInterCommunityEdgeCounts(Map<UndirectedEdge, Double> interCommunityEdgeCounts) {
 		this.interCommunityEdgeCounts = interCommunityEdgeCounts;
 	}
 

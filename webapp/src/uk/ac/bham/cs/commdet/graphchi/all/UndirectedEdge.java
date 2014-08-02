@@ -7,14 +7,14 @@ public class UndirectedEdge {
 	
 	int source;
 	int target;
-	int weight;
+	double weight;
 	 
 	public UndirectedEdge(int node1, int node2) {
 		this.source = Math.min(node1, node2);
 		this.target = Math.max(node1, node2);
 	}
 	
-	public UndirectedEdge(int node1, int node2, int weight) {
+	public UndirectedEdge(int node1, int node2, double weight) {
 		this.source = Math.min(node1, node2);
 		this.target = Math.max(node1, node2);
 		this.weight = weight;
@@ -22,7 +22,7 @@ public class UndirectedEdge {
 	
 	public static UndirectedEdge getEdge(String line) {
 		String[] edgeInfo = line.split(" ");
-		int weight = edgeInfo.length == 3 ? Integer.parseInt(edgeInfo[2]) : 1;
+		double weight = edgeInfo.length == 3 ? Double.parseDouble(edgeInfo[2]) : 1.;
 		return new UndirectedEdge(Integer.parseInt(edgeInfo[0]), Integer.parseInt(edgeInfo[1]), weight);
 	}
 
@@ -42,15 +42,15 @@ public class UndirectedEdge {
 		this.target = target;
 	}	
 	
-	public int getWeight() {
+	public double getWeight() {
 		return weight;
 	}
 
-	public void setWeight(int weight) {
+	public void setWeight(double weight) {
 		this.weight = weight;
 	}
 	
-	public void increaseWeightBy(int weight) {
+	public void increaseWeightBy(double weight) {
 		this.weight += weight;
 	}
 	

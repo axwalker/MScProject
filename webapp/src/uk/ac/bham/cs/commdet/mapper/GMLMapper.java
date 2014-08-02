@@ -1,4 +1,4 @@
-package uk.ac.bham.cs.commdet.fileutils.gml;
+package uk.ac.bham.cs.commdet.mapper;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -15,7 +15,6 @@ import java.io.Writer;
 import java.nio.charset.Charset;
 import java.util.*;
 
-import uk.ac.bham.cs.commdet.fileutils.FileMapper;
 
 /**
  * @author Stuart Hendren (http://stuarthendren.net)
@@ -27,28 +26,36 @@ import uk.ac.bham.cs.commdet.fileutils.FileMapper;
 public class GMLMapper implements FileMapper {
 
 	private int nodeCount = 1;
-
-	private Map<Integer, Map<String, Object>> internalToGml;
-
-	private Map<String, Integer> gmlToInternal;
-	
+	private Map<Integer, Map<String, Object>> internalToExternal;
+	private Map<String, Integer> externalToInternal;
 	private Writer writer;
+	private double maxEdgeWeight;
 
 	public GMLMapper() {
-		this.internalToGml = new HashMap<Integer, Map<String, Object>>();
-		this.gmlToInternal = new HashMap<String, Integer>();
+		this.internalToExternal = new HashMap<Integer, Map<String, Object>>();
+		this.externalToInternal = new HashMap<String, Integer>();
 	}
 	
 	public String getExternalid(int internalId) {
-		Map<String, Object> gmlProperties = internalToGml.get(internalId);
+		Map<String, Object> gmlProperties = internalToExternal.get(internalId);
 		return (int)gmlProperties.get(GMLTokens.ID) + "";
 	}
 	
 	public int getInternalId(int gmlID) {
-		return gmlToInternal.get(gmlID + "");
+		return externalToInternal.get(gmlID + "");
 	}
 
-	public void parse(final StreamTokenizer st) throws IOException {
+	@Override
+	public int getInternalEdgeWeight(int edgeWeight) {
+		return Math.max(1, (int)(edgeWeight/maxEdgeWeight) * 1000);
+	}
+
+	@Override
+	public double getExternalEdgeWeight(int edgeWeight) {
+		return (edgeWeight / 1000) * maxEdgeWeight;
+	}
+	
+	private void parse(final StreamTokenizer st) throws IOException {
 		while (hasNext(st)) {
 			int type = st.ttype;
 			if (notLineBreak(type)) {
@@ -96,8 +103,8 @@ public class GMLMapper implements FileMapper {
 		nodeProperties.put("id", id);
 		nodeProperties.putAll(map);
 		
-		internalToGml.put(nodeCount, nodeProperties);
-		gmlToInternal.put((int)id + "", nodeCount);
+		internalToExternal.put(nodeCount, nodeProperties);
+		externalToInternal.put((int)id + "", nodeCount);
 		nodeCount++;
 	}
 
@@ -113,8 +120,8 @@ public class GMLMapper implements FileMapper {
 			throw new IOException("Edge has no target");
 		}
 
-		Integer sourceId = gmlToInternal.get(source + "");
-		Integer targetId = gmlToInternal.get(target + "");
+		Integer sourceId = externalToInternal.get(source + "");
+		Integer targetId = externalToInternal.get(target + "");
 
 		if (sourceId == null) {
 			throw new IOException("Edge source " + source + " not found");
@@ -197,7 +204,7 @@ public class GMLMapper implements FileMapper {
 	}
 
 	public Map<Integer, Map<String, Object>> getInternalToExternal() {
-		return internalToGml;
+		return internalToExternal;
 	}
 
 	public void inputGraph(String inputFilename) throws FileNotFoundException, IOException {

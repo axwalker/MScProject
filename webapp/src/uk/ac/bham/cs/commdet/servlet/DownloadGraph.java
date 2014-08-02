@@ -10,7 +10,7 @@ import javax.servlet.http.*;
 
 import edu.cmu.graphchi.ChiLogger;
 
-import uk.ac.bham.cs.commdet.cyto.json.GraphGenerator;
+import uk.ac.bham.cs.commdet.cyto.graph.GraphGenerator;
 import uk.ac.bham.cs.commdet.graphchi.all.GraphResult;
 
 @WebServlet("/DownloadGraph")

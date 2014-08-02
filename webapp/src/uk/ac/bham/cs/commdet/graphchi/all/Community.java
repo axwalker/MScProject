@@ -3,8 +3,8 @@ package uk.ac.bham.cs.commdet.graphchi.all;
 public class Community {
 	
 	private int seedNode;
-	private int internalEdges;
-	private int totalEdges;
+	private double internalEdges;
+	private double totalEdges;
 	private int totalSize;
 	private int levelSize;
 	
@@ -12,19 +12,19 @@ public class Community {
 		this.seedNode = seedNode;
 	}
 	
-	public void increaseInternalEdges(int increase) {
+	public void increaseInternalEdges(double increase) {
 		this.internalEdges += increase;
 	}
 	
-	public void decreaseInternalEdges(int decrease) {
+	public void decreaseInternalEdges(double decrease) {
 		this.internalEdges -= decrease;
 	}
 	
-	public void increaseTotalEdges(int increase) {
+	public void increaseTotalEdges(double increase) {
 		this.totalEdges += increase;
 	}
 	
-	public void decreaseTotalEdges(int decrease) {
+	public void decreaseTotalEdges(double decrease) {
 		this.totalEdges -= decrease;
 	}
 	
@@ -52,19 +52,19 @@ public class Community {
 		this.seedNode = seedNode;
 	}
 
-	public int getInternalEdges() {
+	public double getInternalEdges() {
 		return internalEdges;
 	}
 
-	public void setInternalEdges(int internalEdges) {
+	public void setInternalEdges(double internalEdges) {
 		this.internalEdges = internalEdges;
 	}
 
-	public int getTotalEdges() {
+	public double getTotalEdges() {
 		return totalEdges;
 	}
 
-	public void setTotalEdges(int totalEdges) {
+	public void setTotalEdges(double totalEdges) {
 		this.totalEdges = totalEdges;
 	}
 

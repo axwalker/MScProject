@@ -1,4 +1,4 @@
-package uk.ac.bham.cs.commdet.cyto.json;
+package uk.ac.bham.cs.commdet.cyto.graph;
 
 import java.io.Serializable;
 
@@ -6,9 +6,9 @@ public class Edge implements Serializable {
 
 	String source;
 	String target;
-	int weight;
+	double weight;
 	 
-	public Edge(String source, String target, int weight) {
+	public Edge(String source, String target, double weight) {
 		this.source = source;
 		this.target = target;
 		this.weight = weight;
@@ -30,15 +30,15 @@ public class Edge implements Serializable {
 		this.target = target;
 	}	
 	
-	public int getWeight() {
+	public double getWeight() {
 		return weight;
 	}
 
-	public void setWeight(int weight) {
+	public void setWeight(double weight) {
 		this.weight = weight;
 	}
 	
-	public void increaseWeightBy(int weight) {
+	public void increaseWeightBy(double weight) {
 		this.weight += weight;
 	}
 	

@@ -16,7 +16,7 @@ function initCy() {
         };
         edgeCss = {
             'line-color': '#53433F',
-            'width': 'mapData(weight, 1, ' + maxEdge + ', 0.2, 5)'
+            'width': 'mapData(weight, 0, ' + maxEdge + ', 0.2, 5)'
         };
     } else {
         nodeCss = {

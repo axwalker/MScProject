@@ -17,6 +17,7 @@ import uk.ac.bham.cs.commdet.graphchi.all.UndirectedEdge;
 import edu.cmu.graphchi.ChiVertex;
 import edu.cmu.graphchi.GraphChiContext;
 import edu.cmu.graphchi.GraphChiProgram;
+import edu.cmu.graphchi.datablocks.FloatConverter;
 import edu.cmu.graphchi.datablocks.IntConverter;
 import edu.cmu.graphchi.engine.GraphChiEngine;
 import edu.cmu.graphchi.engine.VertexInterval;
@@ -31,13 +32,13 @@ import edu.cmu.graphchi.preprocessing.VertexProcessor;
  * 
  * Algorithm as described by Raghavan et al (http://arxiv.org/pdf/0709.2938.pdf)
  */
-public class LabelPropagationProgram implements GraphChiProgram<Integer, Integer>, DetectionProgram  {
+public class LabelPropagationProgram implements GraphChiProgram<Float, Float>, DetectionProgram  {
 
 	private boolean hasFinishedPropagation;
 	private GraphStatus status = new GraphStatus();
 
 	@Override
-	public synchronized void update(ChiVertex<Integer, Integer> vertex, GraphChiContext context) {
+	public synchronized void update(ChiVertex<Float, Float> vertex, GraphChiContext context) {
 		if (context.getIteration() == 0) {
 			addToInitialGraphStatus(vertex, context);
 		} else if (!hasFinishedPropagation) {
@@ -47,14 +48,14 @@ public class LabelPropagationProgram implements GraphChiProgram<Integer, Integer
 		}
 	}
 
-	private void addToInitialGraphStatus(ChiVertex<Integer, Integer> vertex, GraphChiContext context) {
+	private void addToInitialGraphStatus(ChiVertex<Float, Float> vertex, GraphChiContext context) {
 		Community community = new Community(vertex.getId());
 		community.setTotalSize(1);
 		status.getCommunities()[vertex.getId()] = community;
 		context.getScheduler().addTask(vertex.getId());
 	}
 
-	private void updateLabelFromNeighbours(ChiVertex<Integer, Integer> vertex, GraphChiContext context) {
+	private void updateLabelFromNeighbours(ChiVertex<Float, Float> vertex, GraphChiContext context) {
 		Community mostFrequentNeighbour = mostFrequentNeighbourCommunity(vertex);
 		Community currentCommunity = status.getCommunities()[vertex.getId()];
 		if (mostFrequentNeighbour != currentCommunity) {
@@ -68,7 +69,7 @@ public class LabelPropagationProgram implements GraphChiProgram<Integer, Integer
 		}
 	}
 
-	private Community mostFrequentNeighbourCommunity(ChiVertex<Integer, Integer> vertex) {
+	private Community mostFrequentNeighbourCommunity(ChiVertex<Float, Float> vertex) {
 		Map<Community, Integer> labelCounts = generateNeighbourLabelCounts(vertex);
 		Community mostFrequentNeighbour = new Community(-1);
 		int maxFrequency = -1;
@@ -84,7 +85,7 @@ public class LabelPropagationProgram implements GraphChiProgram<Integer, Integer
 		return mostFrequentNeighbour;
 	}
 
-	private Map<Community, Integer> generateNeighbourLabelCounts(ChiVertex<Integer, Integer> vertex) {
+	private Map<Community, Integer> generateNeighbourLabelCounts(ChiVertex<Float, Float> vertex) {
 		Map<Community, Integer> labelCounts = new HashMap<Community, Integer>();
 		for (int i = 0; i < vertex.numEdges(); i++) {
 			int neighbour = vertex.edge(i).getVertexId();
@@ -102,11 +103,11 @@ public class LabelPropagationProgram implements GraphChiProgram<Integer, Integer
 	/*
 	 * contracted graph used to write final edge list with vertices grouped into respective communities
 	 */
-	private void addToContractedGraph(ChiVertex<Integer, Integer> vertex, VertexIdTranslate trans) {
+	private void addToContractedGraph(ChiVertex<Float, Float> vertex, VertexIdTranslate trans) {
 		int source = vertex.getId();
 		for (int i = 0; i < vertex.numOutEdges(); i++) {
 			int target = vertex.outEdge(i).getVertexId();
-			int weight = vertex.outEdge(i).getValue();
+			double weight = vertex.outEdge(i).getValue();
 			Community sourceCommunity = status.getCommunities()[source];
 			Community targetCommunity = status.getCommunities()[target];
 			if (sourceCommunity != targetCommunity) {
@@ -156,11 +157,11 @@ public class LabelPropagationProgram implements GraphChiProgram<Integer, Integer
 	public void endSubInterval(GraphChiContext ctx, VertexInterval interval) {}
 
 	public GraphResult run(String baseFilename, int nShards) throws  Exception {
-		FastSharder<Integer, Integer> sharder = createSharder(baseFilename, nShards);
+		FastSharder<Float, Float> sharder = createSharder(baseFilename, nShards);
 		sharder.shard(new FileInputStream(new File(baseFilename)), "edgelist");
-		GraphChiEngine<Integer, Integer> engine = new GraphChiEngine<Integer, Integer>(baseFilename, nShards);
-		engine.setEdataConverter(new IntConverter());
-		engine.setVertexDataConverter(new IntConverter());
+		GraphChiEngine<Float, Float> engine = new GraphChiEngine<Float, Float>(baseFilename, nShards);
+		engine.setEdataConverter(new FloatConverter());
+		engine.setVertexDataConverter(new FloatConverter());
 		engine.setEnableScheduler(true);
 		engine.setSkipZeroDegreeVertices(true);
 		engine.run(this, 200);
@@ -179,24 +180,24 @@ public class LabelPropagationProgram implements GraphChiProgram<Integer, Integer
 		String newFilename = baseFilename + "_pass_" + 1;
 
 		BufferedWriter bw = new BufferedWriter(new FileWriter(newFilename));
-		for (Entry<UndirectedEdge, Integer> entry : status.getContractedGraph().entrySet()) {
+		for (Entry<UndirectedEdge, Double> entry : status.getContractedGraph().entrySet()) {
 			bw.write(entry.getKey().toStringWeightless() + " " + entry.getValue() + "\n");
 		}
 		bw.close();
 
-		status.setContractedGraph(new HashMap<UndirectedEdge, Integer>());
+		status.setContractedGraph(new HashMap<UndirectedEdge, Double>());
 		return newFilename;
 	}
 
-	private static FastSharder<Integer, Integer> createSharder(String graphName, int numShards) throws IOException {
-		return new FastSharder<Integer, Integer>(graphName, numShards, new VertexProcessor<Integer>() {
-			public Integer receiveVertexValue(int vertexId, String token) {
-				return token != null ? Integer.parseInt(token) : 0;
+	private static FastSharder<Float, Float> createSharder(String graphName, int numShards) throws IOException {
+		return new FastSharder<Float, Float>(graphName, numShards, new VertexProcessor<Float>() {
+			public Float receiveVertexValue(int vertexId, String token) {
+				return token != null ? Float.parseFloat(token) : 0f;
 			}
-		}, new EdgeProcessor<Integer>() {
-			public Integer receiveEdge(int from, int to, String token) {
-				return token != null ? Integer.parseInt(token) : 1;
+		}, new EdgeProcessor<Float>() {
+			public Float receiveEdge(int from, int to, String token) {
+				return token != null ? Float.parseFloat(token) : 1f;
 			}
-		}, new IntConverter(), new IntConverter());
+		}, new FloatConverter(), new FloatConverter());
 	}
 }

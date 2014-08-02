@@ -1,4 +1,4 @@
-package uk.ac.bham.cs.commdet.fileutils;
+package uk.ac.bham.cs.commdet.mapper;
 
 import java.io.IOException;
 import java.util.Map;
@@ -14,6 +14,10 @@ public interface FileMapper {
 	public String getExternalid(int internalId);
 
 	public int getInternalId(int externalID);
+	
+	public int getInternalEdgeWeight(int edgeWeight);
+	
+	public double getExternalEdgeWeight(int edgeWeight);
 
 	/**
 	 * Load the GML file into the maps and write edgelist file.

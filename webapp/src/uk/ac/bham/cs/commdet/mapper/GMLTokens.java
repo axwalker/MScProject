@@ -1,4 +1,4 @@
-package uk.ac.bham.cs.commdet.fileutils.gml;
+package uk.ac.bham.cs.commdet.mapper;
 
 /**
  * A collection of tokens used for GML related data.
@@ -25,9 +25,4 @@ public class GMLTokens {
     public static final String GRAPHICS = "graphics";
     public static final String LABEL_GRAPHICS = "LabelGraphics";
     public static final char COMMENT_CHAR = '#';
-
-    /**
-     * Special token used to store Blueprint ids as they may not be integers
-     */
-    public static final String BLUEPRINTS_ID = "blueprintsId";
 }

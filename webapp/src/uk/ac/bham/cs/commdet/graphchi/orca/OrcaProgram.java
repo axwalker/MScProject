@@ -10,6 +10,7 @@ import uk.ac.bham.cs.commdet.graphchi.all.DetectionProgram;
 import uk.ac.bham.cs.commdet.graphchi.all.GraphResult;
 import uk.ac.bham.cs.commdet.graphchi.all.GraphStatus;
 import uk.ac.bham.cs.commdet.graphchi.all.UndirectedEdge;
+import edu.cmu.graphchi.datablocks.FloatConverter;
 import edu.cmu.graphchi.datablocks.IntConverter;
 import edu.cmu.graphchi.preprocessing.EdgeProcessor;
 import edu.cmu.graphchi.preprocessing.FastSharder;
@@ -55,25 +56,25 @@ public class OrcaProgram implements DetectionProgram {
 		String newFilename = base + "_pass_" + status.getHierarchyHeight();
 
 		BufferedWriter bw = new BufferedWriter(new FileWriter(newFilename));
-		for (Entry<UndirectedEdge, Integer> entry : status.getContractedGraph().entrySet()) {
+		for (Entry<UndirectedEdge, Double> entry : status.getContractedGraph().entrySet()) {
 			bw.write(entry.getKey().toStringWeightless() + " " + entry.getValue() + "\n");
 		}
 		bw.close();
 
-		status.setContractedGraph(new HashMap<UndirectedEdge, Integer>());
+		status.setContractedGraph(new HashMap<UndirectedEdge, Double>());
 		return newFilename;
 	}
 	
-	protected static FastSharder<Integer, Integer> createSharder(String graphName, int numShards) throws IOException {
-		return new FastSharder<Integer, Integer>(graphName, numShards, new VertexProcessor<Integer>() {
-			public Integer receiveVertexValue(int vertexId, String token) {
-				return token != null ? Integer.parseInt(token) : 0;
+	protected static FastSharder<Float, Float> createSharder(String graphName, int numShards) throws IOException {
+		return new FastSharder<Float, Float>(graphName, numShards, new VertexProcessor<Float>() {
+			public Float receiveVertexValue(int vertexId, String token) {
+				return token != null ? Float.parseFloat(token) : 0f;
 			}
-		}, new EdgeProcessor<Integer>() {
-			public Integer receiveEdge(int from, int to, String token) {
-				return (token != null ? Integer.parseInt(token) : 1000);
+		}, new EdgeProcessor<Float>() {
+			public Float receiveEdge(int from, int to, String token) {
+				return token != null ? Float.parseFloat(token) : 1f;
 			}
-		}, new IntConverter(), new IntConverter());
+		}, new FloatConverter(), new FloatConverter());
 	}
 
 }

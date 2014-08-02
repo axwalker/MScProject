@@ -20,6 +20,7 @@ import uk.ac.bham.cs.commdet.graphchi.all.UndirectedEdge;
 import edu.cmu.graphchi.ChiVertex;
 import edu.cmu.graphchi.GraphChiContext;
 import edu.cmu.graphchi.GraphChiProgram;
+import edu.cmu.graphchi.datablocks.FloatConverter;
 import edu.cmu.graphchi.datablocks.IntConverter;
 import edu.cmu.graphchi.engine.GraphChiEngine;
 import edu.cmu.graphchi.engine.VertexInterval;
@@ -35,7 +36,7 @@ import edu.cmu.graphchi.preprocessing.VertexProcessor;
  * Algorithm as described by Blondel at al (http://arxiv.org/pdf/0803.0476v2.pdf)
  * Partly adapted from C++ source code (https://sites.google.com/site/findcommunities/)
  */
-public class LouvainProgram implements GraphChiProgram<Integer, Integer>, DetectionProgram  {
+public class LouvainProgram implements GraphChiProgram<Float, Float>, DetectionProgram  {
 
 	private int passIndex;
 	private boolean improvedOnPass;
@@ -46,7 +47,7 @@ public class LouvainProgram implements GraphChiProgram<Integer, Integer>, Detect
 	private VertexIdTranslate trans;
 
 	@Override
-	public synchronized void update(ChiVertex<Integer, Integer> vertex, GraphChiContext context) {
+	public synchronized void update(ChiVertex<Float, Float> vertex, GraphChiContext context) {
 		if (context.getIteration() == 0) {
 			addToInitialGraphStatus(vertex);
 		} else if (!isReadyToContract) {
@@ -56,17 +57,17 @@ public class LouvainProgram implements GraphChiProgram<Integer, Integer>, Detect
 		}
 	}
 
-	private void lookForModularityGain(ChiVertex<Integer, Integer> vertex) {
+	private void lookForModularityGain(ChiVertex<Float, Float> vertex) {
 		Node node = status.getNodes()[vertex.getId()];
 		Community community = status.getCommunities()[vertex.getId()];
-		Map<Community, Integer> neighbourCommunities = getNeighbourCommunities(vertex);
+		Map<Community, Double> neighbourCommunities = getNeighbourCommunities(vertex);
 
 		status.removeNodeFromCommunity(node, community, neighbourCommunities.get(community));
 		
 		Community bestCommunity = community;
-		int bestNoOfLinks = 0;
+		double bestNoOfLinks = 0;
 		double bestModularityGain = 0.;
-		for (Map.Entry<Community, Integer> entry : neighbourCommunities.entrySet()) {	
+		for (Map.Entry<Community, Double> entry : neighbourCommunities.entrySet()) {	
 			double gain = status.modularityGain(node, entry.getKey(), entry.getValue());
 			if (gain > bestModularityGain || (gain == bestModularityGain && entry.getKey().equals(community))) {
 				bestCommunity = entry.getKey();
@@ -84,16 +85,16 @@ public class LouvainProgram implements GraphChiProgram<Integer, Integer>, Detect
 	}
 
 
-	private Map<Community, Integer> getNeighbourCommunities(ChiVertex<Integer, Integer> vertex) {
-		Map<Community, Integer> result = new HashMap<Community, Integer>();
-		result.put(status.getCommunities()[vertex.getId()], 0);
+	private Map<Community, Double> getNeighbourCommunities(ChiVertex<Float, Float> vertex) {
+		Map<Community, Double> result = new HashMap<Community, Double>();
+		result.put(status.getCommunities()[vertex.getId()], 0.);
 
 		for (int i = 0; i < vertex.numEdges(); i++) {
 			int neighbour = vertex.edge(i).getVertexId();
 			Community neighbourCommunity = status.getCommunities()[neighbour];
-			int edgeWeight = vertex.edge(i).getValue();
+			double edgeWeight = vertex.edge(i).getValue();
 			if (result.containsKey(neighbourCommunity)) {
-				int previousWeightToCommunity = result.get(neighbourCommunity);
+				double previousWeightToCommunity = result.get(neighbourCommunity);
 				result.put(neighbourCommunity, previousWeightToCommunity + edgeWeight);
 			} else {
 				result.put(neighbourCommunity, edgeWeight);
@@ -103,17 +104,17 @@ public class LouvainProgram implements GraphChiProgram<Integer, Integer>, Detect
 		return result;
 	}
 
-	private void addToInitialGraphStatus(ChiVertex<Integer, Integer> vertex) {
+	private void addToInitialGraphStatus(ChiVertex<Float, Float> vertex) {
 		Community community = new Community(vertex.getId());
 		Node node = new Node(vertex.getId());
 		
-		int externalWeightedDegree = 0;
+		double externalWeightedDegree = 0;
 		for (int i = 0; i < vertex.numEdges(); i++) {
-			int edgeWeight = vertex.edge(i).getValue();
+			double edgeWeight = vertex.edge(i).getValue();
 			externalWeightedDegree += edgeWeight;
 		}
-		int selfLoops = 2 * vertex.getValue();
-		int weightedDegree = selfLoops + externalWeightedDegree;
+		double selfLoops = 2 * vertex.getValue();
+		double weightedDegree = selfLoops + externalWeightedDegree;
 
 		if (passIndex == 0) {
 			status.increaseTotalGraphWeight(weightedDegree);
@@ -132,7 +133,7 @@ public class LouvainProgram implements GraphChiProgram<Integer, Integer>, Detect
 		status.getCommunities()[vertex.getId()] = community;
 	}
 
-	private void addToContractedGraph(ChiVertex<Integer, Integer> vertex) {
+	private void addToContractedGraph(ChiVertex<Float, Float> vertex) {
 		int source = vertex.getId();
 		Community community = status.getCommunities()[source];
 		if (community.getInternalEdges() > 0) {
@@ -146,10 +147,10 @@ public class LouvainProgram implements GraphChiProgram<Integer, Integer>, Detect
 			if (sourceCommunity != targetCommunity) {
 				int actualSourceCommunity = trans.backward(sourceCommunity);
 				int actualTargetCommunity = trans.backward(targetCommunity);
-				int weight = vertex.outEdge(i).getValue();
+				double weight = vertex.outEdge(i).getValue();
 				UndirectedEdge edge = new UndirectedEdge(actualSourceCommunity, actualTargetCommunity);
 				if (status.getContractedGraph().containsKey(edge)) {
-					int oldWeight = status.getContractedGraph().get(edge);
+					double oldWeight = status.getContractedGraph().get(edge);
 					status.getContractedGraph().put(edge, oldWeight + weight);
 				} else {
 					status.getContractedGraph().put(edge, weight);
@@ -206,11 +207,11 @@ public class LouvainProgram implements GraphChiProgram<Integer, Integer>, Detect
 	}
 
 	private void setupAndRunEngine(String filename) throws FileNotFoundException, IOException {
-		FastSharder<Integer, Integer> sharder = createSharder(filename, 1);
+		FastSharder<Float, Float> sharder = createSharder(filename, 1);
 		sharder.shard(new FileInputStream(new File(filename)), "edgelist");
-		GraphChiEngine<Integer, Integer> engine = new GraphChiEngine<Integer, Integer>(filename, 1);
-		engine.setEdataConverter(new IntConverter());
-		engine.setVertexDataConverter(new IntConverter());
+		GraphChiEngine<Float, Float> engine = new GraphChiEngine<Float, Float>(filename, 1);
+		engine.setEdataConverter(new FloatConverter());
+		engine.setVertexDataConverter(new FloatConverter());
 		engine.setEnableScheduler(true);
 		engine.setSkipZeroDegreeVertices(true);
 		engine.run(this, 1000);
@@ -230,25 +231,25 @@ public class LouvainProgram implements GraphChiProgram<Integer, Integer>, Detect
 		String newFilename = base + "_pass_" + passIndex;
 
 		BufferedWriter bw = new BufferedWriter(new FileWriter(newFilename));
-		for (Entry<UndirectedEdge, Integer> entry : status.getContractedGraph().entrySet()) {
+		for (Entry<UndirectedEdge, Double> entry : status.getContractedGraph().entrySet()) {
 			bw.write(entry.getKey().toStringWeightless() + " " + entry.getValue() + "\n");
 		}
 		bw.close();
 
-		status.setContractedGraph(new HashMap<UndirectedEdge, Integer>());
+		status.setContractedGraph(new HashMap<UndirectedEdge, Double>());
 		return newFilename;
 	}
 
-	private static FastSharder<Integer, Integer> createSharder(String graphName, int numShards) throws IOException {
-		return new FastSharder<Integer, Integer>(graphName, numShards, new VertexProcessor<Integer>() {
-			public Integer receiveVertexValue(int vertexId, String token) {
-				return token != null ? Integer.parseInt(token) : -1;
+	private static FastSharder<Float, Float> createSharder(String graphName, int numShards) throws IOException {
+		return new FastSharder<Float, Float>(graphName, numShards, new VertexProcessor<Float>() {
+			public Float receiveVertexValue(int vertexId, String token) {
+				return token != null ? Float.parseFloat(token) : 0f;
 			}
-		}, new EdgeProcessor<Integer>() {
-			public Integer receiveEdge(int from, int to, String token) {
-				return (token != null ? Integer.parseInt(token) : 1);
+		}, new EdgeProcessor<Float>() {
+			public Float receiveEdge(int from, int to, String token) {
+				return (token != null ? Float.parseFloat(token) : 1f);
 			}
-		}, new IntConverter(), new IntConverter());
+		}, new FloatConverter(), new FloatConverter());
 	}
 
 }

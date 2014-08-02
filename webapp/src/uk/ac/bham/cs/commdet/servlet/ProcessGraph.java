@@ -20,14 +20,15 @@ import javax.servlet.http.Part;
 
 import org.apache.commons.io.FileUtils;
 
-import uk.ac.bham.cs.commdet.cyto.json.GraphGenerator;
-import uk.ac.bham.cs.commdet.fileutils.FileMapper;
-import uk.ac.bham.cs.commdet.fileutils.gml.GMLMapper;
+import uk.ac.bham.cs.commdet.cyto.graph.GraphGenerator;
 import uk.ac.bham.cs.commdet.graphchi.all.DetectionProgram;
 import uk.ac.bham.cs.commdet.graphchi.all.GraphResult;
 import uk.ac.bham.cs.commdet.graphchi.labelprop.LabelPropagationProgram;
 import uk.ac.bham.cs.commdet.graphchi.louvain.LouvainProgram;
 import uk.ac.bham.cs.commdet.graphchi.orca.OrcaProgram;
+import uk.ac.bham.cs.commdet.mapper.EdgelistMapper;
+import uk.ac.bham.cs.commdet.mapper.FileMapper;
+import uk.ac.bham.cs.commdet.mapper.GMLMapper;
 import edu.cmu.graphchi.ChiLogger;
 
 @MultipartConfig
@@ -64,7 +65,7 @@ public class ProcessGraph extends HttpServlet {
 		} else {
 			GCprogram = new LabelPropagationProgram();
 		}
-
+		
 		//make temporary folder
 		String currentTime = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss").format(new Date());
 		String tempFolderPath = getServletConfig().getServletContext().getRealPath("WEB-INF") + "/tmp/";
@@ -86,16 +87,17 @@ public class ProcessGraph extends HttpServlet {
 		GraphResult result = null;
 		String filetype = request.getParameter("filetype");;
 		try {
+			FileMapper mapper;
 			if (filetype.equals("GML")) {
-				FileMapper mapper = new GMLMapper();
-				mapper.inputGraph(tempFolderPath + filename);
-				result = GCprogram.run(tempFolderPath + filename + "_fromGML", 1);
-				result.setMapper(mapper);
-				result.writeSortedEdgeLists();
+				mapper = new GMLMapper();
 			} else {
-				result = GCprogram.run(tempFolderPath + filename, 1);
-				result.writeSortedEdgeLists();
+				mapper = new EdgelistMapper();
 			}
+			//mapper.inputGraph(tempFolderPath + filename);
+			//result = GCprogram.run(tempFolderPath + filename + "_fromGML", 1);
+			result = GCprogram.run(tempFolderPath + filename, 1);
+			//result.setMapper(mapper);
+			result.writeSortedEdgeLists();
 			GraphGenerator generator = new GraphGenerator(result);
 			generator.setIncludeEdges(true);
 			responseString = generator.getParentGraphJson();

@@ -4,10 +4,10 @@ public class Path {
 
 	private int from;
 	private int to;
-	private int weight;
+	private double weight;
 	private boolean adjacent;
 	
-	public Path(int from, int to, int weight) {
+	public Path(int from, int to, double weight) {
 		this.from = from;
 		this.to = to;
 		this.weight = weight;
@@ -29,11 +29,11 @@ public class Path {
 		this.to = to;
 	}
 
-	public int getWeight() {
+	public double getWeight() {
 		return weight;
 	}
 
-	public void setWeight(int weight) {
+	public void setWeight(double weight) {
 		this.weight = weight;
 	}
 	
@@ -49,7 +49,9 @@ public class Path {
 		int result = 1;
 		result = prime * result + from;
 		result = prime * result + to;
-		result = prime * result + weight;
+		long temp;
+		temp = Double.doubleToLongBits(weight);
+		result = prime * result + (int) (temp ^ (temp >>> 32));
 		return result;
 	}
 
@@ -66,7 +68,7 @@ public class Path {
 			return false;
 		if (to != other.to)
 			return false;
-		if (weight != other.weight)
+		if (Double.doubleToLongBits(weight) != Double.doubleToLongBits(other.weight))
 			return false;
 		return true;
 	}
