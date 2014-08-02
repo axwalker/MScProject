@@ -22,6 +22,11 @@ var viewModel = function() {
     });
 
     // RESULTS -----
+    self.allModularities = ko.computed( function() {
+        if (self.graph()) console.log(self.graph().modularities);
+        return self.graph() ? self.graph().modularities : '';
+    });
+
     self.metadata = ko.computed( function() {
         return self.graph() ? self.graph().metadata : '';
     });
@@ -74,46 +79,51 @@ var viewModel = function() {
         }
     };
 
-    self.drillLevel = ko.observable();
-
-    self.availableLevels = ko.computed(function() {
+     self.levelsListWithModularity = ko.computed(function() {
         var levels = [];
-        if (self.hasSelectedCommunity()) {
-            var i;
-            for (i = 0; i < self.currentLevel(); i++) {
-                levels.push(i);
-            }
-            self.drillLevel(i - 1);
-        } else {
-            var j;
-            for (j = 0; j <= self.hierarchyHeight(); j++) {
-                levels.push(j);
-            }
-            self.drillLevel(j - 1);
+        for (var i = 0; i <= self.hierarchyHeight(); i++) {
+            var iModularity = (i === 0) ? 0 : self.allModularities()[(i-1)];
+            levels.push(i + ' (' + iModularity.toFixed(2) + ')');
         }
         return levels;
     });
 
+    self.drillLevel = ko.observable();
+
+    self.drillLevelIndex = ko.computed( function() {
+        return self.levelsListWithModularity().indexOf(self.drillLevel());
+    });
+
+    self.availableLevels = ko.computed(function() {
+        if (self.hasSelectedCommunity()) {
+            self.drillLevel(self.currentLevel() - 1);
+            return self.levelsListWithModularity().slice(0, self.currentLevel());
+        } else {
+            self.drillLevel(self.hierarchyHeight());
+            return self.levelsListWithModularity().slice(0, self.hierarchyHeight() + 1);
+        }
+    });
+
     self.colourLevel = ko.observable();
 
+    self.colourLevelIndex = ko.computed( function() {
+        return self.levelsListWithModularity().indexOf(self.colourLevel());
+    });
+
     self.colourLevels = ko.computed(function() {
-        var levels = [];
-        var i;
-        for (i = Math.max(self.drillLevel(), 1); i <= self.hierarchyHeight(); i++) {
-            levels.push(i);
-        }
-        self.colourLevel(i - 1);
-        return levels;
+        self.colourLevel(self.hierarchyHeight() + 1);
+        var from = Math.max(self.drillLevel(), 1);
+        return self.levelsListWithModularity().slice(from, self.hierarchyHeight() + 1);
     });
 
     self.isSmallEnoughToView = ko.observable(false);
 
     self.computeSmallEnoughToView = ko.computed(function() {
-        if (self.drillLevel() === self.hierarchyHeight()) {
+        if (self.drillLevelIndex() === self.hierarchyHeight()) {
             self.isSmallEnoughToView(true);
         } else if (self.hasSelectedCommunity()) {
             if (!self.isBottomLevel() && self.selectedCommunity()) {
-                var formData = 'graphLevel=' + encodeURIComponent(self.drillLevel());
+                var formData = 'graphLevel=' + encodeURIComponent(self.drillLevelIndex());
                 formData += '&currentLevel=' + encodeURIComponent(self.currentLevel());
                 formData += '&selectedNode=' + encodeURIComponent(self.selectedCommunity());
                 $.ajax({
@@ -130,11 +140,11 @@ var viewModel = function() {
                   }
                 });
             }
-        } else if (self.drillLevel()) {
+        } else if (self.drillLevel() || self.drillLevel() === 0) {
             $.ajax({
               type: 'GET',
               url: 'GetLevelSize',
-              data: 'graphLevel=' + encodeURIComponent(self.drillLevel()),
+              data: 'graphLevel=' + encodeURIComponent(self.drillLevelIndex()),
               cache: false,
               success: function(data){
                 if (data < 1000) {
@@ -144,6 +154,8 @@ var viewModel = function() {
                 }
               }
             });
+        } else {
+            self.isSmallEnoughToView(false);
         }
     });
 
@@ -250,8 +262,8 @@ var viewModel = function() {
     };
 
     self.updateGraph = function() {
-        var formData = 'graphLevel=' + encodeURIComponent(self.drillLevel());
-        formData += '&colourLevel=' + encodeURIComponent(self.colourLevel());
+        var formData = 'graphLevel=' + encodeURIComponent(self.drillLevelIndex());
+        formData += '&colourLevel=' + encodeURIComponent(self.colourLevelIndex());
         if (self.hasSelectedCommunity()) {
             formData += '&currentLevel=' + encodeURIComponent(self.currentLevel());
             formData += '&selectedNode=' + encodeURIComponent(self.selectedCommunity());
@@ -262,8 +274,8 @@ var viewModel = function() {
     };
 
     self.downloadGraph = function() {
-        var formData = 'graphLevel=' + encodeURIComponent(self.drillLevel());
-        formData += '&colourLevel=' + encodeURIComponent(self.colourLevel());
+        var formData = 'graphLevel=' + encodeURIComponent(self.drillLevelIndex());
+        formData += '&colourLevel=' + encodeURIComponent(self.colourLevelIndex());
         if (self.hasSelectedCommunity()) {
             formData += '&currentLevel=' + encodeURIComponent(self.currentLevel());
             formData += '&selectedNode=' + encodeURIComponent(self.selectedCommunity());

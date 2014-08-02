@@ -97,8 +97,8 @@
 
                             <HR>
 
-                            Hierarchy view level: <select data-bind="options: availableLevels, value: drillLevel"></select> <br>
-                            Color by level: <select data-bind="options: colourLevels, value: colourLevel"></select> <br>
+                            Hierarchy view level (modularity): <select data-bind="options: availableLevels, value: drillLevel"></select> <br>
+                            Color by level (modularity): <select data-bind="options: colourLevels, value: colourLevel"></select> <br>
                             
                             <div id="wholeLevel" data-bind="visible: !hasSelectedCommunity()">
                                 <HR>
@@ -136,7 +136,6 @@
                     <table>
                         <thead>
                             <tr>
-                                <th>Id</th>
                                 <!-- ko foreach: tableHeadings -->
                                     <th data-bind="text: $data"></th>
                                 <!-- /ko -->
@@ -144,7 +143,6 @@
                         </thead>
                         <tbody data-bind="foreach: community">
                             <tr>
-                                <td data-bind="text: $data.data.id"></td>
                                 <!-- ko foreach: Object.keys($data.data.metadata).map(function (key) {
                                                     return $data.data.metadata[key];
                                                 }); 

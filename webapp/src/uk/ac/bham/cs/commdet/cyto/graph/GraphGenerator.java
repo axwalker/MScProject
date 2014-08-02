@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
@@ -35,6 +36,11 @@ public class GraphGenerator {
 	public GraphGenerator(GraphResult result) {
 		this.result = result;
 		this.graph = new Graph();
+		double[] modularities = new double[result.getModularities().size()];
+		for (Entry<Integer, Double> entry : result.getModularities().entrySet()) {
+			modularities[entry.getKey()] = entry.getValue();
+		}
+		this.graph.setModularities(modularities);
 	}
 
 	public String getParentGraphJson() {
@@ -77,6 +83,18 @@ public class GraphGenerator {
 		colourNodes(fileLevel, colourLevel);
 	}
 
+	private void setMetadata(double modularity, int level) {
+		Metadata metadata = graph.getMetadata();
+		metadata.setModularity(modularity);
+		metadata.setNoOfCommunities(graph.getNodes().size());
+		metadata.setAvgCommunitySize(result.getHierarchy().size() / graph.getNodes().size());
+		metadata.setHierarchyHeight(result.getHeight());
+		metadata.setCurrentLevel(level);
+		metadata.setMaxEdgeConnection(maxEdgeConnection);
+		metadata.setMaxCommunitySize(maxCommunitySize);
+		metadata.setMinCommunitySize(minCommunitySize);
+	}
+
 	private void colourNodes(int level, int colourLevel) {
 		for (NodeData nodeData : graph.getNodes()) {
 			Node node = nodeData.getData();
@@ -90,18 +108,6 @@ public class GraphGenerator {
 			node.setColour(toColour(parentId + ""));
 			node.getMetadata().put("community", parentId);
 		}
-	}
-
-	private void setMetadata(double modularity, int level) {
-		Metadata metadata = graph.getMetadata();
-		metadata.setModularity(modularity);
-		metadata.setNoOfCommunities(graph.getNodes().size());
-		metadata.setAvgCommunitySize(result.getHierarchy().size() / graph.getNodes().size());
-		metadata.setHierarchyHeight(result.getHeight());
-		metadata.setCurrentLevel(level);
-		metadata.setMaxEdgeConnection(maxEdgeConnection);
-		metadata.setMaxCommunitySize(maxCommunitySize);
-		metadata.setMinCommunitySize(minCommunitySize);
 	}
 
 	/**
@@ -196,7 +202,7 @@ public class GraphGenerator {
 		maxCommunitySize = Math.max(maxCommunitySize, size);
 		minCommunitySize = Math.min(minCommunitySize, size);
 	}
-	
+
 	private String serializeJson() {
 		ObjectMapper mapper = new ObjectMapper();
 		// mapper.getSerializationConfig().enable(Feature.INDENT_OUTPUT);

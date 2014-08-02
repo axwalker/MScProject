@@ -8,6 +8,7 @@ public class Graph implements Serializable {
 	private List<NodeData> nodes = new ArrayList<NodeData>();
 	private List<EdgeData> edges = new ArrayList<EdgeData>();
 	private Metadata metadata = new Metadata();
+	private double[] modularities;
 	
 	public Graph() {}
 
@@ -37,6 +38,14 @@ public class Graph implements Serializable {
 	
 	public boolean getSuccess() {
 		return true;
+	}
+
+	public double[] getModularities() {
+		return modularities;
+	}
+
+	public void setModularities(double[] modularities) {
+		this.modularities = modularities;
 	}
 	
 }
