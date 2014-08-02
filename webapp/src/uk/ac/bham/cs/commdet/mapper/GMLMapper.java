@@ -15,6 +15,8 @@ import java.io.Writer;
 import java.nio.charset.Charset;
 import java.util.*;
 
+import org.apache.commons.lang.math.NumberUtils;
+
 
 /**
  * @author Stuart Hendren (http://stuarthendren.net)
@@ -29,7 +31,6 @@ public class GMLMapper implements FileMapper {
 	private Map<Integer, Map<String, Object>> internalToExternal;
 	private Map<String, Integer> externalToInternal;
 	private Writer writer;
-	private double maxEdgeWeight;
 
 	public GMLMapper() {
 		this.internalToExternal = new HashMap<Integer, Map<String, Object>>();
@@ -43,16 +44,6 @@ public class GMLMapper implements FileMapper {
 	
 	public int getInternalId(int gmlID) {
 		return externalToInternal.get(gmlID + "");
-	}
-
-	@Override
-	public int getInternalEdgeWeight(int edgeWeight) {
-		return Math.max(1, (int)(edgeWeight/maxEdgeWeight) * 1000);
-	}
-
-	@Override
-	public double getExternalEdgeWeight(int edgeWeight) {
-		return (edgeWeight / 1000) * maxEdgeWeight;
 	}
 	
 	private void parse(final StreamTokenizer st) throws IOException {
@@ -111,6 +102,7 @@ public class GMLMapper implements FileMapper {
 	private void addEdge(final Map<String, Object> map) throws IOException {
 		Object source = map.remove(GMLTokens.SOURCE);
 		Object target = map.remove(GMLTokens.TARGET);
+		Object value = map.remove(GMLTokens.VALUE);
 
 		if (source == null) {
 			throw new IOException("Edge has no source");
@@ -130,8 +122,14 @@ public class GMLMapper implements FileMapper {
 			throw new IOException("Edge target " + target + " not found");
 		}
 		
+		if (value != null && !NumberUtils.isNumber(value + "")) {
+			throw new IOException("Edge " + source + " to " + target + " has a non-numeric weight value");
+		}
+		
+		String weight = (value != null) ? " " + value : "";
+		
 		if (sourceId != null && targetId != null) {
-			writer.write(sourceId + " " + targetId + "\n");
+			writer.write(sourceId + " " + targetId + weight + "\n");
 		}
 
 	}
@@ -223,7 +221,7 @@ public class GMLMapper implements FileMapper {
 		final StreamTokenizer st = new StreamTokenizer(r);
 		
 		writer = new BufferedWriter(new OutputStreamWriter(
-		          new FileOutputStream(filename+ "_fromGML"), "utf-8"));
+		          new FileOutputStream(filename+ "_mapped"), "utf-8"));
 
 		try {
 			st.commentChar(GMLTokens.COMMENT_CHAR);
@@ -244,19 +242,4 @@ public class GMLMapper implements FileMapper {
 			writer.close();
 		}
 	}
-
-	public static void main(String[] args) throws IOException {
-		//String testGML = "graph [\r\n\tnode [\r\n\t\tid 1\r\n\t\tblueprintsId \"3\"\r\n\t\tname \"lop\"\r\n\t\tlang \"java\"\r\n\t]\r\n\tnode [\r\n\t\tid 2\r\n\t\tblueprintsId \"2\"\r\n\t\tname \"vadas\"\r\n\t\tage 27\r\n\t]\r\n\tnode [\r\n\t\tid 3\r\n\t\tblueprintsId \"1\"\r\n\t\tname \"marko\"\r\n\t\tage 29\r\n\t]\r\n\tnode [\r\n\t\tid 4\r\n\t\tblueprintsId \"6\"\r\n\t\tname \"peter\"\r\n\t\tage 35\r\n\t]\r\n\tnode [\r\n\t\tid 5\r\n\t\tblueprintsId \"5\"\r\n\t\tname \"ripple\"\r\n\t\tlang \"java\"\r\n\t]\r\n\tnode [\r\n\t\tid 6\r\n\t\tblueprintsId \"4\"\r\n\t\tname \"josh\"\r\n\t\tage 32\r\n\t]\r\n\tedge [\r\n\t\tsource 6\r\n\t\ttarget 5\r\n\t\tlabel \"created\"\r\n\t\tblueprintsId \"10\"\r\n\t\tweight 1.0\r\n\t]\r\n\tedge [\r\n\t\tsource 3\r\n\t\ttarget 2\r\n\t\tlabel \"knows\"\r\n\t\tblueprintsId \"7\"\r\n\t\tweight 0.5\r\n\t]\r\n\tedge [\r\n\t\tsource 3\r\n\t\ttarget 1\r\n\t\tlabel \"created\"\r\n\t\tblueprintsId \"9\"\r\n\t\tweight 0.4\r\n\t]\r\n\tedge [\r\n\t\tsource 3\r\n\t\ttarget 6\r\n\t\tlabel \"knows\"\r\n\t\tblueprintsId \"8\"\r\n\t\tweight 1.0\r\n\t]\r\n\tedge [\r\n\t\tsource 6\r\n\t\ttarget 1\r\n\t\tlabel \"created\"\r\n\t\tblueprintsId \"11\"\r\n\t\tweight 0.4\r\n\t]\r\n\tedge [\r\n\t\tsource 4\r\n\t\ttarget 1\r\n\t\tlabel \"created\"\r\n\t\tblueprintsId \"12\"\r\n\t\tweight 0.2\r\n\t]\r\n]";
-		//System.out.println(testGML);
-		
-		//InputStream in = IOUtils.toInputStream(testGML, "UTF-8");
-		
-		InputStream in = new FileInputStream("testGMLin.txt");
-		
-		GMLMapper mapper = new GMLMapper();
-		mapper.inputGraph("testOut", in);
-		//System.out.println(mapper.getGmlToInternal());
-		//System.out.println(mapper.getInternalToGml());
-	}
-
 }

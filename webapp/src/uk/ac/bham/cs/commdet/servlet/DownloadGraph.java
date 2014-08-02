@@ -35,9 +35,6 @@ public class DownloadGraph extends HttpServlet {
 				response.setHeader("Content-Disposition", "attachment;filename=graph.gml");
 				if (request.getParameter("selectedNode") != null) {
 					int community = Integer.parseInt(request.getParameter("selectedNode"));
-					if (result.hasMapper()) {
-						community = result.getMapper().getInternalId(community);
-					}
 					int communityLevel = Integer.parseInt(request.getParameter("currentLevel"));
 					generator.ouputCommunityGML(community, communityLevel - 1, fileLevel, colourLevel, os);
 				} else {

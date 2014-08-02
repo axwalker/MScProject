@@ -32,9 +32,6 @@ public class UpdateGraph extends HttpServlet {
 				generator.setIncludeEdges(includeEdges);
 				if (request.getParameter("selectedNode") != null) {
 					int community = Integer.parseInt(request.getParameter("selectedNode"));
-					if (result.hasMapper()) {
-						community = result.getMapper().getInternalId(community);
-					}
 					int communityLevel = Integer.parseInt(request.getParameter("currentLevel"));
 					responseString = generator.getCommunityJson(community, communityLevel - 1, fileLevel, colourLevel);
 				} else {

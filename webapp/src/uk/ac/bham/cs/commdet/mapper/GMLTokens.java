@@ -21,6 +21,7 @@ public class GMLTokens {
     public static final String EDGE = "edge";
     public static final String SOURCE = "source";
     public static final String TARGET = "target";
+    public static final String VALUE = "value";
     public static final String DIRECTED = "directed"; // directed (0) undirected (1) default is undirected
     public static final String GRAPHICS = "graphics";
     public static final String LABEL_GRAPHICS = "LabelGraphics";

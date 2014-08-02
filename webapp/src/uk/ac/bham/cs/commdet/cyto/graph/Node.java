@@ -49,7 +49,7 @@ public class Node implements Serializable {
 	public void setMetadata(Map<String, Object> metadata) {
 		this.metadata = metadata;
 	}
-	
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;

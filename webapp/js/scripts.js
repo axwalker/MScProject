@@ -112,7 +112,7 @@ var viewModel = function() {
         if (self.drillLevel() === self.hierarchyHeight()) {
             self.isSmallEnoughToView(true);
         } else if (self.hasSelectedCommunity()) {
-            if (!self.isBottomLevel()) {
+            if (!self.isBottomLevel() && self.selectedCommunity()) {
                 var formData = 'graphLevel=' + encodeURIComponent(self.drillLevel());
                 formData += '&currentLevel=' + encodeURIComponent(self.currentLevel());
                 formData += '&selectedNode=' + encodeURIComponent(self.selectedCommunity());
@@ -130,7 +130,7 @@ var viewModel = function() {
                   }
                 });
             }
-        } else {
+        } else if (self.drillLevel()) {
             $.ajax({
               type: 'GET',
               url: 'GetLevelSize',
@@ -160,7 +160,7 @@ var viewModel = function() {
 
     self.availableNodeData = ko.computed(function() {
         var options = [];
-        if (self.drillLevel() === 0) {
+        if (self.graph()) {
             var metadata = self.graph().nodes[0].data.metadata;
             for (var key in metadata) {
                options.push(key);
@@ -329,7 +329,7 @@ var graphRequest = function(url, formData, processData, contentType, dataFunctio
 var initialiseGraph = function(data) {
     viewModel.status('Graph processed');
     viewModel.graph(data);
-    //console.log("in success: " + JSON.stringify(data, undefined, 2));
+    console.log("in success: " + JSON.stringify(data, undefined, 2));
     initCy(viewModel.graph());
 };
 

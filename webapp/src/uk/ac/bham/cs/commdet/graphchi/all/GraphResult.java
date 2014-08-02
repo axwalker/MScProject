@@ -33,7 +33,6 @@ public class GraphResult implements Serializable {
 	private List<Map<CommunityID, CommunityEdgePositions>> allEdgePositions;
 	private Map<Integer, Integer> levelNodeCounts;
 	private FileMapper mapper;
-	private boolean hasMapper;
 
 	/**
 	 * 
@@ -67,11 +66,6 @@ public class GraphResult implements Serializable {
 
 	public void setMapper(FileMapper mapper) {
 		this.mapper = mapper;
-		hasMapper = true;
-	}
-
-	public boolean hasMapper() {
-		return hasMapper;
 	}
 
 	public int getLevelNodeCount(int level) {

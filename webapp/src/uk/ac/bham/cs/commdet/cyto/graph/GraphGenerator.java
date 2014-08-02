@@ -81,9 +81,6 @@ public class GraphGenerator {
 		for (NodeData nodeData : graph.getNodes()) {
 			Node node = nodeData.getData();
 			int nodeId = Integer.parseInt(node.getId());
-			if (result.hasMapper()) {
-				nodeId = result.getMapper().getInternalId(nodeId);
-			}
 			int parentId;
 			if (level == result.getHeight()) {
 				parentId = nodeId;
@@ -172,7 +169,7 @@ public class GraphGenerator {
 		if (includeEdges) {
 			if (source != target) {
 				graph.getEdges().add(
-						new EdgeData(new Edge(mapNode(source), mapNode(target), weight)));
+						new EdgeData(new Edge(source + "", target + "", weight)));
 				maxEdgeConnection = Math.max(maxEdgeConnection, weight);
 			}
 		}
@@ -186,10 +183,12 @@ public class GraphGenerator {
 
 	private void addNode(int level, int nodeId, Set<Integer> nodesAdded) {
 		int size = (level == 0 ? 1 : result.getSizes().get(new CommunityID(nodeId, level - 1)));
-		Node node = new Node(mapNode(nodeId), size);
+		Node node = new Node(nodeId + "", size);
 		Map<String, Object> nodeMetadata = new HashMap<String, Object>();
-		if (result.hasMapper() && level == 0) {
+		if (level == 0) {
 			nodeMetadata.putAll(result.getMapper().getInternalToExternal().get(nodeId));
+		} else {
+			nodeMetadata.put("community", nodeId);
 		}
 		node.setMetadata(nodeMetadata);
 		graph.getNodes().add(new NodeData(node));
@@ -197,18 +196,6 @@ public class GraphGenerator {
 		maxCommunitySize = Math.max(maxCommunitySize, size);
 		minCommunitySize = Math.min(minCommunitySize, size);
 	}
-
-	private String mapNode(int node) {
-		if (result.hasMapper()) {
-			return result.getMapper().getExternalid(node);
-		} else {
-			return node + "";
-		}
-	}
-
-	/*private double mapWeight(int edgeWeight) {
-		
-	}*/
 	
 	private String serializeJson() {
 		ObjectMapper mapper = new ObjectMapper();
