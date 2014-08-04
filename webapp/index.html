@@ -10,6 +10,8 @@
         <link rel="stylesheet" href="css/main.css">
         <link rel="stylesheet" href="css/plugins/jquery.qtip.css">
         <link rel="stylesheet" href="css/plugins/cytoscape.js-navigator.css">
+        <link rel="stylesheet" href="css/plugins/alertify.core.css">
+        <link rel="stylesheet" href="css/plugins/alertify.default.css">
 
         <script src="js/plugins/jquery.min.js"></script>
         <script src="js/plugins/arbor.js"></script>
@@ -17,6 +19,7 @@
         <script src="js/plugins/jquery.qtip.js"></script>
         <script src="js/plugins/cytoscape.js-qtip.js"></script>
         <script src="js/plugins/knockout-3.1.0.js"></script>
+        <script src="js/plugins/alertify.min.js"></script>
         <!--<script src="js/plugins/cytoscape.js-navigator.js"></script>-->
     </head>
 
@@ -32,7 +35,7 @@
                             <form id="uploadForm" action="upload" method="post" enctype="multipart/form-data">
                                 <fieldset>
 
-                                    <input data-bind="event: { change: addedFile }" type="file" name="file"> <br>
+                                    <input id= "fileInput" data-bind="event: { change: addedFile }" type="file" name="file"> <br>
 
                                     <label for="filetype">Graph file type:</label>
                                     <select id="filetype" name="filetype">
@@ -60,12 +63,10 @@
                         <a>Display Settings</a>
                             <div id="Display" class="accordion">
 
-                                Layout style: <select id="layoutStyle" data-bind="options: layoutOptions, value: layoutChoice"></select> <br>
+                                Layout style: <select id="layoutStyle" data-bind="options: layoutOptions, value: layoutChoice"></select>
 
-                                <div data-bind="visible: usesArborLayout">
-                                    <label for="arborTimeHigh">Time for layout (seconds):</label>
-                                    <input data-bind="value: layoutTime" type="number" min="1" max="300" step="1" value="10" name="arborTimeHigh" id="arborTimeHigh"> <br> 
-                                </div>
+                                <label data-bind="visible: usesArborLayout" for="arborTimeHigh">Max time (secs):</label>
+                                <input data-bind="value: layoutTime, visible: usesArborLayout" type="number" min="1" max="300" step="1" value="10" name="arborTimeHigh" id="arborTimeHigh"> <br> 
 
                                 <HR data-bind="visible: graph">
 
@@ -82,11 +83,10 @@
                     </li>
 
                     <li>
-                        <a>Results</a>
+                        <a>Navigate Results</a>
                         <div data-bind="visible: graph" id="Results" class="accordion">
-                            <div class="resultTable">
+                            <!--<div class="resultTable">
                                 <table>
-                                    <tr><th></th><th></th></tr>
                                     <tr><td>Modularity </td><td data-bind="text: modularity"></td></tr>
                                     <tr><td>Min community size </td><td data-bind="text: minCommunitySize"></td></tr>
                                     <tr><td>Max community size </td><td data-bind="text: maxCommunitySize"></td></tr>
@@ -95,7 +95,7 @@
                                 </table>
                             </div>
 
-                            <HR>
+                            <HR>-->
 
                             Hierarchy view level (modularity): <select data-bind="options: availableLevels, value: drillLevel"></select> <br>
                             Color by level (modularity): <select data-bind="options: colourLevels, value: colourLevel"></select> <br>
@@ -115,53 +115,60 @@
                         </div>
                     </li>
 
-                    <li>
+                    <li data-bind="visible: graph">
+                        <a>Selected Community</a>
+                        <div id="community" class="accordion scroll-x">
+                            <div data-bind="visible: !hasSelectedCommunity()">
+                                Select a single node to view its members.
+                            </div>
+                            <div data-bind="visible: hasSelectedCommunity">
+                                <div class="resultTable scroll-x">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <!-- ko foreach: tableHeadings -->
+                                                    <th data-bind="text: $data"></th>
+                                                <!-- /ko -->
+                                            </tr>
+                                        </thead>
+                                        <tbody data-bind="foreach: pagedCommunity">
+                                            <tr>
+                                                <!-- ko foreach: Object.keys($data.data.metadata).map(function (key) {
+                                                                    return $data.data.metadata[key];
+                                                                }); 
+                                                -->                                
+                                                    <td data-bind="text: $data"></td>
+                                                <!-- /ko -->
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div id="navigateCommunity">
+                                    <input data-bind="click: firstPage, disable: isFirstPage" type="button" value="<<" />
+                                    <input data-bind="click: previousPage, disable: isFirstPage" type="button" value="<" />
+                                    page <span data-bind="text: communityPageIndex"></span> of <span data-bind="text: communityNoOfPages"></span>
+                                    <input data-bind="click: nextPage, disable: isLastPage" type="button" value=">" />
+                                    <input data-bind="click: lastPage, disable: isLastPage" type="button" value=">>" />
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+
+                    <!--<li>
                         <a>Status</a>
                         <div id="Status" class="accordion scroll-y">
                             <div id="progress">
                                 <span data-bind="text: status"></span>
                             </div>
                         </div>
-                    </li>
+                    </li>-->
 
                 </ul>
             </div>
         </div>
-        <div class="right col">
-            <div class="top row">
-                <div id="cy" data-bind="click: updateSelectedCommunity"></div>
-            </div>
-            <div class="bottom row">
-                <div class="table col scroll-y scroll-x">
-                    <table>
-                        <thead>
-                            <tr>
-                                <!-- ko foreach: tableHeadings -->
-                                    <th data-bind="text: $data"></th>
-                                <!-- /ko -->
-                            </tr>
-                        </thead>
-                        <tbody data-bind="foreach: community">
-                            <tr>
-                                <!-- ko foreach: Object.keys($data.data.metadata).map(function (key) {
-                                                    return $data.data.metadata[key];
-                                                }); 
-                                -->                                
-                                    <td data-bind="text: $data"></td>
-                                <!-- /ko -->
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <!--<div class="pan col">
-                    <div class="cytoscape-navigator">
-                        <canvas></canvas>
-                        <div class="cytoscape-navigatorView"></div>
-                        <div class="cytoscape-navigatorOverlay"></div>
-                    </div>
-                </div>-->
-            </div>
 
+        <div class="right col">
+            <div id="cy" data-bind="click: updateSelectedCommunity"></div>
         </div>
         
         <script src="js/cytoscape-commdet.js"></script>

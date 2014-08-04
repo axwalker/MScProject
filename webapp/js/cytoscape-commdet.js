@@ -12,7 +12,8 @@ function initCy() {
         nodeCss = {
             'background-color': 'data(colour)',
             'height': 'mapData(size, 1, ' + maxSize + ', 2, 30)',
-            'width': 'mapData(size, 1, ' + maxSize + ', 2, 30)'
+            'width': 'mapData(size, 1, ' + maxSize + ', 2, 30)',
+            'font-size': 'mapData(size, 1, ' + maxSize + ', 3, 20)'
         };
         edgeCss = {
             'line-color': '#53433F',
@@ -61,12 +62,11 @@ function initCy() {
         ready: function(){
             window.cy = this;
 
-            //$('#cy').cytoscapeNavigator('destroy');
-            //$('#cy').cytoscapeNavigator();
-
             cy.on('click', 'node', function(evt){
-                this.select();
-                viewModel.selectedCommunity(this.data('id'));
+                if (!viewModel.isBottomLevel()) {
+                    this.select();
+                    viewModel.selectedCommunity(this.data('id'));
+                }
             });
             
             cy.nodes().qtip({
@@ -153,13 +153,13 @@ function arborLayout(maxTime) {
         ready: function() {
             viewModel.isArborRunning(true);
             $('#refreshButton').attr("disabled", true);
-            viewModel.status('Layout complete');
+            alertify.success('Laying out graph');
         },
         
         stop: function() {
             viewModel.isArborRunning(false);
             $('#refreshButton').attr("disabled", false);
-            viewModel.status('Layout complete');
+            alertify.success('Layout complete');
 
             //hack to fix graph not refreshing if time remains unchanged:
             var previousTime = viewModel.layoutTime();
@@ -190,13 +190,13 @@ function defaultArborLayout(maxTime) {
         ready: function() {
             viewModel.isArborRunning(true);
             $('#refreshButton').attr("disabled", true);
-            viewModel.status('Layout complete');
+            alertify.success('Laying out graph');
         },
         
         stop: function() {
             viewModel.isArborRunning(false);
             $('#refreshButton').attr("disabled", false);
-            viewModel.status('Layout complete');
+            alertify.success('Layout complete');
 
             //hack to fix graph not refreshing if time remains unchanged:
             var previousTime = viewModel.layoutTime();

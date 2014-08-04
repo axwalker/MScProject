@@ -2,12 +2,14 @@
 
 var viewModel = function() {
     var self = this;
+    var PAGE_SIZE = 10;
 
     self.status = ko.observable();
     self.graph = ko.observable();
     self.cy = ko.observable();
     self.community = ko.observableArray();
 
+    // COMMUNITY TABLE -----
     self.tableHeadings = ko.observableArray();
 
     self.computeTableHeadings = ko.computed(function() {
@@ -15,15 +17,57 @@ var viewModel = function() {
         if (self.community().length > 0 && self.community()[0].data.metadata) {
             var metadata = self.community()[0].data.metadata;
             for (var key in metadata) {
-                headings.push(key);
+                if (key != 'community') {
+                    headings.push(key);
+                }
             }
         }
         self.tableHeadings(headings);
     });
 
+    self.communityPageIndex = ko.observable(1);
+
+    self.communityNoOfPages = ko.computed( function() {
+        self.communityPageIndex(1);
+        return Math.floor((self.community().length - 1) / PAGE_SIZE) + 1;
+    });
+
+    self.isFirstPage = ko.computed( function() {
+        return self.communityPageIndex() === 1;
+    });
+
+    self.isLastPage = ko.computed( function() {
+        return self.communityPageIndex() === self.communityNoOfPages();
+    });
+
+    this.pagedCommunity = ko.computed(function() {
+        var startIndex = (self.communityPageIndex()-1) * PAGE_SIZE;
+        var endIndex = startIndex + PAGE_SIZE;
+        var page = self.community().slice(startIndex, endIndex);
+        page.forEach( function (node) {
+            delete node.data.metadata.community;
+        });
+        return page;
+    });
+
+    self.nextPage = function() {
+        self.communityPageIndex(self.communityPageIndex() + 1);
+    };
+
+    self.previousPage = function() {
+        self.communityPageIndex(self.communityPageIndex() - 1);
+    };
+
+    self.firstPage = function() {
+        self.communityPageIndex(1);
+    };
+
+    self.lastPage = function() {
+        self.communityPageIndex(self.communityNoOfPages());
+    };
+
     // RESULTS -----
     self.allModularities = ko.computed( function() {
-        if (self.graph()) console.log(self.graph().modularities);
         return self.graph() ? self.graph().modularities : '';
     });
 
@@ -83,7 +127,9 @@ var viewModel = function() {
         var levels = [];
         for (var i = 0; i <= self.hierarchyHeight(); i++) {
             var iModularity = (i === 0) ? 0 : self.allModularities()[(i-1)];
-            levels.push(i + ' (' + iModularity.toFixed(2) + ')');
+            if (iModularity || iModularity === 0 ) {
+                levels.push(i + ' (' + iModularity.toFixed(2) + ')');
+            }
         }
         return levels;
     });
@@ -112,7 +158,7 @@ var viewModel = function() {
 
     self.colourLevels = ko.computed(function() {
         self.colourLevel(self.hierarchyHeight() + 1);
-        var from = Math.max(self.drillLevel(), 1);
+        var from = Math.max(self.drillLevelIndex(), 1);
         return self.levelsListWithModularity().slice(from, self.hierarchyHeight() + 1);
     });
 
@@ -201,6 +247,12 @@ var viewModel = function() {
         }
     };
 
+     self.refreshLabels = function() {
+        if (self.hasLabels()) {
+            self.cy().style().selector('node').css('content', 'data(metadata.' + self.nodeDataChoice() + ')').update();
+        }
+    };
+
     // DISPLAY OPTIONS -----
     self.layoutOptions = ['Force-directed', 'Grid', 'Breadth-first', 'Circle'];
 
@@ -249,7 +301,12 @@ var viewModel = function() {
     self.addedFile = function() {
         self.fileValue($('input[type=file]').val());
         if (self.fileValue()) {
-            self.hasAddedFile(true);
+            if ($("#fileInput")[0].files[0].size > 10000000) {
+                alertify.alert('This file is too big. Files larger than 10mb currently not supported');
+                self.hasAddedFile(false);
+            } else {
+                self.hasAddedFile(true);
+            }
         } else {
             self.hasAddedFile(false);
         }
@@ -268,9 +325,15 @@ var viewModel = function() {
             formData += '&currentLevel=' + encodeURIComponent(self.currentLevel());
             formData += '&selectedNode=' + encodeURIComponent(self.selectedCommunity());
         }
-        formData += '&includeEdges=' + encodeURIComponent('true');
+        var dataFunction = initialiseGraph;
+        if (self.currentLevel() === self.drillLevelIndex()) {
+            dataFunction = refreshColours;
+            formData += '&includeEdges=' + encodeURIComponent('false');
+        } else {
+            formData += '&includeEdges=' + encodeURIComponent('true');
+        }
         self.selectedCommunity(-1);
-        graphRequest('UpdateGraph', formData, true, 'application/x-www-form-urlencoded', initialiseGraph);
+        graphRequest('UpdateGraph', formData, true, 'application/x-www-form-urlencoded', dataFunction);
     };
 
     self.downloadGraph = function() {
@@ -317,14 +380,13 @@ var graphRequest = function(url, formData, processData, contentType, dataFunctio
             if(data.success) {
                 dataFunction(data);
             } else {
-                console.log(data.error);
-                viewModel.status('Exception: failed to process graph');
+                alertify.alert('There was a problem: <br><br>' + data.error);
             }
         },
 
         beforeSend: function(jqXHR, settings) {
             $('#uploadButton').attr('disabled', true);
-            viewModel.status('Processing...');
+            alertify.success('Processing request...');
         },
 
         complete: function(jqXHR, textStatus){
@@ -333,19 +395,34 @@ var graphRequest = function(url, formData, processData, contentType, dataFunctio
 
         error: function(jqXHR, textStatus, errorThrown){
             console.log('Something really bad happened ' + textStatus);
-            viewModel.status('Failed to process: POST error');
+            alertify.error('POST ERROR', '', 0);
         }
     });
 };
 
 var initialiseGraph = function(data) {
-    viewModel.status('Graph processed');
+    alertify.success('Processing complete');
     viewModel.graph(data);
-    console.log("in success: " + JSON.stringify(data, undefined, 2));
+    //console.log('in success: ' + JSON.stringify(data, undefined, 2));
     initCy(viewModel.graph());
 };
 
 var setCommunity = function(data) {
     viewModel.status('Processed');
     viewModel.community(data.nodes);
+};
+
+var refreshColours = function(data) {
+    var nodes = data.nodes;
+    nodes.forEach( function (node) {
+        var id = node.data.id;
+        var newColour = node.data.colour;
+        var newMetadata = node.data.metadata;
+        var cyNode = viewModel.cy().elements('node#' + id)[0];
+        cyNode.data('colour', newColour);
+        cyNode.data('metadata', newMetadata);
+        cyNode.css('background-color', newColour);
+    });
+    viewModel.refreshLabels();
+    alertify.success("Updated colours");
 };
