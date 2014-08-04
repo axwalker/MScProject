@@ -54,12 +54,14 @@ public class TwoCore implements GraphChiProgram<Float, Float> {
 				context.getScheduler().addTask(vertex.getId());
 			} else {
 				degree = nodeDegree[vertex.getId()];
-				if (degree < 2) {
+				if (degree < 2 && !contracted[vertex.getId()]) {
+					System.out.println("contracting: " + vertex.getId());
 					contracted[vertex.getId()] = true;
-					for (int i = 0; i < degree; i++) {
+					for (int i = 0; i < vertex.numEdges(); i++) {
 						int neighbourId = vertex.edge(i).getVertexId();
-						nodeDegree[neighbourId]--;
 						if (!contracted[neighbourId]) {
+							System.out.println("to: " + neighbourId);
+							nodeDegree[neighbourId]--;
 							context.getScheduler().addTask(neighbourId);
 						}
 					}
@@ -69,14 +71,14 @@ public class TwoCore implements GraphChiProgram<Float, Float> {
 			if (!contracted[vertex.getId()]) {
 				for (int i = 0; i < vertex.numEdges(); i++) {
 					int neighbourId = vertex.edge(i).getVertexId();
-					double weight = vertex.edge(i).getValue();
-					Node neighbour = status.getNodes()[neighbourId];
-					Community neighbourCommunity = status.getCommunities()[neighbourId];
 					if (contracted[neighbourId]) {
+						double weight = vertex.edge(i).getValue();
+						Node neighbour = status.getNodes()[neighbourId];
+						Community neighbourCommunity = status.getCommunities()[neighbourId];
 						Community currentCommunity = status.getCommunities()[vertex.getId()];
 						status.removeNodeFromCommunity(neighbour, neighbourCommunity, 0);
 						status.insertNodeIntoCommunity(neighbour, currentCommunity, weight);
-						contracted[neighbourId] = false; //to prevent looping round adding tasks infintely
+						contracted[neighbourId] = false; //to propagate up the branch
 						context.getScheduler().addTask(neighbourId);
 					}
 				}
