@@ -41,6 +41,9 @@ public class ProcessGraph extends HttpServlet {
 
 		//create session
 		HttpSession session = request.getSession(true);
+		
+		final int timeoutInSeconds = 60 * 60;
+		session.setMaxInactiveInterval(timeoutInSeconds);
 
 		if (!session.isNew()) {
 			logger.info("removing previous session");
@@ -101,8 +104,17 @@ public class ProcessGraph extends HttpServlet {
 			generator.setIncludeEdges(true);
 			responseString = generator.getParentGraphJson();
 			logger.info("Response written succesfully for " + filename);
+		} catch (IOException e) {
+			responseString = "{ \"success\": false , " +
+					"\"error\": \"" + e.getMessage() + "\"}";
+			logger.info("in ioexception");
+		} catch (IllegalArgumentException e) {
+			responseString = "{ \"success\": false , " +
+					"\"error\": \"" + e.getMessage() + "\"}";
+			logger.info("in illegalArgumentException");
 		} catch (Exception e) {
-			responseString = "{ \"success\" : false }";
+			responseString = "{ \"success\": false , " +
+					"\"error\": \"" + e.getMessage() + "\"}";			
 			logger.info(e.getMessage() + "\n" + Arrays.asList(e.getStackTrace()));
 		}
 
@@ -117,6 +129,7 @@ public class ProcessGraph extends HttpServlet {
 		//send response
 		response.setContentType("application/json");
 		response.getWriter().println(responseString);
+		response.getWriter().flush();
 
 	}
 
