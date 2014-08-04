@@ -55,12 +55,10 @@ public class TwoCore implements GraphChiProgram<Float, Float> {
 			} else {
 				degree = nodeDegree[vertex.getId()];
 				if (degree < 2 && !contracted[vertex.getId()]) {
-					System.out.println("contracting: " + vertex.getId());
 					contracted[vertex.getId()] = true;
 					for (int i = 0; i < vertex.numEdges(); i++) {
 						int neighbourId = vertex.edge(i).getVertexId();
 						if (!contracted[neighbourId]) {
-							System.out.println("to: " + neighbourId);
 							nodeDegree[neighbourId]--;
 							context.getScheduler().addTask(neighbourId);
 						}

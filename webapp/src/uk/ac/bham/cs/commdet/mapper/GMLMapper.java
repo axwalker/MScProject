@@ -236,7 +236,7 @@ public class GMLMapper implements FileMapper {
 			parse(st);
 
 		} catch (IOException e) {
-			throw new IOException("GML malformed line number " + st.lineno() + ": ", e);
+			throw new IOException("GML line number " + st.lineno() + ": " + e.getMessage(), e);
 		} finally {
 			r.close();
 			writer.close();

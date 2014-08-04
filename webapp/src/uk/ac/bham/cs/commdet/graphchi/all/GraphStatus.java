@@ -29,7 +29,8 @@ public class GraphStatus {
 	private HashMap<UndirectedEdge, Double> contractedGraph = new HashMap<UndirectedEdge, Double>();
 	private Set<Integer> uniqueCommunities;
 	private Map<UndirectedEdge, Double> interCommunityEdgeCounts;
-
+	private int edgeCount;
+	
 	/**
 	 * Add each node in an initial input graph to the community hierarchy map
 	 */
@@ -64,12 +65,12 @@ public class GraphStatus {
 				} else {
 					int previousCommunity = nodeCommunities.get(hierarchyHeight - 1);
 					int previousCommunityGcId = updatedVertexTrans.forward(previousCommunity);
-					int latestCommunityGcId = communities[previousCommunityGcId].getSeedNode();
-					if (updatedVertexTrans.backward(latestCommunityGcId) == -1) {
-						System.out.println("This is not a connected graph: " + previousCommunityGcId);
+					if (previousCommunityGcId > communities.length || communities[previousCommunityGcId] == null) {
 						// this happens when graph is not connected, resulting in single disjoint communities
-						nodeCommunities.add(previousCommunity);
+						throw new IllegalArgumentException("ORCA is not currently compatible with non connected graphs");
+						//nodeCommunities.add(previousCommunity);
 					} else {
+						int latestCommunityGcId = communities[previousCommunityGcId].getSeedNode();
 						nodeCommunities.add(updatedVertexTrans.backward(latestCommunityGcId));
 					}
 				}
@@ -245,6 +246,18 @@ public class GraphStatus {
 
 	public void setInterCommunityEdgeCounts(Map<UndirectedEdge, Double> interCommunityEdgeCounts) {
 		this.interCommunityEdgeCounts = interCommunityEdgeCounts;
+	}
+
+	public int getEdgeCount() {
+		return edgeCount;
+	}
+
+	public void setEdgeCount(int edgeCount) {
+		this.edgeCount = edgeCount;
+	}
+	
+	public void increaseEdgeCount(int increase) {
+		this.edgeCount += increase;
 	}
 
 }

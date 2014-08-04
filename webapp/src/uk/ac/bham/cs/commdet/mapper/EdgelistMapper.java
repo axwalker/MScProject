@@ -113,7 +113,7 @@ public class EdgelistMapper implements FileMapper {
 			parse(br);
 
 		} catch (IOException e) {
-			throw new IOException("Edgelist malformed line number " + lineNo + ": " + e.getMessage(), e);
+			throw new IOException("Edgelist line number " + lineNo + ": " + e.getMessage(), e);
 		} finally {
 			br.close();
 			writer.close();

@@ -103,8 +103,7 @@ public class GraphResult implements Serializable {
 			generateCommunityPositions(edges, i);
 			String sortedFilename = filename + (i != 0 ? "_pass_" + i : "")
 					+ "_sorted";
-			BufferedWriter bw = new BufferedWriter(new FileWriter(
-					sortedFilename));
+			BufferedWriter bw = new BufferedWriter(new FileWriter(sortedFilename));
 			Set<Integer> uniqueNodes = new HashSet<Integer>();
 			for (UndirectedEdge edge : edges) {
 				bw.write(edge.toString());
@@ -124,6 +123,12 @@ public class GraphResult implements Serializable {
 		String line = null;
 		while ((line = br.readLine()) != null) {
 			UndirectedEdge edge = UndirectedEdge.getEdge(line);
+			
+			//ignore zero degree vertices in bottom level edgelist
+			if (level == 0 && hierarchy.get(edge.getSource()) == null) {
+				continue;
+			}
+			
 			edges.add(edge);
 		}
 		br.close();

@@ -100,7 +100,6 @@ public class DenseRegion implements GraphChiProgram<Float, Float> {
 			double edgeWeight = vertex.edge(i).getValue();
 			int targetId = vertex.edge(i).getVertexId();
 			Path path = new Path(vertex.getId(), targetId, edgeWeight);
-			path.setAdjacent(true);
 			thisPaths.put(targetId, path);
 			neighbourhoods.get(targetId).addMember(vertex.getId());
 		}
@@ -137,13 +136,13 @@ public class DenseRegion implements GraphChiProgram<Float, Float> {
 	}
 
 	private void setTotalEdgeWeightsAndCounts(Neighbourhood neighbourhood) {
-		int doubleTotalEdgeWeight = 0;
+		double doubleTotalEdgeWeight = 0;
 		Set<Integer> members = neighbourhood.getMembersSeenCount().keySet();
 		for (Integer member : members) {
 			for (Map.Entry<Integer, Path> entry : pathsWithinD.get(member).entrySet()) {
 				int target = entry.getKey();
 				Path path = entry.getValue();
-				if (members.contains(target) && path.isAdjacent()) {
+				if (members.contains(target)) {
 					doubleTotalEdgeWeight += path.getWeight();
 					neighbourhood.setEdgeCount(neighbourhood.getEdgeCount() + 1);
 				}
@@ -186,7 +185,7 @@ public class DenseRegion implements GraphChiProgram<Float, Float> {
 							UndirectedEdge edge = new UndirectedEdge(actualSource, actualTarget);
 							double linkCount = previousInterCommunityEdges.containsKey(edge) 
 									? previousInterCommunityEdges.get(edge) : 0.;
-							noLinksToCommunity += linkCount;
+									noLinksToCommunity += linkCount;
 						}
 						Node memberNode = status.getNodes()[member];
 						status.insertNodeIntoCommunity(memberNode, labelCommunity,
@@ -294,18 +293,18 @@ public class DenseRegion implements GraphChiProgram<Float, Float> {
 			neighbourhoods = new HashMap<Integer, Neighbourhood>();
 			denseRegionsRanked = new PriorityQueue<Neighbourhood>(noOfVertices,
 					new Comparator<Neighbourhood>() {
-						@Override
-						public int compare(Neighbourhood o1, Neighbourhood o2) {
-							int primaryRank = Double.compare(o2.getPrimaryRankValue(),
-									o1.getPrimaryRankValue());
-							if (primaryRank == 0) {
-								return Double.compare(o2.getSecondaryRankValue(),
-										o1.getSecondaryRankValue());
-							} else {
-								return primaryRank;
-							}
-						}
-					});
+				@Override
+				public int compare(Neighbourhood o1, Neighbourhood o2) {
+					int primaryRank = Double.compare(o2.getPrimaryRankValue(),
+							o1.getPrimaryRankValue());
+					if (primaryRank == 0) {
+						return Double.compare(o2.getSecondaryRankValue(),
+								o1.getSecondaryRankValue());
+					} else {
+						return primaryRank;
+					}
+				}
+			});
 			denseRegions = new TreeSet<Neighbourhood>(new Comparator<Neighbourhood>() {
 				@Override
 				public int compare(Neighbourhood arg0, Neighbourhood arg1) {

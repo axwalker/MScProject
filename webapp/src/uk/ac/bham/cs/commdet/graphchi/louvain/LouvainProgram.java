@@ -48,9 +48,13 @@ public class LouvainProgram implements GraphChiProgram<Float, Float>, DetectionP
 	@Override
 	public synchronized void update(ChiVertex<Float, Float> vertex, GraphChiContext context) {
 		if (context.getIteration() == 0) {
-			addToInitialGraphStatus(vertex);
+			if ((passIndex == 0 && vertex.numEdges() > 0) || passIndex > 0) {
+				addToInitialGraphStatus(vertex);
+			}
 		} else if (!isReadyToContract) {
-			lookForModularityGain(vertex);
+			if (vertex.numEdges() > 0) {
+				lookForModularityGain(vertex);
+			}
 		} else {
 			addToContractedGraph(vertex);
 		}
@@ -120,6 +124,11 @@ public class LouvainProgram implements GraphChiProgram<Float, Float>, DetectionP
 			community.setTotalSize(1);
 		} else {
 			Map<CommunityID, Integer> sizes = status.getCommunitySizes();
+			CommunityID communityId = new CommunityID(trans.backward(vertex.getId()), passIndex - 1);
+			if (!sizes.containsKey(communityId)) {
+				//System.out.println("this should be a graphchi generated node... " + trans.backward(vertex.getId()));
+				return;
+			}
 			int previousSize = sizes.get(new CommunityID(trans.backward(vertex.getId()), passIndex - 1));
 			community.setTotalSize(previousSize);
 		}
@@ -135,7 +144,14 @@ public class LouvainProgram implements GraphChiProgram<Float, Float>, DetectionP
 	private void addToContractedGraph(ChiVertex<Float, Float> vertex) {
 		int source = vertex.getId();
 		Community community = status.getCommunities()[source];
-		if (community.getInternalEdges() > 0) {
+		if (community == null) {
+			return;
+		}
+		if (community.getInternalEdges() > 0 && vertex.numEdges() > 0) {
+			int actualNode = trans.backward(community.getSeedNode());
+			status.getContractedGraph().put(new UndirectedEdge(actualNode, actualNode), community.getInternalEdges() / 2);
+		} 
+		if (vertex.numEdges() == 0) {
 			int actualNode = trans.backward(community.getSeedNode());
 			status.getContractedGraph().put(new UndirectedEdge(actualNode, actualNode), community.getInternalEdges() / 2);
 		}
@@ -153,9 +169,12 @@ public class LouvainProgram implements GraphChiProgram<Float, Float>, DetectionP
 					status.getContractedGraph().put(edge, oldWeight + weight);
 				} else {
 					status.getContractedGraph().put(edge, weight);
+					status.increaseEdgeCount(1);
 				}
 			}
 		}
+		
+		
 	}
 
 	public void beginIteration(GraphChiContext ctx) {
@@ -163,6 +182,7 @@ public class LouvainProgram implements GraphChiProgram<Float, Float>, DetectionP
 			trans = ctx.getVertexIdTranslate();
 			status.setCommunities(new Community[(int) ctx.getNumVertices()]);
 			status.setNodes(new Node[(int) ctx.getNumVertices()]);
+			status.setEdgeCount(0);
 		}
 		iterationModularityImprovement = 0.;
 	}
@@ -193,7 +213,7 @@ public class LouvainProgram implements GraphChiProgram<Float, Float>, DetectionP
 	public GraphResult run(String baseFilename, int nShards) throws  Exception {
 		setupAndRunEngine(baseFilename);
 		String newFilename = baseFilename;
-		while (improvedOnPass && status.getContractedGraph().size() > 1) {
+		while (improvedOnPass && status.getContractedGraph().size() > 1 && status.getEdgeCount() > 0) {
 			isReadyToContract = false;
 			passIndex++;
 			improvedOnPass = false;
@@ -212,7 +232,7 @@ public class LouvainProgram implements GraphChiProgram<Float, Float>, DetectionP
 		engine.setEdataConverter(new FloatConverter());
 		engine.setVertexDataConverter(new FloatConverter());
 		engine.setEnableScheduler(true);
-		engine.setSkipZeroDegreeVertices(true);
+		//engine.setSkipZeroDegreeVertices(true);
 		engine.run(this, 1000);
 	}
 
