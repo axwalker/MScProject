@@ -75,6 +75,7 @@ public class ProcessGraph extends HttpServlet {
 		tempFolderPath += currentTime + "_" + filename.hashCode() + "/";
 		File tempFolder = new File(tempFolderPath);
 		tempFolder.mkdir();
+		session.setAttribute("folder", tempFolderPath);
 
 		//write graph file to temporary folder
 		FileOutputStream outputStream = new FileOutputStream(new File(tempFolderPath + filename));
@@ -100,30 +101,18 @@ public class ProcessGraph extends HttpServlet {
 			result = GCprogram.run(tempFolderPath + filename + "_mapped", 1);
 			result.setMapper(mapper);
 			result.writeSortedEdgeLists();
+			session.setAttribute("result", result);
 			GraphGenerator generator = new GraphGenerator(result);
 			generator.setIncludeEdges(true);
 			responseString = generator.getParentGraphJson();
-			logger.info("Response written succesfully for " + filename);
-		} catch (IOException e) {
+		} catch (IOException | IllegalArgumentException e) {
 			responseString = "{ \"success\": false , " +
 					"\"error\": \"" + e.getMessage() + "\"}";
-			logger.info("in ioexception");
-		} catch (IllegalArgumentException e) {
-			responseString = "{ \"success\": false , " +
-					"\"error\": \"" + e.getMessage() + "\"}";
-			logger.info("in illegalArgumentException");
+			session.invalidate();
 		} catch (Exception e) {
 			responseString = "{ \"success\": false , " +
-					"\"error\": \"" + e.getMessage() + "\"}";			
-			logger.info(e.getMessage() + "\n" + Arrays.asList(e.getStackTrace()));
-		}
-
-		//set session attributes
-		try {
-			session.setAttribute("folder", tempFolderPath);
-			session.setAttribute("result", result);
-		} catch (Exception e) {
-			logger.info(e.getMessage() + "\n" + Arrays.asList(e.getStackTrace()));
+					"\"error\": \"" + "SERVER ERROR: " + e.getMessage() + "\"}";		
+			session.invalidate();
 		}
 
 		//send response

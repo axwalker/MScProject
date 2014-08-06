@@ -9,7 +9,6 @@
 
         <link rel="stylesheet" href="css/main.css">
         <link rel="stylesheet" href="css/plugins/jquery.qtip.css">
-        <link rel="stylesheet" href="css/plugins/cytoscape.js-navigator.css">
         <link rel="stylesheet" href="css/plugins/alertify.core.css">
         <link rel="stylesheet" href="css/plugins/alertify.default.css">
 
@@ -20,7 +19,6 @@
         <script src="js/plugins/cytoscape.js-qtip.js"></script>
         <script src="js/plugins/knockout-3.1.0.js"></script>
         <script src="js/plugins/alertify.min.js"></script>
-        <!--<script src="js/plugins/cytoscape.js-navigator.js"></script>-->
     </head>
 
     <body>    
@@ -75,27 +73,16 @@
                                     <input data-bind="value: labelButton, click: toggleLabels" type="button" />
                                     
                                     <HR>
-                                </div>
 
-                                <input data-bind="enable: graph, click: refreshLayout" id="refreshButton" type="button" value="Refresh Display" /> 
-                                <input id="cancelLayout" data-bind="visible: isArborRunning, click: cancelLayout" type="button" value="Cancel layout" /><br>
+                                    <input data-bind="enable: graph, click: refreshLayout" id="refreshButton" type="button" value="Refresh Display" /> 
+                                    <input id="cancelLayout" data-bind="visible: isArborRunning, click: cancelLayout" type="button" value="Stop layout" /><br>
+                                </div>
                         </div>
                     </li>
 
                     <li>
                         <a>Navigate Results</a>
                         <div data-bind="visible: graph" id="Results" class="accordion">
-                            <!--<div class="resultTable">
-                                <table>
-                                    <tr><td>Modularity </td><td data-bind="text: modularity"></td></tr>
-                                    <tr><td>Min community size </td><td data-bind="text: minCommunitySize"></td></tr>
-                                    <tr><td>Max community size </td><td data-bind="text: maxCommunitySize"></td></tr>
-                                    <tr><td>Hierarchy height </td><td data-bind="text: hierarchyHeight"></td></tr>
-                                    <tr><td>Current level </td><td data-bind="text: currentLevel"></td></tr>
-                                </table>
-                            </div>
-
-                            <HR>-->
 
                             Hierarchy view level (modularity): <select data-bind="options: availableLevels, value: drillLevel"></select> <br>
                             Color by level (modularity): <select data-bind="options: colourLevels, value: colourLevel"></select> <br>
@@ -167,8 +154,33 @@
             </div>
         </div>
 
+        <div data-bind="visible: loadingGraph">
+            <div id="overlay"></div>
+            <center>
+                <div id="progressBar" class="big-green"><div></div></div>
+            </center>
+        </div>
+
         <div class="right col">
-            <div id="cy" data-bind="click: updateSelectedCommunity"></div>
+
+            <div class="top row">
+                <div class="menuSection">
+                    View level: <span class="detail">3</span>
+                    Colour level: <span class="detail">3</span>
+                    Modularity: <span class="detail">0.67</span>
+                </div>
+                
+                <div class="menuSection">
+                    View level: <span class="detail">3</span>
+                    Colour level: <span class="detail">3</span>
+                    Modularity: <span class="detail">0.67</span>
+                </div>
+            </div>
+
+            <div class="bottom row">
+                <div id="cy" data-bind="click: updateSelectedCommunity"></div>
+            </div>
+
         </div>
         
         <script src="js/cytoscape-commdet.js"></script>

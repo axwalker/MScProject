@@ -45,7 +45,28 @@ input[type=button]:disabled {
 
 .left.col { width: 350px; background:#B3B3B3; border-right:1px solid #010F1F; }
 .right.col { left: 351px; right: 0; }
-.body.row { top: 0px; bottom: 0px; }
+
+.top { 
+  height: 50px; 
+  padding-top: 20px;
+  padding-left: 30px;
+  font-size: 14px;
+}
+
+.bottom { 
+  top: 50px; 
+  bottom: 0px;
+}
+
+span.detail {
+  font-size: 20px;
+  margin-right: 15px;
+}
+
+div.menuSection {
+  margin-right: 30px;
+  display: inline;
+}
 
 fieldset { 
   border-style: none; 
@@ -64,6 +85,54 @@ li { list-style-type: none; }
     position: relative;
     width: 100%;
     height: 100%;
+}
+
+#overlay {
+  display: table-cell;
+  vertical-align: middle;
+  min-height: 12em;
+  background-color: black;
+  position: fixed;
+  top: 0; right: 0; bottom: 0; left: 0;
+  opacity: 0.2; /* also -moz-opacity, etc. */
+  z-index: 10;
+}
+
+#progressBar {
+  position:absolute;
+  margin: auto;
+  top: 0; left: 0; bottom: 0; right: 0;
+  width: 600px;
+  height: 45px;
+  border: 1px solid #111;
+  background-color: #292929;
+  opacity: 1.0;
+  z-index: 11;
+}
+ 
+#progressBar div {
+    height: 100%;
+    color: #fff;
+    text-align: right;
+    line-height: 22px; /* same as #progressBar height if we want text middle aligned */
+    width: 0;
+    background-color: #0099ff;
+}
+
+.big-green {
+  border-radius: 10px;
+  padding: 5px;
+  background: #000924;
+  border: 1px solid #111;
+  box-shadow: 0 2px 3px #333;
+}
+
+.big-green div {
+  background: #1cc300 url(type_4.gif) top right;
+  border-radius: 6px;
+  box-shadow: 0 5px 5px #ccc inset;
+  text-indent: 99999px;
+  overflow: hidden;
 }
 
 /* ACCORDION */

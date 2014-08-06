@@ -1,8 +1,8 @@
 /*jshint strict: false */
 
 function initCy() {
-    var maxSize = viewModel.maxCommunitySize();
-    var maxEdge = viewModel.maxEdgeConnection();
+    var maxSize = viewModel.metadata().maxCommunitySize;
+    var maxEdge = viewModel.metadata().maxEdgeConnection;
 
     var nodeCss;
     var edgeCss;
@@ -63,10 +63,10 @@ function initCy() {
             window.cy = this;
 
             cy.on('click', 'node', function(evt){
-                if (!viewModel.isBottomLevel()) {
+                //if (!viewModel.isBottomLevel()) {
                     this.select();
                     viewModel.selectedCommunity(this.data('id'));
-                }
+                //}
             });
             
             cy.nodes().qtip({
@@ -105,7 +105,7 @@ function initCy() {
             
             cy.edges().qtip({
 				content: function(){ 
-                    return 'Connections: ' + this.data('weight');
+                    return 'Weight: ' + this.data('weight').toFixed(3);
                 },
 				position: {
 					my: 'top center',
@@ -129,6 +129,10 @@ function initCy() {
         }
     });
     viewModel.cy($('#cy').cytoscape('get'));
+}
+
+function clearCy() {
+    $('#cy').cytoscape({});
 }
 
 function arborLayout(maxTime) {
@@ -159,7 +163,9 @@ function arborLayout(maxTime) {
         stop: function() {
             viewModel.isArborRunning(false);
             $('#refreshButton').attr("disabled", false);
-            alertify.success('Layout complete');
+            if (!viewModel.cancelLayoutStatus()) {
+                alertify.success('Layout complete');
+            }
 
             //hack to fix graph not refreshing if time remains unchanged:
             var previousTime = viewModel.layoutTime();
@@ -196,7 +202,9 @@ function defaultArborLayout(maxTime) {
         stop: function() {
             viewModel.isArborRunning(false);
             $('#refreshButton').attr("disabled", false);
-            alertify.success('Layout complete');
+            if(!viewModel.cancelLayoutStatus()) {
+                alertify.success('Layout complete');
+            }
 
             //hack to fix graph not refreshing if time remains unchanged:
             var previousTime = viewModel.layoutTime();

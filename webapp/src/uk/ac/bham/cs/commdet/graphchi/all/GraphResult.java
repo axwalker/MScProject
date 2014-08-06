@@ -83,10 +83,9 @@ public class GraphResult implements Serializable {
 	 *            edges
 	 * @return the number of edges in this community at the chosen file level
 	 */
-	public int getCommunityEdgeCount(int community, int communityLevel,
-			int fileLevel) {
-		CommunityEdgePositions positions = allEdgePositions.get(fileLevel).get(
-				new CommunityID(community, communityLevel));
+	public int getCommunityEdgeCount(int community, int communityLevel, int fileLevel) {
+		CommunityID id = new CommunityID(community, communityLevel);
+		CommunityEdgePositions positions = allEdgePositions.get(fileLevel).get(id);
 		return positions.getEndIndex() - positions.getStartIndex();
 	}
 

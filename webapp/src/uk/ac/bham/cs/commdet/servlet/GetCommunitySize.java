@@ -29,9 +29,6 @@ public class GetCommunitySize extends HttpServlet {
 			int communityLevel = Integer.parseInt(request.getParameter("currentLevel"));
 
 			try {
-				/*if (result.hasMapper()) {
-					community = result.getMapper().getInternalId(community);
-				}*/
 				responseString = result.getCommunityEdgeCount(community, communityLevel - 1, fileLevel) + "";
 				
 				logger.info("Response written succesfully");
