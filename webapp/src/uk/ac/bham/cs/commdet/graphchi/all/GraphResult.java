@@ -97,7 +97,7 @@ public class GraphResult implements Serializable {
 	 * @throws IOException
 	 */
 	public void writeSortedEdgeLists() throws IOException {
-		for (int i = 0; i < height; i++) {
+		for (int i = 0; i <= height; i++) {
 			TreeSet<UndirectedEdge> edges = readInUnsortedEdgeList(i);
 			generateCommunityPositions(edges, i);
 			String sortedFilename = filename + (i != 0 ? "_pass_" + i : "")
