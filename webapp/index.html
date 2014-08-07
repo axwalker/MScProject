@@ -39,7 +39,7 @@
             <form id="uploadForm" action="upload" method="post" enctype="multipart/form-data">
                 <fieldset>
 
-                    <input id= "fileInput" data-bind="event: { change: addedFile }" type="file" name="file"> <br>
+                    <input id= "fileInput" type="file" name="file"> <br>
 
                     <label for="filetype">&nbsp; &nbsp; &nbsp; &nbsp; Graph file type:</label>
                     <select id="filetype" class="upload" name="filetype">
@@ -54,7 +54,7 @@
                         <option>ORCA</option>
                     </select> <br>
 
-                    <input class="myButton upload" data-bind="click: uploadGraph, enable: hasAddedFile" type="button" value="Process Graph" /> <br>
+                    <input class="myButton upload" data-bind="click: uploadGraph" type="button" value="Process Graph" /> <br>
 
                 </fieldset>
             </form>  

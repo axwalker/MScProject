@@ -1,8 +1,8 @@
 /*jshint strict: false */
 
 var PAGE_SIZE = 10;
-var MAX_NODES_VIEWABLE = 500;
-var MAX_EDGES_VIEWABLE = 200;
+var MAX_NODES_VIEWABLE = 1000;
+var MAX_EDGES_VIEWABLE = 300;
 var MAX_FILESIZE = 50 * 1000 * 1000;
 var FILESIZE_NEEDING_PROGRESSBAR = 250* 1000;
 
@@ -231,42 +231,36 @@ var viewModel = function() {
 
     self.hasAddedFile = ko.observable(false);
 
-    self.addedFile = function() {
-        self.fileValue($('input[type=file]').val());
-        if (self.fileValue()) {
-            if ($('#fileInput')[0].files[0].size > MAX_FILESIZE) {
-                alertify.alert('This file is too big. Files larger than 50mb currently not supported.');
-                self.hasAddedFile(false);
-            } else {
-                self.hasAddedFile(true);
-            }
-        } else {
-            self.hasAddedFile(false);
-        }
-    };
-
     self.intervalId = 0;
 
     self.uploadGraph = function() {
-        var filesize = $('#fileInput')[0].files[0].size;
-        if (filesize > FILESIZE_NEEDING_PROGRESSBAR) {
-            self.loadingGraph(true);
-            var percentComplete = 0;
-            progress(percentComplete, $('#progressBar'));
-            var increment = 5000000 / filesize;
-            self.intervalId = setInterval(function() {
-                percentComplete = percentComplete + increment;
-                progress(percentComplete, $('#progressBar'));
-                var remaining = 100 - percentComplete;
-                if (remaining < 20) {
-                    increment = remaining / 20;
+        if ($('#fileInput')[0].files[0]) {
+            var filesize = $('#fileInput')[0].files[0].size;
+            if ($('#fileInput')[0].files[0].size > MAX_FILESIZE) {
+                alertify.alert('This file is too big. Files larger than 50mb currently not supported.');
+            } else {
+                if (filesize > FILESIZE_NEEDING_PROGRESSBAR) {
+                    self.loadingGraph(true);
+                    var percentComplete = 0;
+                    progress(percentComplete, $('#progressBar'));
+                    var increment = 5000000 / filesize;
+                    self.intervalId = setInterval(function() {
+                        percentComplete = percentComplete + increment;
+                        progress(percentComplete, $('#progressBar'));
+                        var remaining = 100 - percentComplete;
+                        if (remaining < 20) {
+                            increment = remaining / 20;
+                        }
+                    }, 100);
                 }
-            }, 100);
-        }
-        self.selectedCommunity(-1);
-        self.isShowingCommunity(false);
-        var formData = new FormData($('form')[0]);
-        graphRequest('ProcessGraph', formData, false, false, initialiseGraph);
+                self.selectedCommunity(-1);
+                self.isShowingCommunity(false);
+                var formData = new FormData($('form')[0]);
+                graphRequest('ProcessGraph', formData, false, false, initialiseGraph);
+            }
+        } else {
+            alertify.alert('Please choose a file to upload.');
+        }        
     };
 
     self.finishLoading = ko.computed( function() {
@@ -523,12 +517,13 @@ var initialiseGraph = function(data) {
     });
     alertify.success('Graph loaded');
     viewModel.graph(data);
-    if (data.nodes.length < 500) {
+    if (data.nodes.length < MAX_NODES_VIEWABLE) {
         //console.log('in success: ' + JSON.stringify(data, undefined, 2));
         initCy(viewModel.graph());
     } else {
         alertify.alert('There are too many communities to display.' +
             ' GML files of this communitry structure can be downloaded through the menu on the left.');
+        viewModel.currentViewTooBig(true);
     }
 };
 
