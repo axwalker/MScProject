@@ -6,6 +6,8 @@ var MAX_EDGES_VIEWABLE = 200;
 var MAX_FILESIZE = 50 * 1000 * 1000;
 var FILESIZE_NEEDING_PROGRESSBAR = 250* 1000;
 
+alertify.set({ delay: 2000 });
+
 var viewModel = function() {
     var self = this;
 
@@ -37,6 +39,12 @@ var viewModel = function() {
     self.currentColourLevel = ko.computed( function() {
         if (self.viewHistory().length > 0) {
             return self.viewHistory()[self.viewHistory().length - 1].colourLevel;
+        }
+    });
+
+    self.previousLevel = ko.computed( function() {
+        if (self.viewHistory().length > 0) {
+            return self.viewHistory()[self.viewHistory().length - 1].currentLevel;
         }
     });
 
@@ -95,14 +103,14 @@ var viewModel = function() {
         return self.drillLevel() === 0;
     });
 
+    self.colourLevel = ko.observable();
+
     self.modularity = ko.computed(function() {
-        var modularity = (self.drillLevel() === 0) ? 0 : self.allModularities()[self.drillLevel() - 1];
+        var modularity = (self.colourLevel() === 0) ? 0 : self.allModularities()[self.colourLevel() - 1];
         if (modularity || modularity === 0) {
             return modularity.toFixed(2);
         }
     });
-
-    self.colourLevel = ko.observable();
 
     self.levelsArray = ko.computed( function() {
         var levels = [];
@@ -118,7 +126,8 @@ var viewModel = function() {
     });
 
     self.colourLevels = ko.computed(function() {
-        self.colourLevel(self.hierarchyHeight() + 1);
+        var colourLevel = (self.currentColourLevel() ? self.currentColourLevel() : self.drillLevel());
+        self.colourLevel(colourLevel);
         var from = Math.max(self.drillLevel(), 1);
         return self.levelsArray().slice(from, self.hierarchyHeight() + 1);
     });
@@ -350,15 +359,22 @@ var viewModel = function() {
 
     self.downloadGraph = function() {
         var formData = 'graphLevel=' + encodeURIComponent(self.drillLevel());
-        formData += '&colourLevel=' + encodeURIComponent(self.colourLevel());
         formData += '&includeEdges=' + encodeURIComponent('true');
+        if (self.isShowingCommunity()) {
+            formData += '&selectedNode=' + self.currentCommunityShown();
+            formData += '&colourLevel=' + encodeURIComponent(self.currentColourLevel());
+            formData += '&currentLevel=' + encodeURIComponent(self.previousLevel());
+        } else {
+            formData += '&colourLevel=' + encodeURIComponent(self.colourLevel());
+            formData += '&currentLevel=' + encodeURIComponent(self.currentLevel());
+        }
         self.selectedCommunity(-1);
         window.location = 'DownloadGraph?' + formData;
     };
 
     self.downloadCommunity = function() {
-        var formData = 'graphLevel=' + encodeURIComponent(self.drillLevel());
-        formData += '&colourLevel=' + encodeURIComponent(self.colourLevel());
+        var formData = 'graphLevel=' + encodeURIComponent(self.communityDrillLevel());
+        formData += '&colourLevel=' + encodeURIComponent(self.communityColourLevel());
         formData += '&currentLevel=' + encodeURIComponent(self.currentLevel());
         formData += '&selectedNode=' + encodeURIComponent(self.selectedCommunity());
         formData += '&includeEdges=' + encodeURIComponent('true');
@@ -483,7 +499,7 @@ var graphRequest = function(url, formData, processData, contentType, dataFunctio
 
         beforeSend: function(jqXHR, settings) {
             $('#uploadButton').attr('disabled', true);
-            alertify.success('Processing request...');
+            //alertify.success('Processing request...');
         },
 
         complete: function(jqXHR, textStatus){
@@ -505,7 +521,7 @@ var initialiseGraph = function(data) {
     $('.qtip').each(function(){
         $(this).data('qtip').destroy();
     });
-    alertify.success('Processing complete');
+    alertify.success('Graph loaded');
     viewModel.graph(data);
     if (data.nodes.length < 500) {
         //console.log('in success: ' + JSON.stringify(data, undefined, 2));

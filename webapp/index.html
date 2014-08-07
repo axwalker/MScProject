@@ -64,9 +64,9 @@
 
             <div id="topMenu" class="top row">
                 <center>
-                    <div id="back" class="menuSection">
+                    <div id="back" class="menuSection" data-bind="visible: hasHistory">
                         <span class="help" data-bind="visible: showHelp">?</span>
-                        <input class="myButton backButton" data-bind="click: backHistory, visible: hasHistory" type="button" value="Back" />
+                        <input class="myButton backButton" data-bind="click: backHistory" type="button" value="Back" />
                     </div>
 
                     <div id="navigation" class="menuSection" data-bind="visible: !isShowingCommunity()">

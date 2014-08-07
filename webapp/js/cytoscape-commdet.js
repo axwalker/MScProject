@@ -159,14 +159,14 @@ function arborLayout(maxTime) {
         ready: function() {
             viewModel.isArborRunning(true);
             $('#refreshButton').attr("disabled", true);
-            alertify.success('Laying out graph');
+            //alertify.success('Laying out graph');
         },
         
         stop: function() {
             viewModel.isArborRunning(false);
             $('#refreshButton').attr("disabled", false);
             if (!viewModel.cancelLayoutStatus()) {
-                alertify.success('Layout complete');
+                //alertify.success('Layout complete');
             }
 
             //hack to fix graph not refreshing if time remains unchanged:
@@ -198,14 +198,14 @@ function defaultArborLayout(maxTime) {
         ready: function() {
             viewModel.isArborRunning(true);
             $('#refreshButton').attr("disabled", true);
-            alertify.success('Laying out graph');
+            //alertify.success('Laying out graph');
         },
         
         stop: function() {
             viewModel.isArborRunning(false);
             $('#refreshButton').attr("disabled", false);
             if(!viewModel.cancelLayoutStatus()) {
-                alertify.success('Layout complete');
+                //alertify.success('Layout complete');
             }
 
             //hack to fix graph not refreshing if time remains unchanged:
