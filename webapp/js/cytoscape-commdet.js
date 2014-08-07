@@ -62,11 +62,13 @@ function initCy() {
         ready: function(){
             window.cy = this;
 
+            cy.boxSelectionEnabled(false);
+
             cy.on('click', 'node', function(evt){
-                //if (!viewModel.isBottomLevel()) {
+                if (!viewModel.isBottomLevel()) {
                     this.select();
                     viewModel.selectedCommunity(this.data('id'));
-                //}
+                }
             });
             
             cy.nodes().qtip({

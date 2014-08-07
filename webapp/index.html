@@ -21,138 +21,7 @@
         <script src="js/plugins/alertify.min.js"></script>
     </head>
 
-    <body>    
-
-        <div class="left col scroll-y">
-            <div id="accordion">
-                <ul>
-
-                    <li>
-                        <a>Upload</a>
-                        <div id="Upload" class="accordion">
-                            <form id="uploadForm" action="upload" method="post" enctype="multipart/form-data">
-                                <fieldset>
-
-                                    <input id= "fileInput" data-bind="event: { change: addedFile }" type="file" name="file"> <br>
-
-                                    <label for="filetype">Graph file type:</label>
-                                    <select id="filetype" name="filetype">
-                                        <option>GML</option>
-                                        <option>Edgelist</option>
-                                    </select> <br>
-
-                                    <label for="algorithm">Detection Algorithm:</label>
-                                    <select id="algorithm" name="algorithm">
-                                        <option>Louvain Method</option>
-                                        <option>Label Propagation</option>
-                                        <option>ORCA</option>
-                                    </select> <br>
-
-                                    <HR>
-
-                                    <input data-bind="click: uploadGraph, enable: hasAddedFile" type="button" value="Process Graph" /> <br>
-
-                                </fieldset>
-                            </form>  
-                        </div>
-                    </li>  
-
-                    <li>
-                        <a>Display Settings</a>
-                            <div id="Display" class="accordion">
-
-                                Layout style: <select id="layoutStyle" data-bind="options: layoutOptions, value: layoutChoice"></select>
-
-                                <label data-bind="visible: usesArborLayout" for="arborTimeHigh">Max time (secs):</label>
-                                <input data-bind="value: layoutTime, visible: usesArborLayout" type="number" min="1" max="300" step="1" value="10" name="arborTimeHigh" id="arborTimeHigh"> <br> 
-
-                                <HR data-bind="visible: graph">
-
-                                <div data-bind="visible: graph">
-                                    Label data: <select data-bind="options: availableNodeData, value: nodeDataChoice"></select>
-                                    <input data-bind="value: labelButton, click: toggleLabels" type="button" />
-                                    
-                                    <HR>
-
-                                    <input data-bind="enable: graph, click: refreshLayout" id="refreshButton" type="button" value="Refresh Display" /> 
-                                    <input id="cancelLayout" data-bind="visible: isArborRunning, click: cancelLayout" type="button" value="Stop layout" /><br>
-                                </div>
-                        </div>
-                    </li>
-
-                    <li>
-                        <a>Navigate Results</a>
-                        <div data-bind="visible: graph" id="Results" class="accordion">
-
-                            Hierarchy view level (modularity): <select data-bind="options: availableLevels, value: drillLevel"></select> <br>
-                            Color by level (modularity): <select data-bind="options: colourLevels, value: colourLevel"></select> <br>
-                            
-                            <div id="wholeLevel" data-bind="visible: !hasSelectedCommunity()">
-                                <HR>
-                                <input data-bind="click: updateGraph, enable: isSmallEnoughToView" type="button" value="View Level" />
-                                <input data-bind="click: downloadGraph" type="button" value="Download Level" /> <br>
-                            </div>
-
-                            <div id="singleCommunity" data-bind="visible: hasSelectedCommunity">
-                                <HR>
-                                <input data-bind="click: updateGraph, enable: isSmallEnoughToView, disable: isBottomLevel" type="button" value="View Community" />
-                                <input data-bind="click: downloadGraph, disable: isBottomLevel" type="button" value="Download Community" /> <br>
-                            </div>
-
-                        </div>
-                    </li>
-
-                    <li data-bind="visible: graph">
-                        <a>Selected Community</a>
-                        <div id="community" class="accordion scroll-x">
-                            <div data-bind="visible: !hasSelectedCommunity()">
-                                Select a single node to view its members.
-                            </div>
-                            <div data-bind="visible: hasSelectedCommunity">
-                                <div class="resultTable scroll-x">
-                                    <table>
-                                        <thead>
-                                            <tr>
-                                                <!-- ko foreach: tableHeadings -->
-                                                    <th data-bind="text: $data"></th>
-                                                <!-- /ko -->
-                                            </tr>
-                                        </thead>
-                                        <tbody data-bind="foreach: pagedCommunity">
-                                            <tr>
-                                                <!-- ko foreach: Object.keys($data.data.metadata).map(function (key) {
-                                                                    return $data.data.metadata[key];
-                                                                }); 
-                                                -->                                
-                                                    <td data-bind="text: $data"></td>
-                                                <!-- /ko -->
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <div id="navigateCommunity">
-                                    <input data-bind="click: firstPage, disable: isFirstPage" type="button" value="<<" />
-                                    <input data-bind="click: previousPage, disable: isFirstPage" type="button" value="<" />
-                                    page <span data-bind="text: communityPageIndex"></span> of <span data-bind="text: communityNoOfPages"></span>
-                                    <input data-bind="click: nextPage, disable: isLastPage" type="button" value=">" />
-                                    <input data-bind="click: lastPage, disable: isLastPage" type="button" value=">>" />
-                                </div>
-                            </div>
-                        </div>
-                    </li>
-
-                    <!--<li>
-                        <a>Status</a>
-                        <div id="Status" class="accordion scroll-y">
-                            <div id="progress">
-                                <span data-bind="text: status"></span>
-                            </div>
-                        </div>
-                    </li>-->
-
-                </ul>
-            </div>
-        </div>
+    <body>
 
         <div data-bind="visible: loadingGraph">
             <div id="overlay"></div>
@@ -161,27 +30,182 @@
             </center>
         </div>
 
-        <div class="right col">
+        <div id="beforeUpload" data-bind="visible: !graph()">
+            <h1>Community Detection</h1>
+            <hr>
 
-            <div class="top row">
-                <div class="menuSection">
-                    View level: <span class="detail">3</span>
-                    Colour level: <span class="detail">3</span>
-                    Modularity: <span class="detail">0.67</span>
+            <p>Visualise the community structures in graphs.</p>
+
+            <form id="uploadForm" action="upload" method="post" enctype="multipart/form-data">
+                <fieldset>
+
+                    <input id= "fileInput" data-bind="event: { change: addedFile }" type="file" name="file"> <br>
+
+                    <label for="filetype">&nbsp; &nbsp; &nbsp; &nbsp; Graph file type:</label>
+                    <select id="filetype" class="upload" name="filetype">
+                        <option>GML</option>
+                        <option>Edgelist</option>
+                    </select> <br>
+
+                    <label for="algorithm">Detection Algorithm:</label>
+                    <select id="algorithm" class="upload" name="algorithm">
+                        <option>Louvain Method</option>
+                        <option>Label Propagation</option>
+                        <option>ORCA</option>
+                    </select> <br>
+
+                    <input class="myButton upload" data-bind="click: uploadGraph, enable: hasAddedFile" type="button" value="Process Graph" /> <br>
+
+                </fieldset>
+            </form>  
+        </div>
+
+        <div id="afterUpload" class="scroll-x" data-bind="visible: graph">
+
+            <div id="topMenu" class="top row">
+                <center>
+                    <div id="back" class="menuSection">
+                        <span class="help" data-bind="visible: showHelp">?</span>
+                        <input class="myButton backButton" data-bind="click: backHistory, visible: hasHistory" type="button" value="Back" />
+                    </div>
+
+                    <div id="navigation" class="menuSection" data-bind="visible: !isShowingCommunity()">
+                        <span class="help" data-bind="visible: showHelp">?</span>
+                        View level:
+                        <span class="detail">
+                            <select class="view" data-bind="options: availableLevels, value: drillLevel, event: { change: updateGraph }"></select>
+                        </span>
+
+                        <span class="help" data-bind="visible: showHelp">?</span>
+                        Colour level: 
+                        <span class="detail">
+                            <select class="view" data-bind="options: colourLevels, value: colourLevel, event: { change: updateGraph }"></select>
+                        </span>
+
+                        <span class="help" data-bind="visible: showHelp">?</span>
+                        Modularity: 
+                        <span class="detail" data-bind="text: modularity"></span>
+                    </div>
+
+                    <div id="navigation" class="menuSection" data-bind="visible: isShowingCommunity">
+                        Viewing community 
+                        <span class="detailCommunity" data-bind="text: currentCommunityShown"></span>
+
+                        at level 
+                        <span class="detailCommunity" data-bind="text: currentLevel"></span>
+
+                        with colour level 
+                        <span class="detailCommunity" data-bind="text: currentColourLevel">.</span>
+
+
+                    </div>
+
+                    <div id="labelling" class="menuSection">
+                        <span class="help" data-bind="visible: showHelp">?</span>
+                        Node labels: 
+                        <span class="detail">
+                            <select class="view" data-bind="options: availableNodeData, value: nodeDataChoice, event: { change: toggleLabels }"></select>
+                        </span>
+                    </div>
+                </center>
+            </div>
+
+
+            <div id="graph" class="middle row">
+                <div id="tooBig" data-bind="visible: currentViewTooBig">
+                    The level you selected is too big to visualise. You can download the level as a GML file or try and view a different level of the hierarchy.
                 </div>
-                
-                <div class="menuSection">
-                    View level: <span class="detail">3</span>
-                    Colour level: <span class="detail">3</span>
-                    Modularity: <span class="detail">0.67</span>
+
+                <div id="cy" data-bind="click: updateSelectedCommunity, visible: !currentViewTooBig()"></div>
+
+                <div id="community" class="left" data-bind="visible: !currentViewTooBig() && hasSelectedCommunity()">
+                    <h1>Community <span data-bind="text: selectedCommunity"></span></h1>
+                    <hr>
+
+                    <div id="navigateCommunity" data-bind="visible: communityNoOfPages() > 1">
+                        <input data-bind="click: firstPage, disable: isFirstPage" type="button" class="myButton pageButton" value="<<" />
+                        <input data-bind="click: previousPage, disable: isFirstPage" type="button" class="myButton pageButton" value="<" />
+                        page <span data-bind="text: communityPageIndex"></span> of <span data-bind="text: communityNoOfPages"></span>
+                        <input data-bind="click: nextPage, disable: isLastPage" type="button" class="myButton pageButton" value=">" />
+                        <input data-bind="click: lastPage, disable: isLastPage" type="button" class="myButton pageButton" value=">>" />
+                    </div>
+
+                    <div class="resultTable scroll-x">
+                        <center>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <!-- ko foreach: tableHeadings -->
+                                        <th data-bind="text: $data"></th>
+                                    <!-- /ko -->
+                                </tr>
+                            </thead>
+                            <tbody data-bind="foreach: pagedCommunity">
+                                <tr>
+                                    <!-- ko foreach: Object.keys($data.data.metadata).map(function (key) {
+                                                        return $data.data.metadata[key];
+                                                    }); 
+                                    -->                                
+                                        <td data-bind="text: $data"></td>
+                                    <!-- /ko -->
+                                </tr>
+                            </tbody>
+                        </table>
+                        </center>
+                    </div>
+                    <hr>
+
+                    <div id="drillIntoCommunity">
+                        <span class="help" data-bind="visible: showHelp">?</span>
+                        View level:
+                        <span class="detail">
+                            <select class="view" data-bind="options: communityAvailableLevels, value: communityDrillLevel"></select>
+                        </span>
+
+                        <span class="help" data-bind="visible: showHelp">?</span>
+                        Colour level: 
+                        <span class="detail">
+                            <select class="view" data-bind="options: communityColourLevels, value: communityColourLevel"></select>
+                        </span> <br>
+
+                        <span data-bind="visible: isCommunityTooBig">Too many nodes at this level to view.</span>
+
+                        <input class="myButton communityButton" data-bind="click: updateCommunity, visible: !isCommunityTooBig()" type="button" value="View Level" />
+                        <input class="myButton communityButton" data-bind="click: downloadCommunity" type="button" value="Download GML" />
+                    </div>
                 </div>
             </div>
 
+
             <div class="bottom row">
-                <div id="cy" data-bind="click: updateSelectedCommunity"></div>
+                <center>
+                    <div id="options" class="menuSection">
+                        <a href="javascript:document.location.reload();">
+                            <input class="myButton graphButton" type="button" value="Upload new graph" />
+                        </a>
+
+                        <input class="myButton graphButton" data-bind="click: turnHelpOn, visible: !showHelp()" type="button" value="Show help" />
+                        <input class="myButton graphButton" data-bind="click: turnHelpOff, visible: showHelp" type="button" value="Hide help" />
+                    </div>
+
+                    <div id="download" class="menuSection">
+                        <span class="help" data-bind="visible: showHelp">?</span>
+                        <input class="myButton graphButton" data-bind="click: downloadGraph" type="button" value="Download GML" />
+                    </div>
+
+                    <div id="layout" class="menuSection">
+                        <input class="myButton layoutButton" data-bind="visible: !isArborRunning(), click: refreshLayout" type="button" value="Refresh layout" />
+                        <input class="myButton layoutButton red" data-bind="visible: isArborRunning, click: cancelLayout" type="button" value="Stop layout" />
+                        
+                        <label data-bind="visible: usesArborLayout" for="arborTimeHigh">Time(secs):</label>
+                        <input data-bind="value: layoutTime" type="number" min="1" max="300" step="1" value="10" id="arborTimeHigh">
+                    </div>
+
+                </center>
             </div>
 
         </div>
+
         
         <script src="js/cytoscape-commdet.js"></script>
         <script src="js/scripts.js"></script>
