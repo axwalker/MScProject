@@ -4,7 +4,7 @@ var PAGE_SIZE = 10;
 var MAX_NODES_VIEWABLE = 1000;
 var MAX_EDGES_VIEWABLE = 300;
 var MAX_FILESIZE = 50 * 1000 * 1000;
-var FILESIZE_NEEDING_PROGRESSBAR = 250* 1000;
+var FILESIZE_NEEDING_PROGRESSBAR = 100* 1000;
 
 alertify.set({ delay: 2000 });
 
@@ -203,7 +203,7 @@ var viewModel = function() {
             if (self.drillLevel() > 0) {
                 return arborLayout(self.layoutTime());
             } else {
-                return defaultArborLayout(self.layoutTime());
+                return arborLayout(self.layoutTime());
             }
         } else if (self.layoutChoice() === 'Grid') {
             return gridLayout();
@@ -246,12 +246,12 @@ var viewModel = function() {
                     var increment = 5000000 / filesize;
                     self.intervalId = setInterval(function() {
                         percentComplete = percentComplete + increment;
-                        progress(percentComplete, $('#progressBar'));
+                        progress(percentComplete, $('#progressBar'), 210);
                         var remaining = 100 - percentComplete;
                         if (remaining < 20) {
                             increment = remaining / 20;
                         }
-                    }, 100);
+                    }, 200);
                 }
                 self.selectedCommunity(-1);
                 self.isShowingCommunity(false);
@@ -263,17 +263,12 @@ var viewModel = function() {
         }        
     };
 
-    self.finishLoading = ko.computed( function() {
-        if (!self.loadingGraph()) {
-            clearInterval(self.intervalId);
-        }
-    });
-
     self.updateGraphWithAjax = function(view) {
         var formData = 'graphLevel=' + view.drillLevel;
         formData += '&colourLevel=' + view.colourLevel;
         var dataFunction = initialiseGraph;
-        if (self.currentLevel() === view.drillLevel) {
+        var tooManyNodesToRecolour = self.graph().nodes.length >= 250
+        if (self.currentLevel() === view.drillLevel && !tooManyNodesToRecolour) {
             dataFunction = refreshColours;
             formData += '&includeEdges=' + encodeURIComponent('false');
         } else {
@@ -493,29 +488,36 @@ var graphRequest = function(url, formData, processData, contentType, dataFunctio
 
         beforeSend: function(jqXHR, settings) {
             $('#uploadButton').attr('disabled', true);
-            //alertify.success('Processing request...');
         },
 
         complete: function(jqXHR, textStatus){
-            viewModel.loadingGraph(false);
+            clearInterval(viewModel.intervalId);
+            if (viewModel.graph()) {
+                progress(100, $('#progressBar'), 1000, function() {
+                    viewModel.loadingGraph(false);
+                    alertify.success('Graph loaded');
+                });
+            } else {
+                viewModel.loadingGraph(false);
+            }
             $('#uploadButton').attr('disabled', false);
         },
 
         error: function(jqXHR, textStatus, errorThrown){
             console.log('Something really bad happened ' + textStatus);
-            alertify.alert('There was a problem with the server, please refresh and try again');
             clearCy();
+            viewModel.loadingGraph(false);
             viewModel.graph(false);
             viewModel.cancelLayoutStatus(true);
+            alertify.alert('There was a problem with the server, please refresh and try again');
         }
     });
 };
 
 var initialiseGraph = function(data) {
-    $('.qtip').each(function(){
+    /*$('.qtip').each(function(){
         $(this).data('qtip').destroy();
-    });
-    alertify.success('Graph loaded');
+    });*/
     viewModel.graph(data);
     if (data.nodes.length < MAX_NODES_VIEWABLE) {
         //console.log('in success: ' + JSON.stringify(data, undefined, 2));
@@ -545,7 +547,18 @@ var refreshColours = function(data) {
     alertify.success('Updated colours');
 };
 
-function progress(percent, $element) {
+function progress(percent, $element, speed, callback) {
+    callback = callback || $.noop;
     var progressBarWidth = percent * $element.width() / 100;
-    $element.find('div').animate({ width: progressBarWidth }, 200).html(percent + '%&nbsp;');
+    $element.find('div').stop(true, true).animate({
+            width: progressBarWidth
+        },
+        {
+            queue: false,
+            duration: speed,
+            complete: function () {
+                setTimeout( callback, 500); 
+            }  
+        }
+    );
 }

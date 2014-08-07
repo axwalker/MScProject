@@ -17,7 +17,8 @@ function initCy() {
         };
         edgeCss = {
             'line-color': '#53433F',
-            'width': 'mapData(weight, 0, ' + maxEdge + ', 0.2, 5)'
+            'width': 'mapData(weight, 0, ' + maxEdge + ', 0.2, 5)',
+            'curve-style': 'haystack'
         };
     } else {
         nodeCss = {
@@ -33,22 +34,22 @@ function initCy() {
     }
 
     var styleOptions = [
-            {
-                selector: 'node',
-                css: nodeCss
-            },
-            {
-                selector: ':selected',
-                css: {
-                    'border-color': 'black',
-                    'border-width': '4',
-                    'line-color': '#000'                                
-                }
-            },
-            {
-                selector: 'edge',
-                css: edgeCss
+        {
+            selector: 'node',
+            css: nodeCss
+        },
+        {
+            selector: ':selected',
+            css: {
+                'border-color': 'black',
+                'border-width': '4',
+                'line-color': '#000'                                
             }
+        },
+        {
+            selector: 'edge',
+            css: edgeCss
+        }
     ];
 
     $('#cy').cytoscape({
@@ -58,6 +59,10 @@ function initCy() {
         layout: viewModel.layoutChoiceComputed(),
 
         elements: viewModel.graph(),
+
+        hideEdgesOnViewport: nodeCount > 250,
+        hideLabelsOnViewport: nodeCount > 250,
+        textureOnViewport: nodeCount > 250,
 
         ready: function(){
             window.cy = this;
@@ -70,7 +75,7 @@ function initCy() {
                     viewModel.selectedCommunity(this.data('id'));
                 }
             });
-            
+
             cy.nodes().qtip({
 				content: {
                     text: function(){ 
@@ -107,7 +112,7 @@ function initCy() {
             
             cy.edges().qtip({
 				content: function(){ 
-                    return 'Weight: ' + this.data('weight').toFixed(3);
+                    return 'Weight: ' + parseFloat(this.data('weight').toFixed(3));
                 },
 				position: {
 					my: 'top center',
@@ -137,19 +142,17 @@ function clearCy() {
     $('#cy').cytoscape({});
 }
 
+//*
 function arborLayout(maxTime) {
     return {
         name: 'arbor',
+
         liveUpdate: true,
         maxSimulationTime: maxTime * 1000,
         fit: true, // reset viewport to fit default simulationBounds
         padding: [ 50, 50, 50, 50 ], // top, right, bottom, left
         ungrabifyWhileSimulating: true,
-        stepSize: 0.1,
-
-        edgeLength: function( edge ) {
-            return 0.01/(edge.weight);
-        },
+        stepSize: 1,    
 
         stableEnergy: function( energy ){
           var e = energy; 
@@ -165,9 +168,6 @@ function arborLayout(maxTime) {
         stop: function() {
             viewModel.isArborRunning(false);
             $('#refreshButton').attr("disabled", false);
-            if (!viewModel.cancelLayoutStatus()) {
-                //alertify.success('Layout complete');
-            }
 
             //hack to fix graph not refreshing if time remains unchanged:
             var previousTime = viewModel.layoutTime();
@@ -176,45 +176,7 @@ function arborLayout(maxTime) {
         }
     };
 }
-
-function defaultArborLayout(maxTime) {
-    return {
-        name: 'arbor',
-
-        liveUpdate: true, // whether to show the layout as it's running
-        maxSimulationTime: maxTime * 1000, // max length in ms to run the layout
-        fit: true, // reset viewport to fit default simulationBounds
-        padding: [ 50, 50, 50, 50 ], // top, right, bottom, left
-        simulationBounds: undefined, // [x1, y1, x2, y2]; [0, 0, width, height] by default
-        ungrabifyWhileSimulating: true, // so you can't drag nodes during layout
-        gravity: true,
-        stepSize: 1, // size of timestep in simulation
-
-        stableEnergy: function( energy ){
-          var e = energy; 
-          return (e.max <= 0.5) || (e.mean <= 0.3) || viewModel.cancelLayoutStatus();
-        },
-
-        ready: function() {
-            viewModel.isArborRunning(true);
-            $('#refreshButton').attr("disabled", true);
-            //alertify.success('Laying out graph');
-        },
-        
-        stop: function() {
-            viewModel.isArborRunning(false);
-            $('#refreshButton').attr("disabled", false);
-            if(!viewModel.cancelLayoutStatus()) {
-                //alertify.success('Layout complete');
-            }
-
-            //hack to fix graph not refreshing if time remains unchanged:
-            var previousTime = viewModel.layoutTime();
-            viewModel.layoutTime(-1);
-            viewModel.layoutTime(previousTime);
-        }
-    }
-}
+//*/
 
 function gridLayout() {
     return {
