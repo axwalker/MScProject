@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Serializable;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -28,7 +29,7 @@ public class GraphResult implements Serializable {
 	private String filename;
 	private Map<Integer, List<Integer>> hierarchy;
 	private Map<CommunityID, Integer> sizes;
-	private Map<Integer, Double> modularities = new HashMap<Integer, Double>();
+	private Map<Integer, Double> modularities;
 	private int height;
 	private List<Map<CommunityID, CommunityEdgePositions>> allEdgePositions;
 	private Map<Integer, Integer> levelNodeCounts;
@@ -49,8 +50,7 @@ public class GraphResult implements Serializable {
 	 *            the number of levels in the hierarchy
 	 */
 	public GraphResult(String filename, Map<Integer, List<Integer>> hierarchy,
-			Map<CommunityID, Integer> sizes, Map<Integer, Double> modularities,
-			int height) {
+			Map<CommunityID, Integer> sizes, Map<Integer, Double> modularities, int height) {
 		this.filename = filename;
 		this.hierarchy = hierarchy;
 		this.sizes = sizes;
@@ -93,81 +93,82 @@ public class GraphResult implements Serializable {
 	 * Sort each edge list in the community hierarchy so that the edges are
 	 * sorted by what community they belong to. Edges in the same community are
 	 * grouped together.
-	 * 
-	 * @throws IOException
 	 */
-	public void writeSortedEdgeLists() throws IOException {
-		for (int i = 0; i <= height; i++) {
-			TreeSet<UndirectedEdge> edges = readInUnsortedEdgeList(i);
-			generateCommunityPositions(edges, i);
-			String sortedFilename = filename + (i != 0 ? "_pass_" + i : "")
-					+ "_sorted";
-			BufferedWriter bw = new BufferedWriter(new FileWriter(sortedFilename));
-			Set<Integer> uniqueNodes = new HashSet<Integer>();
-			for (UndirectedEdge edge : edges) {
-				bw.write(edge.toString());
-				uniqueNodes.add(edge.getSource());
-				uniqueNodes.add(edge.getTarget());
+	public void writeAllSortedEdgeLists() {
+		for (int level = 0; level <= height; level++) {
+			TreeSet<UndirectedEdge> edges = readInUnsortedEdgeList(level);
+			generateCommunityPositions(edges, level);
+			String sortedFilename = filename + (level != 0 ? "_pass_" + level : "") + "_sorted";
+			
+			try (BufferedWriter bw = new BufferedWriter(new FileWriter(sortedFilename))) {
+				writeSortedEdgeList(bw, edges, level);
+			}  catch (IOException e) {
+			    e.printStackTrace();
 			}
-			bw.close();
-			levelNodeCounts.put(i, uniqueNodes.size());
 		}
 	}
 
-	private TreeSet<UndirectedEdge> readInUnsortedEdgeList(int level) throws IOException {
-		TreeSet<UndirectedEdge> edges = new TreeSet<UndirectedEdge>(
-				new UndirectedEdgeComparator(hierarchy, level));
-		String inputFilename = filename + (level != 0 ? "_pass_" + level : "");
-		BufferedReader br = new BufferedReader(new FileReader(inputFilename));
-		String line = null;
-		while ((line = br.readLine()) != null) {
-			UndirectedEdge edge = UndirectedEdge.getEdge(line);
-			
-			//ignore zero degree vertices in bottom level edgelist
-			if (level == 0 && hierarchy.get(edge.getSource()) == null) {
-				continue;
-			}
-			
-			edges.add(edge);
+	protected void writeSortedEdgeList(Writer writer, TreeSet<UndirectedEdge> edges, int level) throws IOException {
+		Set<Integer> uniqueNodes = new HashSet<Integer>();
+		for (UndirectedEdge edge : edges) {
+			writer.write(edge.toString());
+			uniqueNodes.add(edge.getSource());
+			uniqueNodes.add(edge.getTarget());
 		}
-		br.close();
+		levelNodeCounts.put(level, uniqueNodes.size());
+	}
+
+	private TreeSet<UndirectedEdge> readInUnsortedEdgeList(int level) {
+		UndirectedEdgeComparator comparator = new UndirectedEdgeComparator(hierarchy, level);
+		TreeSet<UndirectedEdge> edges = new TreeSet<UndirectedEdge>(comparator);
+		String inputFilename = filename + (level != 0 ? "_pass_" + level : "");
+		try (BufferedReader br = new BufferedReader(new FileReader(inputFilename))) {
+			String line = null;
+			while ((line = br.readLine()) != null) {
+				UndirectedEdge edge = UndirectedEdge.getEdge(line);
+	
+				//ignore zero degree vertices in bottom level edgelist
+				if (level == 0 && hierarchy.get(edge.getSource()) == null) {
+					continue;
+				}
+	
+				edges.add(edge);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		return edges;
 	}
 
-	private void generateCommunityPositions(TreeSet<UndirectedEdge> edges, int fromLevel) throws IOException {
+	protected void generateCommunityPositions(TreeSet<UndirectedEdge> edges, int fromLevel) {
 		Map<CommunityID, CommunityEdgePositions> edgePositions = new HashMap<CommunityID, CommunityEdgePositions>();
 		CommunityID[] previousCommunities = new CommunityID[height];
 		UndirectedEdge firstEdge = edges.first();
 		for (int level = fromLevel; level < height; level++) {
 			CommunityID communityAtLevel = getCommunityAtLevel(firstEdge, level);
 			previousCommunities[level] = communityAtLevel;
-			edgePositions.put(communityAtLevel,
-					new CommunityEdgePositions(0, 0));
+			edgePositions.put(communityAtLevel, new CommunityEdgePositions(0, 0));
 		}
-		int setIndex = 0;
+		int counter = 0;
 		for (UndirectedEdge edge : edges) {
 			for (int level = fromLevel; level < height; level++) {
 				CommunityID communityAtLevel = getCommunityAtLevel(edge, level);
 				CommunityID previousCommunity = previousCommunities[level];
 				if (communityAtLevel.equals(previousCommunity)) {
-					if (previousCommunity.getId() != -1) {
-						break;
+					if (previousCommunity.getId() != -1 && (counter+1) == edges.size()) {
+							edgePositions.get(previousCommunity).setEndIndex(counter);
 					}
 				} else {
-					if (previousCommunity.getId() != -1) {
-						edgePositions.get(previousCommunity).setEndIndex(
-								setIndex);
+					if (previousCommunity.getId() != -1) { // || (counter+1) == edges.size()) {
+						edgePositions.get(previousCommunity).setEndIndex(counter);
+					}
+					if ((communityAtLevel.getId() != -1)) {
+						edgePositions.put(communityAtLevel, new CommunityEdgePositions(counter, counter));
 					}
 					previousCommunities[level] = communityAtLevel;
-					if (communityAtLevel.getId() == -1) {
-						continue;
-					} else {
-						edgePositions.put(communityAtLevel,
-								new CommunityEdgePositions(setIndex, setIndex));
-					}
 				}
 			}
-			setIndex++;
+			counter++;
 		}
 		allEdgePositions.add(edgePositions);
 	}

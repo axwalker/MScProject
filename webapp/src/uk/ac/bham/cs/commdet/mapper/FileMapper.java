@@ -25,4 +25,5 @@ public interface FileMapper {
 	 */
 	public void inputGraph(String filename) throws IOException;
 
+	public boolean hasValidGraph();
 }

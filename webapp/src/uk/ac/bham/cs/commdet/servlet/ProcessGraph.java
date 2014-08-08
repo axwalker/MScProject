@@ -5,7 +5,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.logging.Logger;
 
@@ -98,20 +97,27 @@ public class ProcessGraph extends HttpServlet {
 				mapper = new EdgelistMapper();
 			}
 			mapper.inputGraph(tempFolderPath + filename);
+			if (!mapper.hasValidGraph()) {
+				throw new IllegalArgumentException("Graph does not contain enough nodes or edges");
+			}
+			
 			result = GCprogram.run(tempFolderPath + filename + "_mapped", 1);
 			result.setMapper(mapper);
-			result.writeSortedEdgeLists();
+			result.writeAllSortedEdgeLists();
 			session.setAttribute("result", result);
+			
 			GraphGenerator generator = new GraphGenerator(result);
 			generator.setIncludeEdges(true);
 			responseString = generator.getParentGraphJson();
+			
 		} catch (IOException | IllegalArgumentException e) {
 			responseString = "{ \"success\": false , " +
 					"\"error\": \"" + e.getMessage() + "\"}";
 			session.invalidate();
 		} catch (Exception e) {
 			responseString = "{ \"success\": false , " +
-					"\"error\": \"" + "SERVER ERROR: " + e.getMessage() + "\"}";		
+					"\"error\": \"" + "SERVER ERROR: " + e.getMessage() + "\"}";	
+			e.printStackTrace();
 			session.invalidate();
 		}
 

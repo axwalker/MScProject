@@ -49,5 +49,9 @@ public class UndirectedEdgeComparator implements Comparator<UndirectedEdge> {
 			return e1.getSource() - e2.getSource();
 		}
 	}
+
+	public void setLevel(int level) {
+		this.level = level;
+	}
 	
 }

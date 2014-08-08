@@ -48,31 +48,42 @@ public class GraphStatus {
 	 */
 	public void updateCommunitiesMap() {
 		if (hierarchyHeight == 0) {
-			for (int i = 0; i < communities.length; i++) {
-				if (communityHierarchy.containsKey(originalVertexTrans.backward(i))) {
-					List<Integer> nodeCommunities = communityHierarchy.get(originalVertexTrans.backward(i));
-					nodeCommunities.add(originalVertexTrans.backward(communities[i].getSeedNode()));
-				}
-			}
+			updateCommunitesMapFirstPass();
 		} else {
-			for (Map.Entry<Integer, List<Integer>> node : communityHierarchy.entrySet()) {
-				int nodeId = node.getKey();
-				List<Integer> nodeCommunities = node.getValue();
-				int currentGcId = updatedVertexTrans.forward(nodeId);
-				if (nodeId < communities.length && communities[currentGcId] != null) {
-					int latestCommunity = updatedVertexTrans.backward(communities[currentGcId].getSeedNode());
-					nodeCommunities.add(latestCommunity);
+			updateCommunitiesMapSubsequentPasses();
+		}
+	}
+	
+	protected void updateCommunitesMapFirstPass() {
+		for (int i = 0; i < communities.length; i++) {
+			if (communityHierarchy.containsKey(originalVertexTrans.backward(i))) {
+				List<Integer> nodeCommunities = communityHierarchy.get(originalVertexTrans.backward(i));
+				int currentCommunitySeedNode = communities[i].getSeedNode();
+				nodeCommunities.add(originalVertexTrans.backward(currentCommunitySeedNode));
+			}
+		}
+	}
+	
+	protected void updateCommunitiesMapSubsequentPasses() {
+		for (Map.Entry<Integer, List<Integer>> node : communityHierarchy.entrySet()) {
+			int nodeId = node.getKey();
+			List<Integer> nodeCommunities = node.getValue();
+			
+			int currentGcId = updatedVertexTrans.forward(nodeId);
+			boolean originalNodeIdStillInGraph = nodeId < communities.length && communities[currentGcId] != null;
+			if (originalNodeIdStillInGraph) {
+				int latestCommunity = updatedVertexTrans.backward(communities[currentGcId].getSeedNode());
+				nodeCommunities.add(latestCommunity);
+			} else {
+				int previousCommunity = nodeCommunities.get(hierarchyHeight - 1);
+				int previousCommunityGcId = updatedVertexTrans.forward(previousCommunity);
+				boolean isSingleDisconnectedCommunity = 
+						previousCommunityGcId > communities.length || communities[previousCommunityGcId] == null;
+				if (isSingleDisconnectedCommunity) {
+					throw new IllegalArgumentException("ORCA is not currently compatible with non connected graphs");
 				} else {
-					int previousCommunity = nodeCommunities.get(hierarchyHeight - 1);
-					int previousCommunityGcId = updatedVertexTrans.forward(previousCommunity);
-					if (previousCommunityGcId > communities.length || communities[previousCommunityGcId] == null) {
-						// this happens when graph is not connected, resulting in single disjoint communities
-						throw new IllegalArgumentException("ORCA is not currently compatible with non connected graphs");
-						//nodeCommunities.add(previousCommunity);
-					} else {
-						int latestCommunityGcId = communities[previousCommunityGcId].getSeedNode();
-						nodeCommunities.add(updatedVertexTrans.backward(latestCommunityGcId));
-					}
+					int latestCommunityGcId = communities[previousCommunityGcId].getSeedNode();
+					nodeCommunities.add(updatedVertexTrans.backward(latestCommunityGcId));
 				}
 			}
 		}
@@ -86,8 +97,9 @@ public class GraphStatus {
 		for (int i = 0; i < communities.length; i++) {
 			Community community = communities[i];
 			if (community != null && !seenCommunites.contains(community) && community.getTotalSize() > 0) {
-				allCommunitySizes.put(new CommunityID(updatedVertexTrans.backward(community.getSeedNode()),
-						hierarchyHeight), community.getTotalSize());
+				int seed = updatedVertexTrans.backward(community.getSeedNode());
+				CommunityID communityId = new CommunityID(seed, hierarchyHeight);
+				allCommunitySizes.put(communityId, community.getTotalSize());
 				seenCommunites.add(community);
 			}
 		}
@@ -151,7 +163,6 @@ public class GraphStatus {
 		} else {
 			contractedGraph.put(edge, weight);
 		}
-		
 	}
 
 	public void addEdgeToInterCommunityEdges(UndirectedEdge edge, double edgeCount) {
@@ -161,7 +172,6 @@ public class GraphStatus {
 		} else {
 			interCommunityEdgeCounts.put(edge, edgeCount);
 		}
-		
 	}
 	
 	public int getNodeCount() {

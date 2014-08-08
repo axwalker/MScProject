@@ -17,7 +17,8 @@ import org.apache.commons.lang.math.NumberUtils;
 
 public class EdgelistMapper implements FileMapper {
 
-	private int nodeCount = 1;
+	private int nodeCount = 0;
+	private int edgeCount = 0;
 	private int lineNo = 1;
 	private Map<Integer, Map<String, Object>> internalToExternal;
 	private Map<String, Integer> externalToInternal;
@@ -75,6 +76,10 @@ public class EdgelistMapper implements FileMapper {
 			
 			addEdge(internalSource, internalTarget, weight);
 			lineNo++;
+			
+			if (internalSource != internalTarget) {
+				edgeCount++;
+			}
 		}
 	}
 
@@ -118,6 +123,11 @@ public class EdgelistMapper implements FileMapper {
 			br.close();
 			writer.close();
 		}
+	}
+
+	@Override
+	public boolean hasValidGraph() {
+		return edgeCount > 0 && nodeCount > 0;
 	}
 
 }

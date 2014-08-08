@@ -27,7 +27,8 @@ import org.apache.commons.lang.math.NumberUtils;
 
 public class GMLMapper implements FileMapper {
 
-	private int nodeCount = 1;
+	private int nodeCount = 0;
+	private int edgeCount = 0;
 	private Map<Integer, Map<String, Object>> internalToExternal;
 	private Map<String, Integer> externalToInternal;
 	private Writer writer;
@@ -130,6 +131,9 @@ public class GMLMapper implements FileMapper {
 		
 		if (sourceId != null && targetId != null) {
 			writer.write(sourceId + " " + targetId + weight + "\n");
+			if (!sourceId.equals(targetId)) {
+				edgeCount++;
+			}
 		}
 
 	}
@@ -241,5 +245,10 @@ public class GMLMapper implements FileMapper {
 			r.close();
 			writer.close();
 		}
+	}
+
+	@Override
+	public boolean hasValidGraph() {
+		return edgeCount > 0 && nodeCount > 0;
 	}
 }
