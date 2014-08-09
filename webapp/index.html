@@ -62,7 +62,7 @@
 
         <div id="afterUpload" class="scroll-x" data-bind="visible: graph">
 
-            <div id="topMenu" class="top row">
+            <div id="topMenu" class="top limWidth">
                 <center>
                     <div id="back" class="menuSection" data-bind="visible: hasHistory">
                         <span class="help" data-bind="visible: showHelp">?</span>
@@ -109,7 +109,7 @@
             </div>
 
 
-            <div id="graph" class="middle row">
+            <div id="graph" class="middle">
                 <div id="tooBig" data-bind="visible: currentViewTooBig">
                     The level you selected is too big to visualise. You can download the level as a GML file or try and view a different level of the hierarchy.
                 </div>
@@ -175,7 +175,7 @@
             </div>
 
 
-            <div class="bottom row">
+            <div class="bottom limWidth">
                 <center>
                     <div id="options" class="menuSection">
                         <a href="javascript:document.location.reload();">
@@ -189,16 +189,30 @@
                     <div id="download" class="menuSection">
                         <span class="help" data-bind="visible: showHelp">?</span>
                         <input class="myButton graphButton" data-bind="click: downloadGraph" type="button" value="Download GML" />
-                    </div>
-
-                    <div id="layout" class="menuSection">
-                        <input class="myButton layoutButton" data-bind="visible: !isArborRunning(), click: refreshLayout" type="button" value="Refresh layout" />
-                        <input class="myButton layoutButton red" data-bind="visible: isArborRunning, click: cancelLayout" type="button" value="Stop layout" />
                         
-                        <label data-bind="visible: usesArborLayout" for="arborTimeHigh">Time(secs):</label>
-                        <input data-bind="value: layoutTime" type="number" min="1" max="300" step="1" value="10" id="arborTimeHigh">
+                        <a id='layoutSettings'>Layout Settings</a>
+                        <div class="tooltiptext">
+                            <ul class="layoutContainer">
+                                <li>
+                                    <span class="layoutOption">Repulsion:</span><input type="range" name="points" min="0" max="10000" data-bind="value: layoutRepulsion" />
+                                </li>
+                                <li>
+                                    <span class="layoutOption">Stiffness:</span><input type="range" name="points" min="0" max="1000" data-bind="value: layoutStiffness" />
+                                </li>
+                                <li>
+                                    <span class="layoutOption">Friction:</span><input type="range" name="points" min="0" max="1000" data-bind="value: layoutFriction" />
+                                </li>
+                                <li>
+                                    <label for="arborTimeHigh">Time(secs):</label>
+                                    <input data-bind="value: layoutTime" type="number" min="1" max="300" step="1" value="10" id="arborTimeHigh">
+                                </li>
+                                <li>
+                                    <input class="myButton layoutButton" data-bind="visible: !isArborRunning(), click: refreshLayout" type="button" value="Refresh layout" />
+                                    <input class="myButton layoutButton red" data-bind="visible: isArborRunning, click: cancelLayout" type="button" value="Stop layout" />
+                                </li>
+                            </ul>
+                        </div>
                     </div>
-
                 </center>
             </div>
 

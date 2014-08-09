@@ -8,6 +8,8 @@ function initCy() {
     var edgeCss;
     var nodeCount = viewModel.graph().nodes.length;
 
+    viewModel.cancelLayoutStatus(false);
+
     if (viewModel.currentLevel() !== 0) {
         nodeCss = {
             'background-color': 'data(colour)',
@@ -56,7 +58,7 @@ function initCy() {
 
         style: styleOptions,
     
-        layout: viewModel.layoutChoiceComputed(),
+        layout: arborLayout(),
 
         elements: viewModel.graph(),
 
@@ -66,6 +68,7 @@ function initCy() {
 
         ready: function(){
             window.cy = this;
+            alertify.success('in ready');
 
             cy.boxSelectionEnabled(false);
 
@@ -76,7 +79,7 @@ function initCy() {
                 }
             });
 
-            cy.nodes().qtip({
+            /*cy.nodes().qtip({
 				content: {
                     text: function(){ 
                         var dataText = '';
@@ -131,9 +134,13 @@ function initCy() {
                 hide: {
                     event: 'mouseout'
                 }
-			});
+			});*/
+        },
 
+        done: function() {
+            alertify.success('in done');
         }
+
     });
     viewModel.cy($('#cy').cytoscape('get'));
 }
@@ -142,17 +149,36 @@ function clearCy() {
     $('#cy').cytoscape({});
 }
 
-//*
-function arborLayout(maxTime) {
+function arborLayout() {
     return {
         name: 'arbor',
 
         liveUpdate: true,
-        maxSimulationTime: maxTime * 1000,
+        maxSimulationTime: viewModel.layoutTime() * 1000,
         fit: true, // reset viewport to fit default simulationBounds
         padding: [ 50, 50, 50, 50 ], // top, right, bottom, left
         ungrabifyWhileSimulating: true,
-        stepSize: 1,    
+        stepSize: 1,
+
+        repulsion: viewModel.layoutRepulsion(),
+        stiffness: viewModel.layoutStiffness(),
+        friction: viewModel.layoutFriction(),
+        gravity: true,
+        fps: undefined,
+        precision: undefined,
+
+        /*nodeMass: function() {
+            var maxSize = viewModel.metadata().maxCommunitySize;
+            //return this.data('size') / maxSize;
+            if (this.data('size') < maxSize/2) {
+                return 1;
+            } else {
+                return 10;
+            }
+        },
+        edgeLength: function() {
+            return 1 / this.data('weight');
+        },*/
 
         stableEnergy: function( energy ){
           var e = energy; 
@@ -161,62 +187,14 @@ function arborLayout(maxTime) {
 
         ready: function() {
             viewModel.isArborRunning(true);
-            $('#refreshButton').attr("disabled", true);
+            $('#refreshButton').attr('disabled', true);
             //alertify.success('Laying out graph');
         },
         
         stop: function() {
             viewModel.isArborRunning(false);
-            $('#refreshButton').attr("disabled", false);
-
-            //hack to fix graph not refreshing if time remains unchanged:
-            var previousTime = viewModel.layoutTime();
-            viewModel.layoutTime(-1);
-            viewModel.layoutTime(previousTime);
+            alertify.success('in arbor stop');
+            $('#refreshButton').attr('disabled', false);
         }
-    };
-}
-//*/
-
-function gridLayout() {
-    return {
-        name: 'grid',
-
-        fit: true, // whether to fit the viewport to the graph
-        padding: 30, // padding used on fit
-        rows: undefined, // force num of rows in the grid
-        columns: undefined, // force num of cols in the grid
-        position: function( node ){}, // returns { row, col } for element
-        ready: undefined, // callback on layoutready
-        stop: undefined // callback on layoutstop
-    };
-}
-
-function circleLayout() {
-    return {
-        name: 'circle',
-
-        fit: true, // whether to fit the viewport to the graph
-        ready: undefined, // callback on layoutready
-        stop: undefined, // callback on layoutstop
-        rStepSize: 10, // the step size for increasing the radius if the nodes don't fit on screen
-        padding: 30, // the padding on fit
-        startAngle: 3/2 * Math.PI, // the position of the first node
-        counterclockwise: false // whether the layout should go counterclockwise (true) or clockwise (false)
-    };
-}
-
-function breadthfirstLayout() {
-    return {
-        name: 'breadthfirst',
-
-        fit: true, // whether to fit the viewport to the graph
-        ready: undefined, // callback on layoutready
-        stop: undefined, // callback on layoutstop
-        directed: false, // whether the tree is directed downwards (or edges can point in any direction if false)
-        padding: 30, // padding on fit
-        circle: false, // put depths in concentric circles if true, put depths top down if false
-        roots: undefined, // the roots of the trees
-        maximalAdjustments: 0 // how many times to try to position the nodes in a maximal way (i.e. no backtracking)
     };
 }

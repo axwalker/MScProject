@@ -13,7 +13,7 @@ body {
 }
 
 #afterUpload {
-  min-width: 1000px;
+  padding: 0px;
 }
 
 #beforeUpload {
@@ -37,7 +37,6 @@ select.upload {
   width: 200px;
   background: #fff;
   border: 1px solid black;
-  /*border: 1px solid silver;*/
   outline:0px;
   margin: 10px;
 }
@@ -58,28 +57,29 @@ select.upload {
   font-size: 15px;
 }
 
-.row, .col { overflow: hidden; position: absolute; }
-.row { left: 0; right: 0; }
-.col { top: 0; bottom: 0; }
 .scroll-x { overflow-x: auto; }
 .scroll-y { overflow-y: auto; }
 
 .top { 
-  height: 50px; 
-  padding-top: 20px;
-  padding-left: 30px;
+  position: absolute;
+  height: 40px; 
+  top: 0px;
+  padding-top: 10px;
   font-size: 14px;
 }
 
 .middle { 
-  top: 50px; 
+  position: absolute;
+  top: 40px; 
   bottom: 65px;
+  left: 0px;
+  right: 0px;
 }
 
 .bottom {
+  position: absolute;
   height: 65px;
   bottom: 0px;
-  padding-left: 30px;
 }
 
 .left {
@@ -96,8 +96,16 @@ select.upload {
   text-align: center;
 }
 
+.limWidth {
+  width: 1000px;
+  left: 50%;
+  margin-left: -500px;
+
+}
+
 div.menuSection {
-  margin-right: 50px;
+  margin-left: 30px;
+  margin-right: 30px;
   display: inline;
 }
 
@@ -278,8 +286,8 @@ input[type=number] {
 
 .layoutButton {
   width: 150px;
-  /*height: 25px;*/
-  /*padding: 3px;*/
+  height: 30px;
+  padding: 3px;
 }
 
 .layoutButton.red {
@@ -289,6 +297,30 @@ input[type=number] {
 hr {
   border: 0px;
   border-bottom: 2px dashed darkgrey;
+}
+
+#layoutSettings {
+  font-size: 20px;
+  color: #000;
+}
+
+ul.layoutContainer {
+  padding-left: 0px;
+}
+
+li {
+  margin: 20px;
+}
+
+.tooltiptext {
+  display: none;
+  text-align: center;
+}
+
+span.layoutOption {
+  width: 80px;
+  margin-right: 3px;
+  text-align: right;
 }
 
 /*  Table

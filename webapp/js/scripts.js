@@ -187,43 +187,22 @@ var viewModel = function() {
     };
 
     // DISPLAY OPTIONS ----------------------------------------------------------------------- //
-    self.layoutOptions = ['Force-directed', 'Grid', 'Breadth-first', 'Circle'];
-
-    self.layoutChoice = ko.observable('Force-directed');
-
+    self.layoutRepulsion = ko.observable(500);
+    self.layoutStiffness = ko.observable(500);
+    self.layoutFriction = ko.observable(500);
     self.layoutTime = ko.observable(10);
 
     self.isArborRunning = ko.observable(false);
 
-    self.cancelLayoutStatus = ko.observable(false);
-
-    self.layoutChoiceComputed = ko.computed(function() {
-        if (self.layoutChoice() === 'Force-directed') {
-            self.cancelLayoutStatus(false);
-            if (self.drillLevel() > 0) {
-                return arborLayout(self.layoutTime());
-            } else {
-                return arborLayout(self.layoutTime());
-            }
-        } else if (self.layoutChoice() === 'Grid') {
-            return gridLayout();
-        } else if (self.layoutChoice() === 'Breadth-first') {
-            return breadthfirstLayout();
-        } else {
-            return circleLayout();
-        }
-    });
-
-    self.usesArborLayout = ko.computed(function() {
-        return self.layoutChoice() === 'Force-directed';
-    });
+    self.cancelLayoutStatus = ko.observable(true);
 
     self.cancelLayout = function() {
         self.cancelLayoutStatus(true);
     };
 
     self.refreshLayout = function() {
-        self.cy().layout(self.layoutChoiceComputed());
+        self.cancelLayoutStatus(false);
+        self.cy().layout(arborLayout());
     };
 
     // UPLOAD ----------------------------------------------------------------------- //
@@ -562,3 +541,26 @@ function progress(percent, $element, speed, callback) {
         }
     );
 }
+
+$(document).ready(function() {
+       $('#layoutSettings').qtip({
+           content: {
+            text: $('#layoutSettings').next('.tooltiptext')
+        },
+        position: {
+            my: 'bottom center',
+            at: 'top center'
+        },
+        style: {
+            classes: 'qtip-bootstrap'
+        },
+        hide: {
+            delay: 400,
+            fixed: true,
+            effect: function() { $(this).fadeOut(250); }
+        },
+        show: {
+            solo: true
+        }
+    });
+});
