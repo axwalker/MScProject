@@ -40,11 +40,11 @@ public class GMLMapper implements FileMapper {
 	
 	public String getExternalid(int internalId) {
 		Map<String, Object> gmlProperties = internalToExternal.get(internalId);
-		return (int)gmlProperties.get(GMLTokens.ID) + "";
+		return gmlProperties.get(GMLTokens.ID) + "";
 	}
 	
-	public int getInternalId(int gmlID) {
-		return externalToInternal.get(gmlID + "");
+	public int getInternalId(String gmlID) {
+		return externalToInternal.get(gmlID);
 	}
 	
 	private void parse(final StreamTokenizer st) throws IOException {
@@ -207,6 +207,11 @@ public class GMLMapper implements FileMapper {
 
 	public Map<Integer, Map<String, Object>> getInternalToExternal() {
 		return internalToExternal;
+	}
+	
+	@Override
+	public Map<String, Object> getExternalMetadata(int internalId) {
+		return internalToExternal.get(internalId);
 	}
 
 	public void inputGraph(String inputFilename) throws FileNotFoundException, IOException {

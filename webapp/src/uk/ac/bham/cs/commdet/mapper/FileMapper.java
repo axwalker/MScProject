@@ -4,16 +4,16 @@ import java.io.IOException;
 import java.util.Map;
 
 public interface FileMapper {
-
+	
 	/**
-	 * @return maps internal id of a node to another map of properties for that
-	 *         node such as external id, label or other information
+	 * @return map of properties for a node such as external id, label or
+	 *         other information
 	 */
-	public Map<Integer, Map<String, Object>> getInternalToExternal();
-
+	public Map<String, Object> getExternalMetadata(int internalId);
+	
 	public String getExternalid(int internalId);
 
-	public int getInternalId(int externalID);
+	public int getInternalId(String externalID);
 
 	/**
 	 * Load the GML file into the maps and write edgelist file.

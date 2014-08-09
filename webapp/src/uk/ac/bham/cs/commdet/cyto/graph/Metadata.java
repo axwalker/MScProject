@@ -78,4 +78,52 @@ public class Metadata implements Serializable {
 		this.currentLevel = currentLevel;
 	}
 
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + NoOfCommunities;
+		result = prime * result + avgCommunitySize;
+		result = prime * result + currentLevel;
+		result = prime * result + hierarchyHeight;
+		result = prime * result + maxCommunitySize;
+		long temp;
+		temp = Double.doubleToLongBits(maxEdgeConnection);
+		result = prime * result + (int) (temp ^ (temp >>> 32));
+		result = prime * result + minCommunitySize;
+		temp = Double.doubleToLongBits(modularity);
+		result = prime * result + (int) (temp ^ (temp >>> 32));
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Metadata other = (Metadata) obj;
+		if (NoOfCommunities != other.NoOfCommunities)
+			return false;
+		if (avgCommunitySize != other.avgCommunitySize)
+			return false;
+		if (currentLevel != other.currentLevel)
+			return false;
+		if (hierarchyHeight != other.hierarchyHeight)
+			return false;
+		if (maxCommunitySize != other.maxCommunitySize)
+			return false;
+		if (Double.doubleToLongBits(maxEdgeConnection) != Double
+				.doubleToLongBits(other.maxEdgeConnection))
+			return false;
+		if (minCommunitySize != other.minCommunitySize)
+			return false;
+		if (Double.doubleToLongBits(modularity) != Double.doubleToLongBits(other.modularity))
+			return false;
+		return true;
+	}
+	
+
 }

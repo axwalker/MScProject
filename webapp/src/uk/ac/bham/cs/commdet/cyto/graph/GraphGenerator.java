@@ -43,15 +43,28 @@ public class GraphGenerator {
 		this.graph.setModularities(modularities);
 	}
 
+	/**
+	 * @return JSON with edges and colouring from the highest level of the hierarchy
+	 */
 	public String getParentGraphJson() {
 		return getGraphJson(result.getHeight(), result.getHeight());
 	}
 
+	/**
+	 * @param level  level of the file hierarchy to get edges from
+	 * @param colourLevel  the hierarchy level at which to colour each node by
+	 */
 	public String getGraphJson(int level, int colourLevel) {
 		parseGraph(level, colourLevel);
 		return serializeJson();
 	}
 
+	/**
+	 * @param community  id of an individual community
+	 * @param communityLevel  level of hierarchy that the community exists at
+	 * @param fileLevel  level of the file hierarchy to get indiviudal edges from
+	 * @param colourLevel  the hierarchy level at which to colour each node by
+	 */
 	public String getCommunityJson(int community, int communityLevel, int fileLevel, int colourLevel) {
 		parseCommunity(community, communityLevel, fileLevel, colourLevel);
 		return serializeJson();
@@ -69,14 +82,18 @@ public class GraphGenerator {
 		GMLWriter.outputGraph(graph, graphMLOutputStream);
 	}
 
-	private void parseGraph(int level, int colourLevel) {
+	protected void parseGraph(int level, int colourLevel) {
 		parseCompoundEdgeFile(result.getFilename(), level);
 		double modularity = (level == 0 ? 0 : result.getModularities().get(level - 1));
 		setMetadata(modularity, level);
 		colourNodes(level, colourLevel);
 	}
 
-	private void parseCommunity(int community, int communityLevel, int fileLevel, int colourLevel) {
+	public Graph getGraph() {
+		return graph;
+	}
+
+	protected void parseCommunity(int community, int communityLevel, int fileLevel, int colourLevel) {
 		parseEdgeFile(result.getFilename(), community, communityLevel, fileLevel);
 		double modularity = (fileLevel == 0 ? 0 : result.getModularities().get(fileLevel));
 		setMetadata(modularity, fileLevel);
@@ -192,7 +209,7 @@ public class GraphGenerator {
 		Node node = new Node(nodeId + "", size);
 		Map<String, Object> nodeMetadata = new HashMap<String, Object>();
 		if (level == 0) {
-			nodeMetadata.putAll(result.getMapper().getInternalToExternal().get(nodeId));
+			nodeMetadata.putAll(result.getMapper().getExternalMetadata(nodeId));
 		} else {
 			nodeMetadata.put("community", nodeId);
 		}

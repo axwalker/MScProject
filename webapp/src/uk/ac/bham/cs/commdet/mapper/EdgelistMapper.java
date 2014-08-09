@@ -29,20 +29,24 @@ public class EdgelistMapper implements FileMapper {
 		this.externalToInternal = new HashMap<String, Integer>();
 	}
 
-	@Override
 	public Map<Integer, Map<String, Object>> getInternalToExternal() {
 		return internalToExternal;
+	}
+	
+	@Override
+	public Map<String, Object> getExternalMetadata(int internalId) {
+		return internalToExternal.get(internalId);
 	}
 
 	@Override
 	public String getExternalid(int internalId) {
 		Map<String, Object> properties = internalToExternal.get(internalId);
-		return properties.get("id") + "";
+		return properties.get("label") + "";
 	}
 
 	@Override
-	public int getInternalId(int externalID) {
-		return externalToInternal.get(externalID + "");
+	public int getInternalId(String externalID) {
+		return externalToInternal.get(externalID);
 	}
 
 	@Override
@@ -88,7 +92,9 @@ public class EdgelistMapper implements FileMapper {
 		if (internalId == null) {
 			internalId = nodeCount;
 			Map<String, Object> nodeProperties = new HashMap<String, Object>();
-			nodeProperties.put("id", externalId);
+			//nodeProperties.put("id", externalId);
+			nodeProperties.put("id", internalId);
+			nodeProperties.put("label", externalId);
 			internalToExternal.put(nodeCount, nodeProperties);
 			externalToInternal.put(externalId, nodeCount);
 			nodeCount++;
@@ -116,7 +122,6 @@ public class EdgelistMapper implements FileMapper {
 
 		try {
 			parse(br);
-
 		} catch (IOException e) {
 			throw new IOException("Edgelist line number " + lineNo + ": " + e.getMessage(), e);
 		} finally {
