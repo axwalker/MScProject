@@ -56,7 +56,7 @@ public class GraphResultTest {
 		
 		result.writeSortedEdgeList(writer, edges, someLevel);
 		
-		String expected = "1 2 " + someWeight + "\n2 3 " + someWeight + "\n";
+		String expected = "1 2 " + someWeight + "\n2 3 " + someWeight + "\n";  //TODO  change to bytearray from random access
 		String actual = writer.toString();
 		assertEquals(expected, actual);
 	}

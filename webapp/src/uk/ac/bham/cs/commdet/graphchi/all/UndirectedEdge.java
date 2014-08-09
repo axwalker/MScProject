@@ -1,5 +1,7 @@
 package uk.ac.bham.cs.commdet.graphchi.all;
 
+import java.nio.ByteBuffer;
+
 /**
  * Edge with lowest id value is always used as the source in the edge.
  */
@@ -24,6 +26,24 @@ public class UndirectedEdge {
 		String[] edgeInfo = line.split(" ");
 		double weight = edgeInfo.length == 3 ? Double.parseDouble(edgeInfo[2]) : 1.;
 		return new UndirectedEdge(Integer.parseInt(edgeInfo[0]), Integer.parseInt(edgeInfo[1]), weight);
+	}
+	
+	public static byte[] toByteArray(UndirectedEdge edge) {
+		return ByteBuffer.allocate(12)
+				.putFloat(edge.getSource())
+				.putFloat(edge.getTarget())
+				.putFloat((float) edge.getWeight())
+				.array();
+	}
+	
+	public static UndirectedEdge fromByteArray(byte[] bytes) {
+		if (bytes.length != 12) {
+			throw new IllegalArgumentException("not a valid byte array for an edge");
+		}
+		int source = (int) ByteBuffer.wrap(bytes, 0, 4).getFloat();
+		int target = (int) ByteBuffer.wrap(bytes, 4, 4).getFloat();
+		double weight = ByteBuffer.wrap(bytes, 8, 4).getFloat();
+		return new UndirectedEdge(source, target, weight);
 	}
 
 	public int getSource() {

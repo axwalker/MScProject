@@ -2,9 +2,12 @@ package uk.ac.bham.cs.commdet.graphchi.all;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.io.Serializable;
 import java.io.Writer;
 import java.util.ArrayList;
@@ -14,6 +17,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+
+import org.apache.commons.io.FileUtils;
 
 import uk.ac.bham.cs.commdet.mapper.FileMapper;
 
@@ -100,18 +105,19 @@ public class GraphResult implements Serializable {
 			generateCommunityPositions(edges, level);
 			String sortedFilename = filename + (level != 0 ? "_pass_" + level : "") + "_sorted";
 			
-			try (BufferedWriter bw = new BufferedWriter(new FileWriter(sortedFilename))) {
-				writeSortedEdgeList(bw, edges, level);
+			try (RandomAccessFile file = new RandomAccessFile(sortedFilename, "rw")) {
+				writeSortedEdgeList(file, edges, level);
 			}  catch (IOException e) {
 			    e.printStackTrace();
-			}
+			}		
 		}
 	}
 
-	protected void writeSortedEdgeList(Writer writer, TreeSet<UndirectedEdge> edges, int level) throws IOException {
+	protected void writeSortedEdgeList(RandomAccessFile file, TreeSet<UndirectedEdge> edges, int level) throws IOException {
 		Set<Integer> uniqueNodes = new HashSet<Integer>();
 		for (UndirectedEdge edge : edges) {
-			writer.write(edge.toString());
+			byte[] bytes = UndirectedEdge.toByteArray(edge);
+			file.write(bytes);
 			uniqueNodes.add(edge.getSource());
 			uniqueNodes.add(edge.getTarget());
 		}

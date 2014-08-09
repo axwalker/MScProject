@@ -79,7 +79,7 @@ function initCy() {
                 }
             });
 
-            /*cy.nodes().qtip({
+            cy.nodes().qtip({
 				content: {
                     text: function(){ 
                         var dataText = '';
@@ -134,7 +134,7 @@ function initCy() {
                 hide: {
                     event: 'mouseout'
                 }
-			});*/
+			});
         },
 
         done: function() {

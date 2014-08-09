@@ -1,15 +1,14 @@
 package uk.ac.bham.cs.commdet.cyto.graph;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.RandomAccessFile;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.apache.commons.io.FileUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
@@ -145,20 +144,17 @@ public class GraphGenerator {
 				.get(new CommunityID(community, communityLevel));
 		int startIndex = positions.getStartIndex();
 		int endIndex = positions.getEndIndex();
+		int edgeCount = endIndex - startIndex;
 		Set<Integer> nodesAdded = new HashSet<Integer>();
-		try {
-			int lineIndex = 0;
-			for (String line : FileUtils.readLines(new File(edgeFilename))) {
-				if (lineIndex < startIndex) {
-					lineIndex++;
-					continue;
-				}
-				if (lineIndex >= endIndex) {
-					break;
-				}
-				addLine(fileLevel, line, nodesAdded);
-				lineIndex++;
-			}
+		
+		try (RandomAccessFile file = new RandomAccessFile(edgeFilename, "r")) {
+			file.seek(startIndex * 12);
+			System.out.println("file length: " + file.length());
+			for (int i = 0; i < edgeCount; i++) {
+				byte[] bytes = new byte[12];
+				file.read(bytes);
+				addEdge(fileLevel, bytes, nodesAdded);
+            }
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -170,22 +166,25 @@ public class GraphGenerator {
 	 *            the original base name of the graphs's edgelist file
 	 * @param level
 	 *            the level of the hierarchy to retrieve the edges for
+	 * @throws IOException 
 	 */
 	private void parseCompoundEdgeFile(String baseFilename, int level) {
 		String edgeFilename = baseFilename + (level == 0 ? "" : "_pass_" + (level));
 
 		Set<Integer> nodesAdded = new HashSet<Integer>();
-		try {
-			for (String line : FileUtils.readLines(new File(edgeFilename))) {
-				addLine(level, line, nodesAdded);
-			}
+		try (RandomAccessFile file = new RandomAccessFile(edgeFilename + "_sorted", "rw")) {
+			while (file.getFilePointer() < file.length()) {
+				byte[] bytes = new byte[12];
+				file.read(bytes);
+				addEdge(level, bytes, nodesAdded);
+            }
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-	private void addLine(int level, String line, Set<Integer> nodesAdded) {
-		UndirectedEdge edge = UndirectedEdge.getEdge(line);
+	private void addEdge(int level, byte[] bytes, Set<Integer> nodesAdded) {
+		UndirectedEdge edge = UndirectedEdge.fromByteArray(bytes);
 		int source = edge.getSource();
 		int target = edge.getTarget();
 		double weight = edge.getWeight();
@@ -222,7 +221,6 @@ public class GraphGenerator {
 
 	private String serializeJson() {
 		ObjectMapper mapper = new ObjectMapper();
-		// mapper.getSerializationConfig().enable(Feature.INDENT_OUTPUT);
 		try {
 			return mapper.writeValueAsString(graph);
 		} catch (Exception e) {
