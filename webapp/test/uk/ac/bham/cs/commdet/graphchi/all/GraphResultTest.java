@@ -1,13 +1,19 @@
 package uk.ac.bham.cs.commdet.graphchi.all;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
-import java.io.StringWriter;
-import java.util.*;
+import java.io.RandomAccessFile;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeSet;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class GraphResultTest {
 
@@ -19,6 +25,9 @@ public class GraphResultTest {
 	private UndirectedEdge e3 = new UndirectedEdge(3, 4, someWeight);
 	private UndirectedEdge e5 = new UndirectedEdge(5, 6, someWeight);
 	private UndirectedEdgeComparator comparator;
+	
+	@Rule
+	public TemporaryFolder testFolder = new TemporaryFolder();
 	
 	@Before
 	public void setUp() {
@@ -46,19 +55,25 @@ public class GraphResultTest {
 	}
 	
 	@Test
-	public void testWriteSortedEdgeList() throws IOException {
-		StringWriter writer = new StringWriter();
+	public void writeSortedEdgeList_correctEdges() throws IOException {
+		RandomAccessFile file = new RandomAccessFile(testFolder.newFile(), "rw");
 		UndirectedEdge[] edgeList = {e1, e2};
 		int someLevel = 0;
 		comparator = new UndirectedEdgeComparator(hierarchy, someLevel);
 		TreeSet<UndirectedEdge> edges = new TreeSet<UndirectedEdge>(comparator);
 		edges.addAll(Arrays.asList(edgeList));
 		
-		result.writeSortedEdgeList(writer, edges, someLevel);
+		result.writeSortedEdgeList(file, edges, someLevel);
 		
-		String expected = "1 2 " + someWeight + "\n2 3 " + someWeight + "\n";  //TODO  change to bytearray from random access
-		String actual = writer.toString();
-		assertEquals(expected, actual);
+		file.seek(0);
+		byte[] e1bytes = new byte[12];
+		file.read(e1bytes);
+		UndirectedEdge actualE1 = UndirectedEdge.fromByteArray(e1bytes);
+		assertEquals(e1, actualE1);
+		byte[] e2bytes = new byte[12];
+		file.read(e2bytes);
+		UndirectedEdge actualE2 = UndirectedEdge.fromByteArray(e2bytes);
+		assertEquals(e2, actualE2);
 	}
 
 	@Test

@@ -140,8 +140,8 @@ public class LabelPropagationProgram implements GraphChiProgram<Float, Float>, D
 			status.initialiseCommunitiesMap();
 		}
 		if (!hasFinishedPropagation && !ctx.getScheduler().hasTasks()) {
-			status.updateSizesMap();
 			status.updateCommunitiesMap();
+			status.updateSizesMap();
 			hasFinishedPropagation = true;
 			ctx.getScheduler().addAllTasks();
 		} else {

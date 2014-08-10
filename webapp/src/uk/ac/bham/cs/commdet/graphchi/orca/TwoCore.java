@@ -140,8 +140,8 @@ public class TwoCore implements GraphChiProgram<Float, Float> {
 			twoCoreCompleted = true;
 			ctx.getScheduler().addAllTasks();
 			status.getModularities().put(status.getHierarchyHeight(), 0.);
-			status.updateSizesMap();
 			status.updateCommunitiesMap();
+			status.updateSizesMap();
 		}
 	}
 

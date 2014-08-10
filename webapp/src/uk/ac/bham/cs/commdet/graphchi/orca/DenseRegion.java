@@ -328,8 +328,8 @@ public class DenseRegion implements GraphChiProgram<Float, Float> {
 		}
 		if (ctx.getIteration() == CONTRACT_SINGULAR_NODES) {
 			status.updateModularity(status.getHierarchyHeight());
-			status.updateSizesMap();
 			status.updateCommunitiesMap();
+			status.updateSizesMap();
 		}
 		if (ctx.getIteration() == ADD_TO_CONTRACTED) {
 			setAverageAdjacencies();

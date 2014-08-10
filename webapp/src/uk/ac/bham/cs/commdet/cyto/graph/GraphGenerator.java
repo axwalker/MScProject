@@ -138,8 +138,7 @@ public class GraphGenerator {
 	 *            the level of the hierarchy to retrieve the edges for
 	 */
 	private void parseEdgeFile(String baseFilename, int community, int communityLevel, int fileLevel) {
-		String edgeFilename = baseFilename + (fileLevel == 0 ? "" : "_pass_" + (fileLevel))
-				+ "_sorted";
+		String edgeFilename = baseFilename + (fileLevel == 0 ? "" : "_pass_" + (fileLevel)) + "_sorted";
 		CommunityEdgePositions positions = result.getAllEdgePositions().get(fileLevel)
 				.get(new CommunityID(community, communityLevel));
 		int startIndex = positions.getStartIndex();

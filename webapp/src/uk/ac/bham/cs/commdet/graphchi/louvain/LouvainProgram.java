@@ -197,8 +197,8 @@ public class LouvainProgram implements GraphChiProgram<Float, Float>, DetectionP
 			ctx.getScheduler().addAllTasks();
 		} else  if (!isReadyToContract && improvedOnPass) {
 			status.updateModularity(passIndex);
-			status.updateSizesMap();
 			status.updateCommunitiesMap();
+			status.updateSizesMap();
 			status.incrementHeight();
 			ctx.getScheduler().addAllTasks();
 			isReadyToContract = true;

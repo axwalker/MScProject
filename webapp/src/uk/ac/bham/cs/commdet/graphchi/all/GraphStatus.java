@@ -65,16 +65,37 @@ public class GraphStatus {
 	}
 	
 	protected void updateCommunitiesMapSubsequentPasses() {
+		Set<Community> hadSeedNodeReplaced = new HashSet<Community>();
+		
 		for (Map.Entry<Integer, List<Integer>> node : communityHierarchy.entrySet()) {
 			int nodeId = node.getKey();
 			List<Integer> nodeCommunities = node.getValue();
-			
 			int currentGcId = updatedVertexTrans.forward(nodeId);
 			boolean originalNodeIdStillInGraph = nodeId < communities.length && communities[currentGcId] != null;
 			if (originalNodeIdStillInGraph) {
-				int latestCommunity = updatedVertexTrans.backward(communities[currentGcId].getSeedNode());
-				nodeCommunities.add(latestCommunity);
-			} else {
+				Community latestCommunity = communities[currentGcId];
+				
+				int communitySeedNode = latestCommunity.getSeedNode();
+				boolean needsSeedNodeReplacing = 
+						communities[communitySeedNode].getSeedNode() != communitySeedNode
+						&& !hadSeedNodeReplaced.contains(latestCommunity);
+				
+				if (needsSeedNodeReplacing) {
+					latestCommunity.setSeedNode(currentGcId);
+					hadSeedNodeReplaced.add(latestCommunity);
+				}
+				
+				int latestCommunityGcId = updatedVertexTrans.backward(latestCommunity.getSeedNode());				
+				nodeCommunities.add(latestCommunityGcId);
+			}
+		}
+		
+		for (Map.Entry<Integer, List<Integer>> node : communityHierarchy.entrySet()) {
+			int nodeId = node.getKey();
+			List<Integer> nodeCommunities = node.getValue();
+			int currentGcId = updatedVertexTrans.forward(nodeId);
+			boolean originalNodeIdStillInGraph = nodeId < communities.length && communities[currentGcId] != null;
+			if (!originalNodeIdStillInGraph) {
 				int previousCommunity = nodeCommunities.get(hierarchyHeight - 1);
 				int previousCommunityGcId = updatedVertexTrans.forward(previousCommunity);
 				boolean isSingleDisconnectedCommunity = 
@@ -82,8 +103,9 @@ public class GraphStatus {
 				if (isSingleDisconnectedCommunity) {
 					throw new IllegalArgumentException("ORCA is not currently compatible with non connected graphs");
 				} else {
-					int latestCommunityGcId = communities[previousCommunityGcId].getSeedNode();
-					nodeCommunities.add(updatedVertexTrans.backward(latestCommunityGcId));
+					Community latestCommunity = communities[previousCommunityGcId];
+					int latestCommunityGcId = updatedVertexTrans.backward(latestCommunity.getSeedNode());				
+					nodeCommunities.add(latestCommunityGcId);
 				}
 			}
 		}
