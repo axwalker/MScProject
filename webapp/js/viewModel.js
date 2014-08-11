@@ -429,8 +429,11 @@ var viewModel = function() {
         self.communityPageIndex(self.communityNoOfPages());
     };
 
+    self.loadingTable = ko.observable(true);
+
     self.updateCommunityTable = ko.computed(function() {
         if (self.hasSelectedCommunity() && !self.isBottomLevel() && self.drillLevel()) {
+            self.loadingTable(true);
             console.log('making request to update community table...');
             var selectedCommunity = self.selectedCommunity();
             if (selectedCommunity !== -1) {
@@ -442,9 +445,13 @@ var viewModel = function() {
                 formData += '&offset=' + (self.communityPageIndex() - 1) * PAGE_SIZE;
                 formData += '&size=' + PAGE_SIZE;
                 graphRequest('GetCommunityNodes', formData, true, 'application/x-www-form-urlencoded', function(data) {
-                    self.community(data.nodes);
+                    var page = data.nodes;
+                    page.forEach( function (node) {
+                        delete node.data.metadata.community;
+                    });
+                    self.community(page);
+                    self.loadingTable(false);
                 });
-                console.log(formData);
             }
         } else {
             self.community([]);

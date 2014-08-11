@@ -123,8 +123,8 @@
 
                 <div id="community" class="left" data-bind="visible: !currentViewTooBig() && hasSelectedCommunity()">
                     <h1>Community <span data-bind="text: selectedCommunity"></span></h1>
-                    <span>Size: <span data-bind="text: selectedCommunitySize"></span></size>
-                    
+                    <h3>Size: <span data-bind="text: selectedCommunitySize"></span></h3>
+
                     <hr>
 
                     <div id="navigateCommunity" data-bind="visible: communityNoOfPages() > 1">
@@ -158,6 +158,9 @@
                         </table>
                         </center>
                     </div>
+                    
+                    <div data-bind="visible: loadingTable">Loading table...</div>
+
                     <hr>
 
                     <div id="drillIntoCommunity">
