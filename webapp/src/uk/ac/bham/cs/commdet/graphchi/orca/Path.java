@@ -5,7 +5,6 @@ public class Path {
 	private int from;
 	private int to;
 	private double weight;
-	private boolean adjacent;
 	
 	public Path(int from, int to, double weight) {
 		this.from = from;
@@ -71,15 +70,6 @@ public class Path {
 		if (Double.doubleToLongBits(weight) != Double.doubleToLongBits(other.weight))
 			return false;
 		return true;
-	}
-
-	public boolean isAdjacent() {
-		return adjacent;
-	}
-
-	public void setAdjacent(boolean adjacent) {
-		this.adjacent = adjacent;
-	}
-	
+	}	
 	
 }

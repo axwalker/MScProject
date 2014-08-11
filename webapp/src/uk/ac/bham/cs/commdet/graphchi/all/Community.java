@@ -1,5 +1,15 @@
 package uk.ac.bham.cs.commdet.graphchi.all;
 
+/**
+ * A community with a unique seed node that is used as a label for the
+ * community. Internal edges is the number of half edges between vertices inside
+ * the community. So one edge between two vertices in the community is
+ * considered 2 half edges. Total edges is the total number of half edges from
+ * all nodes in the community to any other node in the graph. Total size is the
+ * total number of vertices this community has across the whole hierarchy while
+ * level size considers only the nodes attached to the community at this level
+ * of the hierarchy.
+ */
 public class Community {
 	
 	private int seedNode;

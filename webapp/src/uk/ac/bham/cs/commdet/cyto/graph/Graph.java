@@ -3,6 +3,23 @@ package uk.ac.bham.cs.commdet.cyto.graph;
 import java.io.Serializable;
 import java.util.*;
 
+/**
+ * A graph as specified by Cytoscape js to be used with a JSON serializer. Result:
+ * 		{
+ * 			"nodes": [
+ * 				...
+ * 			],
+ * 			"edges": [
+ * 				...
+ * 			],
+ * 			"metadata": {
+ * 				...
+ * 			},
+ * 			"modularities": [
+ * 				...
+ * 			]
+ * 		}
+ */
 public class Graph implements Serializable {
 
 	private List<NodeData> nodes = new ArrayList<NodeData>();

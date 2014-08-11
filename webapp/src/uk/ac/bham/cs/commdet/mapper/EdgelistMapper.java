@@ -15,6 +15,13 @@ import java.util.Map;
 
 import org.apache.commons.lang.math.NumberUtils;
 
+/**
+ * A filemapper for converting to an internal edgelist described in FileMapper from
+ * an edgelist in the format (String)source (String)target (float)weight, eg with input:
+ * 		A B 1.0
+ * 		A C 1.0
+ * 		B C 1.0
+ */
 public class EdgelistMapper implements FileMapper {
 
 	private int nodeCount = 0;

@@ -2,7 +2,19 @@ package uk.ac.bham.cs.commdet.cyto.graph;
 
 import java.io.Serializable;
 
-
+/**
+ * Container for an edge object. This is to be used with a JSON serializer so the that the
+ * format matches cytoscape's graph data format. For example, a graph with a single edge:
+ * 		{ 
+ * 			"edges": [ 
+ * 				"data": { 
+ * 					"source": "1",
+ * 					"target": "2",
+ * 					"weight": 1.5
+ * 				}
+ * 			]
+ *		} 
+ */
 public class EdgeData implements Serializable {
 
 	private Edge data;

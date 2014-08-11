@@ -4,6 +4,12 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * A node with a given id, size, colour and metadata. Id must be a string as
+ * specifed by Cytoscape js. A node can be considered as a single vertex with
+ * size 1, or a compound node where size represents how many vertices belong to
+ * this node.
+ */
 public class Node implements Serializable {
 
 	private String id;

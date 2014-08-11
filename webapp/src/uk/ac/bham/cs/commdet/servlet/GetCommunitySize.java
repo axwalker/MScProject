@@ -12,6 +12,9 @@ import edu.cmu.graphchi.ChiLogger;
 
 import uk.ac.bham.cs.commdet.graphchi.all.GraphResult;
 
+/**
+ * Get the number of edges in a given community
+ */
 @WebServlet("/GetCommunitySize")
 public class GetCommunitySize extends HttpServlet {
 
@@ -37,7 +40,8 @@ public class GetCommunitySize extends HttpServlet {
 				logger.info(e.getMessage() + "\n" + Arrays.asList(e.getStackTrace()));
 			}
 		} else {
-			responseString = "error: no session found";
+			responseString = "{ \"success\": false , " + "\"error\": \""
+					+ "current session timed out, please try again" + "\"}";
 		}
 		response.setContentType("text/plain");
 		response.getWriter().println(responseString);

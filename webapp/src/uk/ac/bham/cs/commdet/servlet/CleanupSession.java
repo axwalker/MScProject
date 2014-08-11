@@ -14,9 +14,7 @@ import org.apache.commons.io.FileUtils;
 public class CleanupSession implements HttpSessionListener {
 
 	@Override
-	public void sessionCreated(HttpSessionEvent event) {
-		
-	}
+	public void sessionCreated(HttpSessionEvent event) {}
 
 	@Override
 	public void sessionDestroyed(HttpSessionEvent event) {

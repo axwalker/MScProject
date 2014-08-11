@@ -2,6 +2,10 @@ package uk.ac.bham.cs.commdet.cyto.graph;
 
 import java.io.Serializable;
 
+/**
+ * An edge with a given source, target and weight. Source and target given by
+ * String ids representing nodes.
+ */
 public class Edge implements Serializable {
 
 	String source;

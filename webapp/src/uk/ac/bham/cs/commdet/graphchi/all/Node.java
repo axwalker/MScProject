@@ -1,5 +1,10 @@
 package uk.ac.bham.cs.commdet.graphchi.all;
 
+/**
+ * A node with an id where self loops is the number of half edges the node has
+ * to itself and weight degree is the total number of half edges incident to
+ * this node.
+ */
 public class Node {
 
 	private int id;

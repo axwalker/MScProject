@@ -232,7 +232,6 @@ public class LouvainProgram implements GraphChiProgram<Float, Float>, DetectionP
 		engine.setEdataConverter(new FloatConverter());
 		engine.setVertexDataConverter(new FloatConverter());
 		engine.setEnableScheduler(true);
-		//engine.setSkipZeroDegreeVertices(true);
 		engine.run(this, 1000);
 	}
 

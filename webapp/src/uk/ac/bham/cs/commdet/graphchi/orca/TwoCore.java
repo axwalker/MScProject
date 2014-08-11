@@ -19,7 +19,8 @@ import edu.cmu.graphchi.preprocessing.FastSharder;
 import edu.cmu.graphchi.preprocessing.VertexIdTranslate;
 
 /**
- * Reduce a graph to its two core, with single degree nodes contracted their neighbouring node.
+ * Reduce a graph to its two core, with single degree nodes contracted to their
+ * neighbouring node.
  */
 public class TwoCore implements GraphChiProgram<Float, Float> {
 
@@ -76,7 +77,8 @@ public class TwoCore implements GraphChiProgram<Float, Float> {
 						Community currentCommunity = status.getCommunities()[vertex.getId()];
 						status.removeNodeFromCommunity(neighbour, neighbourCommunity, 0);
 						status.insertNodeIntoCommunity(neighbour, currentCommunity, weight);
-						contracted[neighbourId] = false; //to propagate up the branch
+						contracted[neighbourId] = false; // to propagate up the
+															// branch
 						context.getScheduler().addTask(neighbourId);
 					}
 				}
@@ -92,26 +94,28 @@ public class TwoCore implements GraphChiProgram<Float, Float> {
 			int targetCommunityId = status.getCommunities()[target].getSeedNode();
 			status.getUniqueCommunities().add(sourceCommunityId);
 			status.getUniqueCommunities().add(targetCommunityId);
-			status.setTotalGraphWeight(status.getTotalGraphWeight() + 2*weight);
+			status.setTotalGraphWeight(status.getTotalGraphWeight() + 2 * weight);
 			if (sourceCommunityId != targetCommunityId) {
 				int actualSourceCommunity = trans.backward(sourceCommunityId);
 				int actualTargetCommunity = trans.backward(targetCommunityId);
-				UndirectedEdge edge = new UndirectedEdge(actualSourceCommunity, actualTargetCommunity);
+				UndirectedEdge edge = new UndirectedEdge(actualSourceCommunity,
+						actualTargetCommunity);
 				status.getContractedGraph().put(edge, weight);
 				status.addEdgeToInterCommunityEdges(edge, weight);
 			}
 		}
-		
+
 		Community community = status.getCommunities()[vertex.getId()];
 		if (community.getInternalEdges() > 0) {
 			int actualNode = trans.backward(community.getSeedNode());
-			status.getContractedGraph().put(new UndirectedEdge(actualNode, actualNode), community.getInternalEdges() / 2);
+			status.getContractedGraph().put(new UndirectedEdge(actualNode, actualNode),
+					community.getInternalEdges() / 2);
 		}
 	}
 
 	public void beginIteration(GraphChiContext ctx) {
 		if (ctx.getIteration() == 0) {
-			int noOfVertices = (int)ctx.getNumVertices();
+			int noOfVertices = (int) ctx.getNumVertices();
 			status.setCommunities(new Community[noOfVertices]);
 			status.setNodes(new Node[noOfVertices]);
 			status.setUniqueCommunities(new HashSet<Integer>());
@@ -145,12 +149,19 @@ public class TwoCore implements GraphChiProgram<Float, Float> {
 		}
 	}
 
-	public void beginInterval(GraphChiContext ctx, VertexInterval interval) {}
-	public void endInterval(GraphChiContext ctx, VertexInterval interval) {}
-	public void beginSubInterval(GraphChiContext ctx, VertexInterval interval) {}
-	public void endSubInterval(GraphChiContext ctx, VertexInterval interval) {}
+	public void beginInterval(GraphChiContext ctx, VertexInterval interval) {
+	}
 
-	public void run(String filename, int nShards, GraphStatus status) throws  Exception {
+	public void endInterval(GraphChiContext ctx, VertexInterval interval) {
+	}
+
+	public void beginSubInterval(GraphChiContext ctx, VertexInterval interval) {
+	}
+
+	public void endSubInterval(GraphChiContext ctx, VertexInterval interval) {
+	}
+
+	public void run(String filename, int nShards, GraphStatus status) throws Exception {
 		this.status = status;
 		FastSharder<Float, Float> sharder = OrcaProgram.createSharder(filename, nShards);
 		sharder.shard(new FileInputStream(new File(filename)), "edgelist");

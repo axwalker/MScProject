@@ -2,6 +2,9 @@ package uk.ac.bham.cs.commdet.cyto.graph;
 
 import java.io.Serializable;
 
+/**
+ * Metadata regarding the found community structure of a graph.
+ */
 public class Metadata implements Serializable {
 	
 	private int NoOfCommunities;

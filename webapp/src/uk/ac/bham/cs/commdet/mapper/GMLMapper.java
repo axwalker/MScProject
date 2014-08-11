@@ -19,10 +19,14 @@ import org.apache.commons.lang.math.NumberUtils;
 
 
 /**
+ * A filemapper for converting to an internal edgelist described in FileMapper from
+ * a Graph Modelling Language (GML) input. GML as described at:
+ * (http://www.fim.uni-passau.de/fileadmin/files/lehrstuhl/brandenburg/projekte/gml/gml-documentation.tar.gz)
+ * 
  * @author Stuart Hendren (http://stuarthendren.net)
  * @author Stephen Mallette
  * 
- * @author limited adjustments made by Andrew Walker
+ * @author adjustments made by Andrew Walker
  */
 
 public class GMLMapper implements FileMapper {

@@ -2,6 +2,22 @@ package uk.ac.bham.cs.commdet.cyto.graph;
 
 import java.io.Serializable;
 
+/**
+ * Container for a node object. This is to be used with a JSON serializer so the that the
+ * format matches cytoscape's graph data format. For example, a graph with a single node:
+ * 		{ 
+ * 			"nodes": [ 
+ * 				"data": { 
+ * 					"id": "1",
+ * 					"size": "10",
+ * 					"colour": "#000",
+ * 					"metadata": {
+ * 						"label": "Andrew"
+ * 					}
+ * 				}
+ * 			]
+ *		} 
+ */
 public class NodeData implements Serializable {
 
 	private Node data;

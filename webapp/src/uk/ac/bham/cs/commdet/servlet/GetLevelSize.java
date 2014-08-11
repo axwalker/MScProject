@@ -12,6 +12,9 @@ import edu.cmu.graphchi.ChiLogger;
 
 import uk.ac.bham.cs.commdet.graphchi.all.GraphResult;
 
+/**
+ * Get the number of nodes at a particular level of a graph hierarchy.
+ */
 @WebServlet("/GetLevelSize")
 public class GetLevelSize extends HttpServlet {
 
@@ -26,13 +29,13 @@ public class GetLevelSize extends HttpServlet {
 			try {
 				int fileLevel = Integer.parseInt(request.getParameter("graphLevel"));
 				responseString = result.getLevelNodeCount(fileLevel) + "";
-				logger.info("Response written succesfully");
 			} catch (Exception e) {
 				responseString = "{ \"success\" : false }";
 				logger.info(e.getMessage() + "\n" + Arrays.asList(e.getStackTrace()));
 			}
 		} else {
-			responseString = "error: no session found";
+			responseString = "{ \"success\": false , " + "\"error\": \""
+					+ "current session timed out, please try again" + "\"}";
 		}
 		response.setContentType("text/plain");
 		response.getWriter().println(responseString);
