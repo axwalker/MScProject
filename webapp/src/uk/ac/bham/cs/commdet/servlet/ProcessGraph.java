@@ -69,10 +69,7 @@ public class ProcessGraph extends HttpServlet {
 		}
 
 		// make temporary folder
-		String currentTime = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss").format(new Date());
-		String tempFolderPath = getServletConfig().getServletContext().getRealPath("WEB-INF")
-				+ "/tmp/";
-		tempFolderPath += currentTime + "_" + filename.hashCode() + "/";
+		String tempFolderPath = getTempFolderPath(filename);
 		File tempFolder = new File(tempFolderPath);
 		tempFolder.mkdir();
 		session.setAttribute("folder", tempFolderPath);
@@ -103,7 +100,6 @@ public class ProcessGraph extends HttpServlet {
 			if (!mapper.hasValidGraph()) {
 				throw new IllegalArgumentException("Graph does not contain enough nodes or edges");
 			}
-
 			
 			result = GCprogram.run(tempFolderPath + filename + "_mapped", 1);
 			result.setMapper(mapper);
@@ -127,12 +123,19 @@ public class ProcessGraph extends HttpServlet {
 		// send response
 		response.setContentType("application/json");
 		response.getWriter().println(responseString);
-		response.getWriter().flush();
 
+	}
+	
+	protected String getTempFolderPath(String filename) {
+		String currentTime = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss").format(new Date());
+		String tempFolderPath = getServletConfig().getServletContext().getRealPath("WEB-INF")
+				+ "/tmp/";
+		tempFolderPath += currentTime + "_" + filename.hashCode() + "/";
+		return tempFolderPath;
 	}
 
 	// add source (stackOverflow)
-	private static String getFilename(Part part) {
+	protected String getFilename(Part part) {
 		for (String cd : part.getHeader("content-disposition").split(";")) {
 			if (cd.trim().startsWith("filename")) {
 				String filename = cd.substring(cd.indexOf('=') + 1).trim().replace("\"", "");
