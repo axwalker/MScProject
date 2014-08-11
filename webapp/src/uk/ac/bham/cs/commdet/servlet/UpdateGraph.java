@@ -18,7 +18,8 @@ public class UpdateGraph extends HttpServlet {
 
 	private static final Logger logger = ChiLogger.getLogger("servlet");
 
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	protected void doPost(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
 
 		HttpSession session = request.getSession(false);
 		String responseString;
@@ -33,7 +34,15 @@ public class UpdateGraph extends HttpServlet {
 				if (request.getParameter("selectedNode") != null) {
 					int community = Integer.parseInt(request.getParameter("selectedNode"));
 					int communityLevel = Integer.parseInt(request.getParameter("currentLevel"));
-					responseString = generator.getCommunityJson(community, communityLevel - 1, fileLevel, colourLevel);
+					String offset = request.getParameter("offset");
+					String size = request.getParameter("size");
+					/*if (offset != null && size != null) {
+						responseString = generator.getCommunityJson(community, communityLevel - 1,
+								fileLevel, colourLevel, Integer.parseInt(offset), Integer.parseInt(size);
+					} else {*/
+						responseString = generator.getCommunityJson(community, communityLevel - 1,
+								fileLevel, colourLevel);
+					//}
 				} else {
 					responseString = generator.getGraphJson(fileLevel, colourLevel);
 				}
@@ -47,7 +56,7 @@ public class UpdateGraph extends HttpServlet {
 		}
 		response.setContentType("application/json");
 		response.getWriter().println(responseString);
-		
+
 	}
 
 }

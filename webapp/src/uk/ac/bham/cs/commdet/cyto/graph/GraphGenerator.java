@@ -5,6 +5,7 @@ import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -81,7 +82,7 @@ public class GraphGenerator {
 		GMLWriter.outputGraph(graph, graphMLOutputStream);
 	}
 
-	protected void parseGraph(int level, int colourLevel) {
+	public void parseGraph(int level, int colourLevel) {
 		parseCompoundEdgeFile(result.getFilename(), level);
 		double modularity = (level == 0 ? 0 : result.getModularities().get(level - 1));
 		setMetadata(modularity, level);
@@ -92,11 +93,17 @@ public class GraphGenerator {
 		return graph;
 	}
 
-	protected void parseCommunity(int community, int communityLevel, int fileLevel, int colourLevel) {
+	public void parseCommunity(int community, int communityLevel, int fileLevel, int colourLevel) {
 		parseEdgeFile(result.getFilename(), community, communityLevel, fileLevel);
 		double modularity = (fileLevel == 0 ? 0 : result.getModularities().get(fileLevel));
 		setMetadata(modularity, fileLevel);
 		colourNodes(fileLevel, colourLevel);
+	}
+	
+	public List<NodeData> getNodesFromCommunity(int community, int communityLevel, 
+			int fileLevel, int colourLevel) {
+		parseCommunity(community, communityLevel, fileLevel, colourLevel);
+		return graph.getNodes();
 	}
 
 	private void setMetadata(double modularity, int level) {
@@ -218,7 +225,7 @@ public class GraphGenerator {
 		minCommunitySize = Math.min(minCommunitySize, size);
 	}
 
-	private String serializeJson() {
+	public String serializeJson() {
 		ObjectMapper mapper = new ObjectMapper();
 		try {
 			return mapper.writeValueAsString(graph);

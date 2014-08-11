@@ -133,6 +133,10 @@ span.help {
   border-radius: 3px;
 }
 
+.helpContent {
+  display: none;
+}
+
 fieldset { 
   border-style: none; 
   -webkit-padding-before: 0.0em;

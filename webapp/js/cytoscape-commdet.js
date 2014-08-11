@@ -41,7 +41,7 @@ function initCy() {
             css: nodeCss
         },
         {
-            selector: ':selected',
+            selector: 'node:selected',
             css: {
                 'border-color': 'black',
                 'border-width': '4',
@@ -79,39 +79,37 @@ function initCy() {
                 }
             });
 
-            cy.nodes().qtip({
-				content: {
-                    text: function(){ 
-                        var dataText = '';
-                        if (viewModel.currentLevel() === 0 && this.data('metadata')) {
+            if (viewModel.currentLevel() === 0) {
+                cy.nodes().qtip({
+    				content: {
+                        text: function(){ 
+                            var dataText = '';
                             var metadata = this.data('metadata');
                             for (var key in metadata) {
                                 dataText += '<b>' + key + ':</b> ' + metadata[key] + '<br>';
                             }
-                        } else {
-                            dataText = '<b>Size:</b> ' + this.data('size') + '<br>';
+                            return dataText;
                         }
-                        return dataText;
-                    }
-                },
-				position: {
-					my: 'top center',
-					at: 'bottom center'
-				},
-				style: {
-					classes: 'qtip-bootstrap',
-					tip: {
-						width: 16,
-						height: 8
-					}
-				},
-                show: {
-                    event: 'mouseover'
-                },
-                hide: {
-                    event: 'mouseout'
-                }
-			});
+                    },
+    				position: {
+    					my: 'top center',
+    					at: 'bottom center'
+    				},
+    				style: {
+    					classes: 'qtip-bootstrap',
+    					tip: {
+    						width: 16,
+    						height: 8
+    					}
+    				},
+                    show: {
+                        event: 'mouseover'
+                    },
+                    hide: {
+                        event: 'mouseout'
+                    },
+    			});
+            }
             
             cy.edges().qtip({
 				content: function(){ 
@@ -129,11 +127,13 @@ function initCy() {
 					}
 				},
                 show: {
-                    event: 'mouseover'
+                    event: 'click'
                 },
                 hide: {
-                    event: 'mouseout'
-                }
+                    delay: 400,
+                    fixed: true,
+                    effect: function() { $(this).fadeOut(250); }
+                },
 			});
         },
 

@@ -65,24 +65,28 @@
             <div id="topMenu" class="top limWidth">
                 <center>
                     <div id="back" class="menuSection" data-bind="visible: hasHistory">
-                        <span class="help" data-bind="visible: showHelp">?</span>
+                        <span class="help topHelp" data-bind="visible: showHelp">?</span>
+                        <div class="helpContent">Help text to be replaced...</div>
                         <input class="myButton backButton" data-bind="click: backHistory" type="button" value="Back" />
                     </div>
 
                     <div id="navigation" class="menuSection" data-bind="visible: !isShowingCommunity()">
-                        <span class="help" data-bind="visible: showHelp">?</span>
+                        <span class="help topHelp" data-bind="visible: showHelp">?</span>
+                        <div class="helpContent">Help text to be replaced...</div>
                         View level:
                         <span class="detail">
                             <select class="view" data-bind="options: availableLevels, value: drillLevel, event: { change: updateGraph }"></select>
                         </span>
 
-                        <span class="help" data-bind="visible: showHelp">?</span>
+                        <span class="help topHelp" data-bind="visible: showHelp">?</span>
+                        <div class="helpContent">Help text to be replaced...</div>
                         Colour level: 
                         <span class="detail">
                             <select class="view" data-bind="options: colourLevels, value: colourLevel, event: { change: updateGraph }"></select>
                         </span>
 
-                        <span class="help" data-bind="visible: showHelp">?</span>
+                        <span class="help topHelp" data-bind="visible: showHelp">?</span>
+                        <div class="helpContent">Help text to be replaced...</div>
                         Modularity: 
                         <span class="detail" data-bind="text: modularity"></span>
                     </div>
@@ -99,7 +103,8 @@
                     </div>
 
                     <div id="labelling" class="menuSection">
-                        <span class="help" data-bind="visible: showHelp">?</span>
+                        <span class="help topHelp" data-bind="visible: showHelp">?</span>
+                        <div class="helpContent">Help text to be replaced...</div>
                         Node labels: 
                         <span class="detail">
                             <select class="view" data-bind="options: availableNodeData, value: nodeDataChoice, event: { change: toggleLabels }"></select>
@@ -118,6 +123,8 @@
 
                 <div id="community" class="left" data-bind="visible: !currentViewTooBig() && hasSelectedCommunity()">
                     <h1>Community <span data-bind="text: selectedCommunity"></span></h1>
+                    <span>Size: <span data-bind="text: selectedCommunitySize"></span></size>
+                    
                     <hr>
 
                     <div id="navigateCommunity" data-bind="visible: communityNoOfPages() > 1">
@@ -138,7 +145,7 @@
                                     <!-- /ko -->
                                 </tr>
                             </thead>
-                            <tbody data-bind="foreach: pagedCommunity">
+                            <tbody data-bind="foreach: community">
                                 <tr>
                                     <!-- ko foreach: Object.keys($data.data.metadata).map(function (key) {
                                                         return $data.data.metadata[key];
@@ -154,13 +161,15 @@
                     <hr>
 
                     <div id="drillIntoCommunity">
-                        <span class="help" data-bind="visible: showHelp">?</span>
+                        <span class="help topHelp" data-bind="visible: showHelp">?</span>
+                        <div class="helpContent">Help text to be replaced...</div>
                         View level:
                         <span class="detail">
                             <select class="view" data-bind="options: communityAvailableLevels, value: communityDrillLevel"></select>
                         </span>
 
-                        <span class="help" data-bind="visible: showHelp">?</span>
+                        <span class="help topHelp" data-bind="visible: showHelp">?</span>
+                        <div class="helpContent">Help text to be replaced...</div>
                         Colour level: 
                         <span class="detail">
                             <select class="view" data-bind="options: communityColourLevels, value: communityColourLevel"></select>
@@ -187,9 +196,12 @@
                     </div>
 
                     <div id="download" class="menuSection">
-                        <span class="help" data-bind="visible: showHelp">?</span>
+                        <span class="help bottomHelp" data-bind="visible: showHelp">?</span>
+                        <div class="helpContent">Help text to be replaced...</div>
                         <input class="myButton graphButton" data-bind="click: downloadGraph" type="button" value="Download GML" />
                         
+                        <span class="help bottomHelp" data-bind="visible: showHelp">?</span>
+                        <div class="helpContent">Help text to be replaced...</div>
                         <a id='layoutSettings'>Layout Settings</a>
                         <div class="tooltiptext">
                             <ul class="layoutContainer">
@@ -207,6 +219,9 @@
                                     <input data-bind="value: layoutTime" type="number" min="1" max="300" step="1" value="10" id="arborTimeHigh">
                                 </li>
                                 <li>
+                                    <input class="myButton layoutButton" data-bind="visible: !hasDefaultSettings(), click: restoreDefaultSettings" type="button" value="Restore defaults" />
+                                </li>
+                                <li>
                                     <input class="myButton layoutButton" data-bind="visible: !isArborRunning(), click: refreshLayout" type="button" value="Refresh layout" />
                                     <input class="myButton layoutButton red" data-bind="visible: isArborRunning, click: cancelLayout" type="button" value="Stop layout" />
                                 </li>
@@ -221,6 +236,7 @@
         
         <script src="js/cytoscape-commdet.js"></script>
         <script src="js/scripts.js"></script>
+        <script src="js/viewModel.js"></script>
         
     </body>
 </html>
