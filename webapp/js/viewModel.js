@@ -4,6 +4,7 @@ var PAGE_SIZE = 10;
 var MAX_NODES_VIEWABLE = 1000;
 var MAX_EDGES_VIEWABLE = 300;
 var MAX_FILESIZE = 50 * 1000 * 1000;
+var MAX_FILESIZE_ORCA = 10 * 1000 * 1000;
 var FILESIZE_NEEDING_PROGRESSBAR = 100* 1000;
 
 alertify.set({ delay: 2000 });
@@ -15,6 +16,7 @@ var viewModel = function() {
     self.cy = ko.observable();
     self.loadingGraph = ko.observable(false);
     self.currentViewTooBig = ko.observable(false);
+    self.loadingUpdate = ko.observable(false);
 
     // HISTORY ----------------------------------------------------------------------- //
     self.viewHistory = ko.observableArray();
@@ -237,7 +239,10 @@ var viewModel = function() {
     self.uploadGraph = function() {
         if ($('#fileInput')[0].files[0]) {
             var filesize = $('#fileInput')[0].files[0].size;
-            if ($('#fileInput')[0].files[0].size > MAX_FILESIZE) {
+            var algorithm = $('#algorithm').val();
+            if (algorithm === 'ORCA' && filesize > MAX_FILESIZE_ORCA) {
+                alertify.alert('This file is too big. Files larger than 10mb currently not supported by ORCA, try another algorithm.');
+            } else if (filesize > MAX_FILESIZE) {
                 alertify.alert('This file is too big. Files larger than 50mb currently not supported.');
             } else {
                 if (filesize > FILESIZE_NEEDING_PROGRESSBAR) {
@@ -249,8 +254,8 @@ var viewModel = function() {
                         percentComplete = percentComplete + increment;
                         progress(percentComplete, $('#progressBar'), 210);
                         var remaining = 100 - percentComplete;
-                        if (remaining < 20) {
-                            increment = remaining / 20;
+                        if (remaining < 30) {
+                            increment = Math.min(increment, remaining * 0.8);
                         }
                     }, 200);
                 }
@@ -403,16 +408,6 @@ var viewModel = function() {
         return self.communityPageIndex() === self.communityNoOfPages();
     });
 
-    /*this.pagedCommunity = ko.computed(function() {
-        var startIndex = (self.communityPageIndex()-1) * PAGE_SIZE;
-        var endIndex = startIndex + PAGE_SIZE;
-        var page = self.community().slice(startIndex, endIndex);
-        page.forEach( function (node) {
-            delete node.data.metadata.community;
-        });
-        return page;
-    });*/
-
     self.nextPage = function() {
         self.communityPageIndex(self.communityPageIndex() + 1);
     };
@@ -434,7 +429,6 @@ var viewModel = function() {
     self.updateCommunityTable = ko.computed(function() {
         if (self.hasSelectedCommunity() && !self.isBottomLevel() && self.drillLevel()) {
             self.loadingTable(true);
-            console.log('making request to update community table...');
             var selectedCommunity = self.selectedCommunity();
             if (selectedCommunity !== -1) {
                 var formData = 'graphLevel=' + encodeURIComponent(0);

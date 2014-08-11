@@ -115,8 +115,12 @@
 
 
             <div id="graph" class="middle">
-                <div id="tooBig" data-bind="visible: currentViewTooBig">
+                <div id="tooBig" class="cyCenter" data-bind="visible: currentViewTooBig">
                     The level you selected is too big to visualise. You can download the level as a GML file or try and view a different level of the hierarchy.
+                </div>
+
+                <div id="loadingGif" class="cyCenter" data-bind="visible: loadingUpdate">
+                    <img src="loading.gif" style="max-width:100%;" alt="Loading...">
                 </div>
 
                 <div id="cy" data-bind="click: updateSelectedCommunity, visible: !currentViewTooBig()"></div>

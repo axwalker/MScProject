@@ -68,7 +68,6 @@ function initCy() {
 
         ready: function(){
             window.cy = this;
-            alertify.success('in ready');
 
             cy.boxSelectionEnabled(false);
 
@@ -135,10 +134,6 @@ function initCy() {
                     effect: function() { $(this).fadeOut(250); }
                 },
 			});
-        },
-
-        done: function() {
-            alertify.success('in done');
         }
 
     });
@@ -193,7 +188,6 @@ function arborLayout() {
         
         stop: function() {
             viewModel.isArborRunning(false);
-            alertify.success('in arbor stop');
             $('#refreshButton').attr('disabled', false);
         }
     };

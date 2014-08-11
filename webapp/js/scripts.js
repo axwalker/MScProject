@@ -1,11 +1,5 @@
 /*jshint strict: false */
 
-var PAGE_SIZE = 10;
-var MAX_NODES_VIEWABLE = 1000;
-var MAX_EDGES_VIEWABLE = 300;
-var MAX_FILESIZE = 50 * 1000 * 1000;
-var FILESIZE_NEEDING_PROGRESSBAR = 100* 1000;
-
 function GraphView(drillLevel, colourLevel, currentLevel, community) {
     this.drillLevel = drillLevel;
     this.colourLevel = colourLevel;
@@ -35,6 +29,7 @@ var graphRequest = function(url, formData, processData, contentType, dataFunctio
         },
 
         beforeSend: function(jqXHR, settings) {
+            viewModel.loadingUpdate(true);
             $('#uploadButton').attr('disabled', true);
         },
 
@@ -48,12 +43,14 @@ var graphRequest = function(url, formData, processData, contentType, dataFunctio
                 viewModel.loadingGraph(false);
             }
             $('#uploadButton').attr('disabled', false);
+            viewModel.loadingUpdate(false);
         },
 
         error: function(jqXHR, textStatus, errorThrown){
             console.log('Something really bad happened ' + textStatus);
             clearCy();
             viewModel.loadingGraph(false);
+            viewModel.loadingUpdate(false);
             viewModel.graph(false);
             viewModel.cancelLayoutStatus(true);
             alertify.alert('There was a problem with the server, please refresh and try again');
@@ -62,13 +59,16 @@ var graphRequest = function(url, formData, processData, contentType, dataFunctio
 };
 
 var initialiseGraph = function(data) {
+    var algorithm = $('#algorithm').val();
+    var filename = $('#fileInput').val().split(/\\/).pop();
+    document.title = algorithm + ' - ' + filename;
+    
     viewModel.graph(data);
     if (data.nodes.length < MAX_NODES_VIEWABLE) {
-        //console.log('in success: ' + JSON.stringify(data, undefined, 2));
         initCy(viewModel.graph());
     } else {
         alertify.alert('There are too many communities to display.' +
-            ' GML files of this communitry structure can be downloaded through the menu on the left.');
+            ' GML files of this community structure are available for download.');
         viewModel.currentViewTooBig(true);
     }
 };
