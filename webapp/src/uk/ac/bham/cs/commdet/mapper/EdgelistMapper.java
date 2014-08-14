@@ -15,13 +15,6 @@ import java.util.Map;
 
 import org.apache.commons.lang.math.NumberUtils;
 
-/**
- * A filemapper for converting to an internal edgelist described in FileMapper from
- * an edgelist in the format (String)source (String)target (float)weight, eg with input:
- * 		A B 1.0
- * 		A C 1.0
- * 		B C 1.0
- */
 public class EdgelistMapper implements FileMapper {
 
 	private int nodeCount = 0;
@@ -30,6 +23,10 @@ public class EdgelistMapper implements FileMapper {
 	private Map<Integer, Map<String, Object>> internalToExternal;
 	private Map<String, Integer> externalToInternal;
 	private Writer writer;
+	private int sourceColumn;
+	private int targetColumn;
+	private int weightColumn;
+	private String separator;
 
 	public EdgelistMapper() {
 		this.internalToExternal = new HashMap<Integer, Map<String, Object>>();
@@ -64,21 +61,23 @@ public class EdgelistMapper implements FileMapper {
 	private void parse(final BufferedReader br) throws IOException {
 		String line;
 		while ((line = br.readLine()) != null) {
-			String[] tokens = line.split(" ");
+			String[] tokens = line.split(separator);
 			
-			if (tokens.length != 2 && tokens.length != 3) {
+			int requiredColumnCount = Math.max(Math.max(sourceColumn, targetColumn), weightColumn);
+			
+			if (tokens.length < requiredColumnCount) {
 				throw new IOException("invalid number of arguments (" + tokens.length + ")");
 			}
 			
-			String externalSource = tokens[0];
-			String externalTarget = tokens[1];
+			String externalSource = tokens[sourceColumn];
+			String externalTarget = tokens[targetColumn];
 			int internalSource = addNode(externalSource);
 			int internalTarget = addNode(externalTarget);
 
 			double weight = 1;
-			if (tokens.length == 3) {
-				if (NumberUtils.isNumber(tokens[2])) {
-					weight = Double.parseDouble(tokens[2]);
+			if (weightColumn < tokens.length) {
+				if (NumberUtils.isNumber(tokens[weightColumn])) {
+					weight = Double.parseDouble(tokens[weightColumn]);
 				} else {
 					throw new IOException("Edge " + externalSource + " to " + 
 							externalTarget + " has a non-numeric weight value");
@@ -114,9 +113,9 @@ public class EdgelistMapper implements FileMapper {
 	}
 
 	/**
-	 * Load the Edgelist file into the maps and write new edgelist file.
+	 * Load the csv file into the maps and write new edgelist file.
 	 *
-	 * @param inputStream      Edgelist file
+	 * @param inputStream      csv file
 	 * @throws IOException thrown if the data is not valid
 	 */
 	public void inputGraph(String filename, final InputStream inputStream) throws IOException {
@@ -130,7 +129,7 @@ public class EdgelistMapper implements FileMapper {
 		try {
 			parse(br);
 		} catch (IOException e) {
-			throw new IOException("Edgelist line number " + lineNo + ": " + e.getMessage(), e);
+			throw new IOException("CSV line number " + lineNo + ": " + e.getMessage(), e);
 		} finally {
 			br.close();
 			writer.close();
@@ -142,4 +141,20 @@ public class EdgelistMapper implements FileMapper {
 		return edgeCount > 0 && nodeCount > 0;
 	}
 
+	public void setSourceColumn(int sourceColumn) {
+		this.sourceColumn = sourceColumn;
+	}
+
+	public void setTargetColumn(int targetColumn) {
+		this.targetColumn = targetColumn;
+	}
+
+	public void setWeightColumn(int weightColumn) {
+		this.weightColumn = weightColumn;
+	}
+
+	public void setSeparator(String separator) {
+		this.separator = separator;
+	}
+	
 }

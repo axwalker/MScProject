@@ -43,7 +43,7 @@ public class ProcessGraph extends HttpServlet {
 		// create session
 		HttpSession session = request.getSession(true);
 		final int timeoutInSeconds = 60 * 60;
-		session.setMaxInactiveInterval(timeoutInSeconds);
+		//session.setMaxInactiveInterval(timeoutInSeconds);
 
 		//clean up previous active session from this user
 		if (!session.isNew()) {
@@ -87,28 +87,67 @@ public class ProcessGraph extends HttpServlet {
 		String responseString;
 		GraphResult result = null;
 		try {
+			final long preMap = System.currentTimeMillis();
+			System.out.println("mapping...");
+
 			//map the input file to an internal edgelist file
 			String filetype = request.getParameter("filetype");
 			FileMapper mapper;
 			if (filetype.equals("GML")) {
 				mapper = new GMLMapper();
+			} else if (filetype.equals("Edgelist")){
+				mapper = new EdgelistMapper();
+				((EdgelistMapper)mapper).setSourceColumn(0);
+				((EdgelistMapper)mapper).setTargetColumn(1);
+				((EdgelistMapper)mapper).setSeparator(" ");
+				((EdgelistMapper)mapper).setWeightColumn(2);
 			} else {
 				mapper = new EdgelistMapper();
+				int sourceColumn = Integer.parseInt(request.getParameter("sourceColumn"));
+				int targetColumn = Integer.parseInt(request.getParameter("targetColumn"));
+				String separator = request.getParameter("separator");
+				if (!request.getParameter("weightColumn").equals("NA")) {
+					int weightColumn = Integer.parseInt(request.getParameter("weightColumn"));
+					((EdgelistMapper)mapper).setWeightColumn(weightColumn);
+				}
+				((EdgelistMapper)mapper).setSourceColumn(sourceColumn);
+				((EdgelistMapper)mapper).setTargetColumn(targetColumn);
+				((EdgelistMapper)mapper).setSeparator(separator);
 			}
 			mapper.inputGraph(tempFolderPath + filename);
-			
+
 			if (!mapper.hasValidGraph()) {
 				throw new IllegalArgumentException("Graph does not contain enough nodes or edges");
 			}
-			
+
+			final long preRun = System.currentTimeMillis();
+			System.out.println("finding communities...");
+
 			result = GCprogram.run(tempFolderPath + filename + "_mapped", 1);
 			result.setMapper(mapper);
+
+			final long preSorted = System.currentTimeMillis();
+			System.out.println("sorting edgelists...");
+
 			result.writeAllSortedEdgeLists();
 			session.setAttribute("result", result);
+
+			final long preGenerator = System.currentTimeMillis();
+			System.out.println("generating JSON...");
 
 			GraphGenerator generator = new GraphGenerator(result);
 			generator.setIncludeEdges(true);
 			responseString = generator.getParentGraphJson();
+
+			final long allDone = System.currentTimeMillis();
+
+			String timings = "Mapping: " + (preRun - preMap) + "\n" +
+					"Detection: " + (preSorted - preRun) + "\n" +
+					"Sorting: " + (preGenerator - preSorted) + "\n" +
+					"Json: " + (allDone - preGenerator) + "\n" +
+					"TOTAL: " + (allDone - preMap);
+
+			System.out.println(timings);
 
 		} catch (IOException | IllegalArgumentException e) {
 			responseString = "{ \"success\": false , " + "\"error\": \"" + e.getMessage() + "\"}";
@@ -125,7 +164,7 @@ public class ProcessGraph extends HttpServlet {
 		response.getWriter().println(responseString);
 
 	}
-	
+
 	protected String getTempFolderPath(String filename) {
 		String currentTime = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss").format(new Date());
 		String tempFolderPath = getServletConfig().getServletContext().getRealPath("WEB-INF")
