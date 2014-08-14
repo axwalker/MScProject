@@ -65,41 +65,23 @@ public class GraphStatus {
 	}
 	
 	protected void updateCommunitiesMapSubsequentPasses() {
-		Set<Community> hadSeedNodeReplaced = new HashSet<Community>();
 		
 		for (Map.Entry<Integer, List<Integer>> node : communityHierarchy.entrySet()) {
 			int nodeId = node.getKey();
 			List<Integer> nodeCommunities = node.getValue();
 			int currentGcId = updatedVertexTrans.forward(nodeId);
+			
 			boolean originalNodeIdStillInGraph = nodeId < communities.length && communities[currentGcId] != null;
 			if (originalNodeIdStillInGraph) {
 				Community latestCommunity = communities[currentGcId];
-				
-				int communitySeedNode = latestCommunity.getSeedNode();
-				boolean needsSeedNodeReplacing = 
-						communities[communitySeedNode].getSeedNode() != communitySeedNode
-						&& !hadSeedNodeReplaced.contains(latestCommunity);
-				
-				if (needsSeedNodeReplacing) {
-					latestCommunity.setSeedNode(currentGcId);
-					hadSeedNodeReplaced.add(latestCommunity);
-				}
-				
 				int latestCommunityGcId = updatedVertexTrans.backward(latestCommunity.getSeedNode());				
 				nodeCommunities.add(latestCommunityGcId);
-			}
-		}
-		
-		for (Map.Entry<Integer, List<Integer>> node : communityHierarchy.entrySet()) {
-			int nodeId = node.getKey();
-			List<Integer> nodeCommunities = node.getValue();
-			int currentGcId = updatedVertexTrans.forward(nodeId);
-			boolean originalNodeIdStillInGraph = nodeId < communities.length && communities[currentGcId] != null;
-			if (!originalNodeIdStillInGraph) {
+			} else {
 				int previousCommunity = nodeCommunities.get(hierarchyHeight - 1);
 				int previousCommunityGcId = updatedVertexTrans.forward(previousCommunity);
 				boolean isSingleDisconnectedCommunity = 
 						previousCommunityGcId > communities.length || communities[previousCommunityGcId] == null;
+						
 				if (isSingleDisconnectedCommunity) {
 					throw new IllegalArgumentException("ORCA is not currently compatible with non connected graphs");
 				} else {
@@ -153,6 +135,13 @@ public class GraphStatus {
 		
 		community.setTotalEdges(community.getTotalEdges() + node.getWeightedDegree());
 		community.setInternalEdges(community.getInternalEdges() + (2*noNodeLinksToComm + node.getSelfLoops()));
+		
+		/* change seed node for communities whose previous seed is no longer in the community
+		 * - ensures the seed node of a community always exists in that community
+		 */
+		if (community.getSeedNode() != communities[community.getSeedNode()].getSeedNode()) {
+			community.setSeedNode(node.getId());
+		}
 	}
 	
 	public double modularityGain(Node node, Community community, double noNodeLinksToComm) {
