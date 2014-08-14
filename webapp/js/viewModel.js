@@ -3,8 +3,8 @@
 var PAGE_SIZE = 10;
 var MAX_NODES_VIEWABLE = 1000;
 var MAX_EDGES_VIEWABLE = 300;
-var MAX_FILESIZE = 50 * 1000 * 1000;
-var MAX_FILESIZE_ORCA = 10 * 1000 * 1000;
+var MAX_FILESIZE = 200 * 1000 * 1000;
+var MAX_FILESIZE_ORCA = 15 * 1000 * 1000;
 var FILESIZE_NEEDING_PROGRESSBAR = 100* 1000;
 
 alertify.set({ delay: 2000 });
@@ -232,6 +232,10 @@ var viewModel = function() {
     // UPLOAD ----------------------------------------------------------------------- //
     self.fileValue = ko.observable();
 
+    self.updateFilevalue = function() {
+        self.fileValue($('#fileInput').val());
+    };
+
     self.hasAddedFile = ko.observable(false);
 
     self.intervalId = 0;
@@ -363,6 +367,7 @@ var viewModel = function() {
             formData += '&currentLevel=' + encodeURIComponent(self.currentLevel());
         }
         self.selectedCommunity(-1);
+        alertify.alert('Your download should start shortly.');
         window.location = 'DownloadGraph?' + formData;
     };
 
@@ -375,6 +380,76 @@ var viewModel = function() {
         self.selectedCommunity(-1);
         window.location = 'DownloadGraph?' + formData;
     };
+
+    // FILETYPE ---------------------------------------------------------------------- //
+    self.filetype = ko.observable('GML');
+
+    self.allFiletypes = ['GML', 'Edgelist', 'Custom edgelist'];
+
+    self.filetypeIsCSV = ko.computed( function() {
+        return self.filetype() === 'CSV';
+    });
+
+    self.csvHasHeaders = ko.observable(false);
+
+    self.sourceColumnSelection = ko.observable();
+    self.targetColumnSelection = ko.observable();
+    self.weightColumnSelection = ko.observable();
+
+    /*self.possibleColumns = ko.observable();
+
+    self.updatePossibleColumns = ko.computed( function() {
+        if (self.fileValue()) {
+            var reader = new FileReader();
+
+            reader.onload = function(e) {
+                fileDisplayArea.innerText = reader.result;
+            }
+
+            reader.readAsText(document.getElementById('fileInput')); 
+
+            if (self.csvHasHeaders()) {  
+            } else {
+
+            }
+        }
+    });
+
+    self.weightPossibleColumns = ko.computed( function() {
+        self.possibleColumns().slice(0).unshift('NA');
+    });
+
+    self.sourceColumnSelection = ko.observable();
+    self.targetColumnSelection = ko.observable();
+    self.weightColumnSelection = ko.observable();
+
+    self.sourceColumn = ko.computed( function() {
+        if (self.csvHasHeaders()) {
+            return self.possibleColumns().indexOf(self.sourceColumnSelection());
+        } else {
+            return self.sourceColumnSelection() - 1;
+        }
+    });
+
+    self.targetColumn = ko.computed( function() {
+        if (self.csvHasHeaders()) {
+            return self.possibleColumns().indexOf(self.targetColumnSelection());
+        } else {
+            return self.targetColumnSelection() - 1;
+        }
+    });
+
+    self.weightColumn = ko.computed( function() {
+        if (self.weightColumnSelection() === 'NA') {
+            return 'NA';
+        } else {
+            if (self.csvHasHeaders()) {
+                return self.possibleColumns().indexOf(self.weightColumnSelection());
+            } else {
+                return self.weightColumnSelection() - 1;
+            }
+        }
+    });*/
 
     // COMMUNITY TABLE ----------------------------------------------------------------------- //
     self.community = ko.observableArray();

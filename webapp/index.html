@@ -31,21 +31,48 @@
         </div>
 
         <div id="beforeUpload" data-bind="visible: !graph()">
-            <h1>Community Detection</h1>
+            <h1>Community Detection in Graphs</h1>
             <hr>
 
-            <p>Visualise the community structures in graphs.</p>
+            <h3>Input graph file type: </h3>
+            <p class="description">
+                <strong>Edgelist:</strong> A file containing a list of edges, where each edge is on a separate line in the format 'source target weight'. The source and target must be a single word each (text or numeric) and the weight must be numeric. <br>
+                <strong>GML:</strong> Graph Modelling Language format as described <a href="http://en.wikipedia.org/wiki/Graph_Modelling_Language" target="_blank">here</a>. <br>
+            </p>
+
+            <h3>Algorithm: </h3>
+            <p class="description">
+                <strong>Louvain Method:</strong> First, assign a different community to each node of the network. Then, for each node we evaluate the gain of modularity that would take place by removing this node from its community and by placing it in a neighbouring community. This process is applied repeatedly and sequentially for all nodes until no further improvement can be achieved. All communities are then contracted into super-nodes and the steps are repeated. <a href="http://arxiv.org/pdf/0803.0476v2.pdf" target="_blank">Paper</a> <br>
+
+                <strong>Label Propagation:</strong> Every node is initialized with a unique label and at every step each node adopts the label that most of its neighbors currently have. In this iterative process densely connected groups of nodes form a consensus on a unique label to form communities. <a href="http://arxiv.org/pdf/0709.2938.pdf" target="_blank">Paper</a> <br>
+
+                <strong>ORCA:</strong> Preliminarily prune the graph of irrelevant vertices, then, iteratively identify dense neighborhoods and contract them into super-nodes; after contraction repeat the second step on the next hierarchy level or, if this fails, remove low-degree nodes and replace them by shortcuts. Do this until the whole graph is contracted. <a href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.164.2905&rep=rep1&type=pdf" target="_blank">Paper</a> <br>
+            </p>
+            
+            <hr>
 
             <form id="uploadForm" action="upload" method="post" enctype="multipart/form-data">
                 <fieldset>
 
-                    <input id= "fileInput" type="file" name="file"> <br>
+                    <input id= "fileInput" type="file" name="file" data-bind="event: { change : updateFilevalue}"> <br>
 
                     <label for="filetype">&nbsp; &nbsp; &nbsp; &nbsp; Graph file type:</label>
-                    <select id="filetype" class="upload" name="filetype">
-                        <option>GML</option>
-                        <option>Edgelist</option>
-                    </select> <br>
+                    <select id="filetype" name="filetype" class="upload" data-bind="options: allFiletypes, value: filetype"></select> <br>
+
+                    <div id="csvHeaderSelection" data-bind="visible: filetype() === 'Custom edgelist'">
+                        <label for="soruceColumn">Source column:</label>
+                        <input name="sourceColumn" data-bind="value: sourceColumnSelection" type="number" min="0" max="20" step="1" value="0" >
+
+                        <label for="targetColumn">Target column:</label> 
+                        <input name="targetColumn" data-bind="value: targetColumnSelection" type="number" min="0" max="20" step="1" value="1" >
+                        
+                        <label for="weightColumn">Edge weight column:</label>
+                        <input name="weightColumn" data-bind="value: weightColumnSelection" type="number" min="0" max="20" step="1" value="2" >
+
+                        <label for="separator">Column separator:</label>
+                        <input name="separator" type="text" >
+                    </div>
+
 
                     <label for="algorithm">Detection Algorithm:</label>
                     <select id="algorithm" class="upload" name="algorithm">
@@ -55,7 +82,6 @@
                     </select> <br>
 
                     <input class="myButton upload" data-bind="click: uploadGraph" type="button" value="Process Graph" /> <br>
-
                 </fieldset>
             </form>  
         </div>
@@ -66,27 +92,35 @@
                 <center>
                     <div id="back" class="menuSection" data-bind="visible: hasHistory">
                         <span class="help topHelp" data-bind="visible: showHelp">?</span>
-                        <div class="helpContent">Help text to be replaced...</div>
+                        <div class="helpContent">
+                            Go back to the previous view.
+                        </div>
                         <input class="myButton backButton" data-bind="click: backHistory" type="button" value="Back" />
                     </div>
 
                     <div id="navigation" class="menuSection" data-bind="visible: !isShowingCommunity()">
                         <span class="help topHelp" data-bind="visible: showHelp">?</span>
-                        <div class="helpContent">Help text to be replaced...</div>
+                        <div class="helpContent">
+                            The level of the community hierarchy you would like to see individual nodes at. <br>At level 0, each individual node from the input graph is shown. At higher levels, each node represents a collection of nodes - a community. As the level is increased, these nodes are grouped together into larger and larger communities.
+                        </div>
                         View level:
                         <span class="detail">
                             <select class="view" data-bind="options: availableLevels, value: drillLevel, event: { change: updateGraph }"></select>
                         </span>
 
                         <span class="help topHelp" data-bind="visible: showHelp">?</span>
-                        <div class="helpContent">Help text to be replaced...</div>
+                        <div class="helpContent">
+                            The level of the community hierarchy you would like nodes to be coloured by. <br>Nodes of the same colour belong to the same community at the level you have chosen.
+                        </div>
                         Colour level: 
                         <span class="detail">
                             <select class="view" data-bind="options: colourLevels, value: colourLevel, event: { change: updateGraph }"></select>
                         </span>
 
                         <span class="help topHelp" data-bind="visible: showHelp">?</span>
-                        <div class="helpContent">Help text to be replaced...</div>
+                        <div class="helpContent">
+                            Modularity is a quality measure of how good the found community structure is with values ranging from -1 to 1. <br>A value closer to 1 indicates a srong community structure and 0 or less indicates that no good community structure was found. A formal definition can be found <a href="http://en.wikipedia.org/wiki/Modularity_(networks)" target="_blank">here</a>.
+                            </div>
                         Modularity: 
                         <span class="detail" data-bind="text: modularity"></span>
                     </div>
@@ -104,7 +138,9 @@
 
                     <div id="labelling" class="menuSection">
                         <span class="help topHelp" data-bind="visible: showHelp">?</span>
-                        <div class="helpContent">Help text to be replaced...</div>
+                        <div class="helpContent">
+                            Choose a label to show above each node in the graph. <br><strong>Community</strong> represents the community for the node at the current colour level. Other available node labels are available at view level 0. If you uploaded an edgelist, the 'label' label represents the name of the node given in the input file.
+                        </div>
                         Node labels: 
                         <span class="detail">
                             <select class="view" data-bind="options: availableNodeData, value: nodeDataChoice, event: { change: toggleLabels }"></select>
@@ -169,14 +205,18 @@
 
                     <div id="drillIntoCommunity">
                         <span class="help topHelp" data-bind="visible: showHelp">?</span>
-                        <div class="helpContent">Help text to be replaced...</div>
+                        <div class="helpContent">
+                            The level of the community hierarchy you would like to see individual nodes at. <br>At level 0, each individual node from the input graph is shown. At higher levels, each node represents a collection of nodes - a community. As the level is increased, these nodes are grouped together into larger and larger communities.
+                        </div>
                         View level:
                         <span class="detail">
                             <select class="view" data-bind="options: communityAvailableLevels, value: communityDrillLevel"></select>
                         </span>
 
                         <span class="help topHelp" data-bind="visible: showHelp">?</span>
-                        <div class="helpContent">Help text to be replaced...</div>
+                        <div class="helpContent">
+                            The level of the community hierarchy you would like nodes to be coloured by. <br>Nodes of the same colour belong to the same community at the level you have chosen.
+                        </div>
                         Colour level: 
                         <span class="detail">
                             <select class="view" data-bind="options: communityColourLevels, value: communityColourLevel"></select>
@@ -204,16 +244,24 @@
 
                     <div id="download" class="menuSection">
                         <span class="help bottomHelp" data-bind="visible: showHelp">?</span>
-                        <div class="helpContent">Help text to be replaced...</div>
+                        <div class="helpContent">
+                            Download the current graph view and colour level in GML(<a href="http://en.wikipedia.org/wiki/Graph_Modelling_Language" target="_blank">Graph Modelling Language</a>) format. 
+                        </div>
                         <input class="myButton graphButton" data-bind="click: downloadGraph" type="button" value="Download GML" />
                         
                         <span class="help bottomHelp" data-bind="visible: showHelp">?</span>
-                        <div class="helpContent">Help text to be replaced...</div>
+                        <div class="helpContent">
+                            These settings can be adjusted to affect the layout of the graph. <br>
+                            <strong>Repulsion: </strong> how much each node will try to push away from nearby nodes. <br>
+                            <strong>Stiffness: </strong> how rigid the edges are. <br>
+                            <strong>Friction: </strong> how much <a href="http://en.wikipedia.org/wiki/Damping" target="_blank">damping</a> there is in the system. <br>
+                            <strong>Time: </strong> how long to allow the layout to run for.
+                        </div>
                         <a id='layoutSettings'>Layout Settings</a>
                         <div class="tooltiptext">
                             <ul class="layoutContainer">
                                 <li>
-                                    <span class="layoutOption">Repulsion:</span><input type="range" name="points" min="0" max="10000" data-bind="value: layoutRepulsion" />
+                                    <span class="layoutOption">Repulsion:</span><input type="range" name="points" min="0" max="1000" data-bind="value: layoutRepulsion" />
                                 </li>
                                 <li>
                                     <span class="layoutOption">Stiffness:</span><input type="range" name="points" min="0" max="1000" data-bind="value: layoutStiffness" />
