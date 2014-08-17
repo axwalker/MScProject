@@ -69,8 +69,11 @@
                         <label for="weightColumn">Edge weight column:</label>
                         <input name="weightColumn" data-bind="value: weightColumnSelection" type="number" min="0" max="20" step="1" value="2" >
 
-                        <label for="separator">Column separator:</label>
-                        <input name="separator" type="text" >
+                        <label for="separatorChoice">Column separator:</label>
+                        <select id="separatorChoice" name="separatorChoice" class="upload" data-bind="options: allSeparatorChoices, value: separatorChoice"></select>
+                        
+                        <input style="display: none;" name="separator" data-bind="value: separator" >
+
                     </div>
 
 

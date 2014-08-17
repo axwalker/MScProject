@@ -32,6 +32,7 @@ public class GraphGenerator {
 	private int minCommunitySize = Integer.MAX_VALUE;
 	private double maxEdgeConnection;
 	private boolean includeEdges;
+	private static final int EDGE_BYTE_SIZE = 12;
 
 	public GraphGenerator(GraphResult result) {
 		this.result = result;
@@ -154,10 +155,9 @@ public class GraphGenerator {
 		Set<Integer> nodesAdded = new HashSet<Integer>();
 		
 		try (RandomAccessFile file = new RandomAccessFile(edgeFilename, "r")) {
-			file.seek(startIndex * 12);
-			System.out.println("file length: " + file.length());
+			file.seek(startIndex * EDGE_BYTE_SIZE);
 			for (int i = 0; i < edgeCount; i++) {
-				byte[] bytes = new byte[12];
+				byte[] bytes = new byte[EDGE_BYTE_SIZE];
 				file.read(bytes);
 				addEdge(fileLevel, bytes, nodesAdded);
             }
@@ -180,7 +180,7 @@ public class GraphGenerator {
 		Set<Integer> nodesAdded = new HashSet<Integer>();
 		try (RandomAccessFile file = new RandomAccessFile(edgeFilename + "_sorted", "rw")) {
 			while (file.getFilePointer() < file.length()) {
-				byte[] bytes = new byte[12];
+				byte[] bytes = new byte[EDGE_BYTE_SIZE];
 				file.read(bytes);
 				addEdge(level, bytes, nodesAdded);
             }

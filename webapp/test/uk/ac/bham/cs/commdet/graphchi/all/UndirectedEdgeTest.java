@@ -47,33 +47,6 @@ public class UndirectedEdgeTest {
 	public void fromByteArray_exception() {
 		@SuppressWarnings("unused")
 		UndirectedEdge edge = UndirectedEdge.fromByteArray(new byte[5]);
-	}
-	
-	@Test
-	public void test() throws IOException {
-		System.out.println("WRITING TO TEST FILE");
-		RandomAccessFile file = new RandomAccessFile("testRAF", "rw");
-		UndirectedEdge edge1 = new UndirectedEdge(2, 4, 0.5);
-		UndirectedEdge edge2 = new UndirectedEdge(2, 4, 0.5);
-		UndirectedEdge edge3 = new UndirectedEdge(7, 13, 4.5);
-		byte[] bytes1 = UndirectedEdge.toByteArray(edge1);
-		file.write(bytes1);
-		byte[] bytes2 = UndirectedEdge.toByteArray(edge2);
-		file.write(bytes2);
-		byte[] bytes3 = UndirectedEdge.toByteArray(edge3);
-		file.write(bytes3);
-		file.close();
-		
-		System.out.println("READING FROM TEST FILE");
-		RandomAccessFile file2 = new RandomAccessFile("testRAF", "r");
-		while (file2.getFilePointer() < file2.length()) {
-			byte[] bytes = new byte[12];
-			System.out.println("bytes read: " + file2.read(bytes));
-			System.out.println(UndirectedEdge.fromByteArray(bytes));
-        }
-		file2.close();
-		
-	}
-	
+	}	
 
 }

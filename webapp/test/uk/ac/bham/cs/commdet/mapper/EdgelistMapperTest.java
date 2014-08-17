@@ -35,8 +35,8 @@ public class EdgelistMapperTest {
 			"B C G" + "\n";
 	
 	private static final String INVALID_NUMBER_ARGUMENTS_EDGE_LIST =
-			"A B 1 1" + "\n" +
-			"B C 2 1 " + "\n";
+			"A" + "\n" +
+			"B" + "\n";
 
 	@Rule
 	public TemporaryFolder testFolder = new TemporaryFolder();
@@ -46,6 +46,10 @@ public class EdgelistMapperTest {
 		inputPath = testFolder.getRoot() + "test.edg";
 		outputPath = inputPath + "_mapped";
 		mapper = new EdgelistMapper();
+		mapper.setSeparator(" ");
+		mapper.setSourceColumn(0);
+		mapper.setTargetColumn(1);
+		mapper.setWeightColumn(2);
 	}
 
 	

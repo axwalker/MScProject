@@ -143,15 +143,15 @@ public class GraphGeneratorTest {
 		nodeComparator = new Comparator<NodeData>() {
 			@Override
 			public int compare(NodeData arg0, NodeData arg1) {
-				return arg0.getData().getId().compareTo(arg1.getData().getId());
+				return arg1.getData().getId().compareTo(arg0.getData().getId());
 			}
 		};
 		edgeComparator = new Comparator<EdgeData>() {
 			@Override
 			public int compare(EdgeData arg0, EdgeData arg1) {
-				int result = arg0.getData().getSource().compareTo(arg1.getData().getSource());
-				if (result != 0) {
-					result = arg0.getData().getTarget().compareTo(arg1.getData().getTarget());
+				int result = arg1.getData().getSource().compareTo(arg0.getData().getSource());
+				if (result == 0) {
+					result = arg1.getData().getTarget().compareTo(arg0.getData().getTarget());
 				}
 				return result;
 			}
@@ -237,7 +237,7 @@ public class GraphGeneratorTest {
 
 		List<NodeData> actualNodes = generator.getGraph().getNodes();
 		Collections.sort(actualNodes, nodeComparator);
-		assertEquals(expectedNodes.toString(), actualNodes.toString());
+		assertEquals(expectedNodes, actualNodes);
 	}
 
 	@Test
@@ -262,7 +262,7 @@ public class GraphGeneratorTest {
 
 		List<NodeData> actualNodes = generator.getGraph().getNodes();
 		Collections.sort(actualNodes, nodeComparator);
-		assertEquals(expectedNodes.toString(), actualNodes.toString());
+		assertEquals(expectedNodes, actualNodes);
 	}
 
 	@Test
@@ -293,7 +293,7 @@ public class GraphGeneratorTest {
 
 		List<EdgeData> actualEdges = generator.getGraph().getEdges();
 		Collections.sort(actualEdges, edgeComparator);
-		assertEquals(expectedEdges, actualEdges);
+		assertEquals(expectedEdges.toString(), actualEdges.toString());
 	}
 	
 	@Test
@@ -315,7 +315,7 @@ public class GraphGeneratorTest {
 
 		List<EdgeData> actualEdges = generator.getGraph().getEdges();
 		Collections.sort(actualEdges, edgeComparator);
-		assertEquals(expectedEdges.toString(), actualEdges.toString());
+		assertEquals(expectedEdges, actualEdges);
 	}
 
 	@Test

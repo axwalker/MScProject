@@ -43,7 +43,7 @@ public class ProcessGraph extends HttpServlet {
 		// create session
 		HttpSession session = request.getSession(true);
 		final int timeoutInSeconds = 60 * 60;
-		//session.setMaxInactiveInterval(timeoutInSeconds);
+		session.setMaxInactiveInterval(timeoutInSeconds);
 
 		//clean up previous active session from this user
 		if (!session.isNew()) {
@@ -150,7 +150,9 @@ public class ProcessGraph extends HttpServlet {
 			System.out.println(timings);
 
 		} catch (IOException | IllegalArgumentException e) {
-			responseString = "{ \"success\": false , " + "\"error\": \"" + e.getMessage() + "\"}";
+			String errorMessage = e.getMessage().replaceAll("\"", "\\\\\"");
+			responseString = "{ \"success\": false , " + "\"error\": \"" 
+					+ errorMessage + "\"}";
 			session.invalidate();
 		} catch (Exception e) {
 			responseString = "{ \"success\": false , " + "\"error\": \"" + "SERVER ERROR: "
@@ -165,6 +167,9 @@ public class ProcessGraph extends HttpServlet {
 
 	}
 
+	/*
+	 * create new temporary folder from the file name and current time - so the name is unique
+	 */
 	protected String getTempFolderPath(String filename) {
 		String currentTime = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss").format(new Date());
 		String tempFolderPath = getServletConfig().getServletContext().getRealPath("WEB-INF")
@@ -173,7 +178,7 @@ public class ProcessGraph extends HttpServlet {
 		return tempFolderPath;
 	}
 
-	// add source (stackOverflow)
+	// http://stackoverflow.com/questions/7114087/html5-file-upload-to-java-servlet
 	protected String getFilename(Part part) {
 		for (String cd : part.getHeader("content-disposition").split(";")) {
 			if (cd.trim().startsWith("filename")) {

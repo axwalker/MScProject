@@ -3,7 +3,7 @@
 var PAGE_SIZE = 10;
 var MAX_NODES_VIEWABLE = 1000;
 var MAX_EDGES_VIEWABLE = 300;
-var MAX_FILESIZE = 200 * 1000 * 1000;
+var MAX_FILESIZE = 2000 * 1000 * 1000;
 var MAX_FILESIZE_ORCA = 15 * 1000 * 1000;
 var FILESIZE_NEEDING_PROGRESSBAR = 100* 1000;
 
@@ -229,6 +229,38 @@ var viewModel = function() {
         self.cy().layout(arborLayout());
     };
 
+    // FILETYPE ---------------------------------------------------------------------- //
+    self.filetype = ko.observable('GML');
+
+    self.allFiletypes = ['GML', 'Edgelist', 'Custom edgelist'];
+
+    self.filetypeIsCSV = ko.computed( function() {
+        return self.filetype() === 'CSV';
+    });
+
+    self.csvHasHeaders = ko.observable(false);
+
+    self.sourceColumnSelection = ko.observable();
+    self.targetColumnSelection = ko.observable();
+    self.weightColumnSelection = ko.observable();
+
+    self.allSeparators = {
+        tab: '\t',
+        space: ' ',
+        comma: ',',
+        semicolon: ';'
+    };
+
+    self.allSeparatorChoices = ko.computed( function() {
+        return Object.keys(self.allSeparators);
+    });
+
+    self.separatorChoice = ko.observable();
+
+    self.separator = ko.computed( function() {
+        return self.allSeparators[self.separatorChoice()];
+    });
+
     // UPLOAD ----------------------------------------------------------------------- //
     self.fileValue = ko.observable();
 
@@ -241,7 +273,13 @@ var viewModel = function() {
     self.intervalId = 0;
 
     self.uploadGraph = function() {
-        if ($('#fileInput')[0].files[0]) {
+        var invalidColumnsSelection = 
+            self.sourceColumnSelection() === self.targetColumnSelection()
+            || self.sourceColumnSelection() === self.weightColumnSelection()
+            || self.targetColumnSelection() === self.weightColumnSelection();
+        if (self.filetype() === 'Custom edgelist' && invalidColumnsSelection) {
+            alertify.alert('Column numbers for source/target/weight must all be different');
+        } else if ($('#fileInput')[0].files[0]) {
             var filesize = $('#fileInput')[0].files[0].size;
             var algorithm = $('#algorithm').val();
             if (algorithm === 'ORCA' && filesize > MAX_FILESIZE_ORCA) {
@@ -380,76 +418,6 @@ var viewModel = function() {
         self.selectedCommunity(-1);
         window.location = 'DownloadGraph?' + formData;
     };
-
-    // FILETYPE ---------------------------------------------------------------------- //
-    self.filetype = ko.observable('GML');
-
-    self.allFiletypes = ['GML', 'Edgelist', 'Custom edgelist'];
-
-    self.filetypeIsCSV = ko.computed( function() {
-        return self.filetype() === 'CSV';
-    });
-
-    self.csvHasHeaders = ko.observable(false);
-
-    self.sourceColumnSelection = ko.observable();
-    self.targetColumnSelection = ko.observable();
-    self.weightColumnSelection = ko.observable();
-
-    /*self.possibleColumns = ko.observable();
-
-    self.updatePossibleColumns = ko.computed( function() {
-        if (self.fileValue()) {
-            var reader = new FileReader();
-
-            reader.onload = function(e) {
-                fileDisplayArea.innerText = reader.result;
-            }
-
-            reader.readAsText(document.getElementById('fileInput')); 
-
-            if (self.csvHasHeaders()) {  
-            } else {
-
-            }
-        }
-    });
-
-    self.weightPossibleColumns = ko.computed( function() {
-        self.possibleColumns().slice(0).unshift('NA');
-    });
-
-    self.sourceColumnSelection = ko.observable();
-    self.targetColumnSelection = ko.observable();
-    self.weightColumnSelection = ko.observable();
-
-    self.sourceColumn = ko.computed( function() {
-        if (self.csvHasHeaders()) {
-            return self.possibleColumns().indexOf(self.sourceColumnSelection());
-        } else {
-            return self.sourceColumnSelection() - 1;
-        }
-    });
-
-    self.targetColumn = ko.computed( function() {
-        if (self.csvHasHeaders()) {
-            return self.possibleColumns().indexOf(self.targetColumnSelection());
-        } else {
-            return self.targetColumnSelection() - 1;
-        }
-    });
-
-    self.weightColumn = ko.computed( function() {
-        if (self.weightColumnSelection() === 'NA') {
-            return 'NA';
-        } else {
-            if (self.csvHasHeaders()) {
-                return self.possibleColumns().indexOf(self.weightColumnSelection());
-            } else {
-                return self.weightColumnSelection() - 1;
-            }
-        }
-    });*/
 
     // COMMUNITY TABLE ----------------------------------------------------------------------- //
     self.community = ko.observableArray();

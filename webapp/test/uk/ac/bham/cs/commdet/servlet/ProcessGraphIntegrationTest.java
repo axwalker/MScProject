@@ -233,6 +233,11 @@ public class ProcessGraphIntegrationTest {
 		when(filePart.getInputStream()).thenReturn(is);
 		when(request.getPart("file")).thenReturn(filePart);
 		when(request.getParameter("filetype")).thenReturn("edgelist");
+		when(request.getParameter("separator")).thenReturn(" ");
+		when(request.getParameter("sourceColumn")).thenReturn("0");
+		when(request.getParameter("targetColumn")).thenReturn("1");
+		when(request.getParameter("weightColumn")).thenReturn("2");
+		
 	}
 	
 	private void setUpGML() throws IOException, ServletException {

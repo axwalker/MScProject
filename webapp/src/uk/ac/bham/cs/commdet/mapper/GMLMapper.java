@@ -260,4 +260,5 @@ public class GMLMapper implements FileMapper {
 	public boolean hasValidGraph() {
 		return edgeCount > 0 && nodeCount > 0;
 	}
+
 }

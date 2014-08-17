@@ -12,6 +12,7 @@ import java.io.Writer;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 import org.apache.commons.lang.math.NumberUtils;
 
@@ -61,6 +62,9 @@ public class EdgelistMapper implements FileMapper {
 	private void parse(final BufferedReader br) throws IOException {
 		String line;
 		while ((line = br.readLine()) != null) {
+			if (line.charAt(0) == '#') {
+				continue;
+			}
 			String[] tokens = line.split(separator);
 			
 			int requiredColumnCount = Math.max(Math.max(sourceColumn, targetColumn), weightColumn);
@@ -129,7 +133,7 @@ public class EdgelistMapper implements FileMapper {
 		try {
 			parse(br);
 		} catch (IOException e) {
-			throw new IOException("CSV line number " + lineNo + ": " + e.getMessage(), e);
+			throw new IOException("Edgelist line number " + lineNo + ": " + e.getMessage(), e);
 		} finally {
 			br.close();
 			writer.close();
