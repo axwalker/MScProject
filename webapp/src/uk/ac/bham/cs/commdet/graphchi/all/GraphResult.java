@@ -95,6 +95,12 @@ public class GraphResult implements Serializable {
 	public void writeAllSortedEdgeLists() {
 		for (int level = 0; level <= height; level++) {
 			TreeSet<UndirectedEdge> edges = readInUnsortedEdgeList(level);
+			
+			if (edges.isEmpty()) {
+				throw new IllegalArgumentException("No community structure could be found, " +
+						"please try again with a different input or algorithm.");
+			}
+			
 			generateCommunityPositions(edges, level);
 			String sortedFilename = filename + (level != 0 ? "_pass_" + level : "") + "_sorted";
 			

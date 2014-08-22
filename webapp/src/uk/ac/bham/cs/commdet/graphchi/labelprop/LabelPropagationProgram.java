@@ -5,15 +5,19 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Random;
 
 import uk.ac.bham.cs.commdet.graphchi.all.Community;
 import uk.ac.bham.cs.commdet.graphchi.all.DetectionProgram;
 import uk.ac.bham.cs.commdet.graphchi.all.GraphResult;
 import uk.ac.bham.cs.commdet.graphchi.all.GraphStatus;
 import uk.ac.bham.cs.commdet.graphchi.all.UndirectedEdge;
+import edu.cmu.graphchi.ChiFilenames;
 import edu.cmu.graphchi.ChiVertex;
 import edu.cmu.graphchi.GraphChiContext;
 import edu.cmu.graphchi.GraphChiProgram;
@@ -70,17 +74,23 @@ public class LabelPropagationProgram implements GraphChiProgram<Float, Float>, D
 
 	private Community mostFrequentNeighbourCommunity(ChiVertex<Float, Float> vertex) {
 		Map<Community, Integer> labelCounts = generateNeighbourLabelCounts(vertex);
-		Community mostFrequentNeighbour = new Community(-1);
 		int maxFrequency = -1;
+		List<Community> potentialCommunities = new ArrayList<Community>();
 		for (Map.Entry<Community, Integer> neighbour : labelCounts.entrySet()) {
-			boolean hasGreaterFrequency = neighbour.getValue() > maxFrequency;
-			boolean hasEqualFrequency = neighbour.getValue() == maxFrequency;
-			boolean seedNodeHasHigherValue = neighbour.getKey().getSeedNode() > mostFrequentNeighbour.getSeedNode();
-			if (hasGreaterFrequency || (hasEqualFrequency && seedNodeHasHigherValue)) {
+			int frequency = neighbour.getValue();
+			if (frequency > maxFrequency) {
 				maxFrequency = neighbour.getValue();
-				mostFrequentNeighbour = neighbour.getKey();
+				potentialCommunities = new ArrayList<Community>();
+				potentialCommunities.add(neighbour.getKey());
+			}
+			if (frequency == maxFrequency) {
+				potentialCommunities.add(neighbour.getKey());
 			}
 		}
+		Random random = new Random();
+		int randomCommunityIndex = random.nextInt(potentialCommunities.size());
+		Community mostFrequentNeighbour = potentialCommunities.get(randomCommunityIndex);
+
 		return mostFrequentNeighbour;
 	}
 
@@ -157,13 +167,18 @@ public class LabelPropagationProgram implements GraphChiProgram<Float, Float>, D
 
 	public GraphResult run(String baseFilename, int nShards) throws  Exception {
 		FastSharder<Float, Float> sharder = createSharder(baseFilename, nShards);
-		sharder.shard(new FileInputStream(new File(baseFilename)), "edgelist");
+		if (!new File(ChiFilenames.getFilenameIntervals(baseFilename, nShards)).exists()) {
+			sharder.shard(new FileInputStream(new File(baseFilename)), "edgelist");
+		} else {
+			System.out.println("Found shards -- no need to preprocess");
+		}
+
 		GraphChiEngine<Float, Float> engine = new GraphChiEngine<Float, Float>(baseFilename, nShards);
 		engine.setEdataConverter(new FloatConverter());
 		engine.setVertexDataConverter(new FloatConverter());
 		engine.setEnableScheduler(true);
 		engine.setSkipZeroDegreeVertices(true);
-		engine.run(this, 200);
+		engine.run(this, 1000);
 
 		writeNextLevelEdgeList(baseFilename);
 
