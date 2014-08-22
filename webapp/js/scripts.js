@@ -64,11 +64,11 @@ var initialiseGraph = function(data) {
     document.title = algorithm + ' - ' + filename;
     
     viewModel.graph(data);
-    if (data.nodes.length < MAX_NODES_VIEWABLE) {
+    if (data.nodes.length < MAX_NODES_VIEWABLE && data.edges.length < MAX_EDGES_VIEWABLE) {
         initCy(viewModel.graph());
     } else {
-        alertify.alert('There are too many communities to display.' +
-            ' GML files of this community structure are available for download.');
+        /*alertify.alert('There are too many communities or edges to display.' +
+            ' GML files of this community structure are available for download.');*/
         viewModel.currentViewTooBig(true);
     }
 };
