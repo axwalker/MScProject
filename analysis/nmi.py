@@ -1,6 +1,6 @@
-#import operator
 from igraph import *
 import sys
+import re
 
 def communities_from(ground_truth_file):
 	assigned_nodes = set([])
@@ -13,6 +13,13 @@ def communities_from(ground_truth_file):
 			if node not in assigned_nodes:
 				nodes_dict[int(node)] = index
 				assigned_nodes.add(node)
+	return nodes_dict
+
+def communities_from_lfr(lfr_file):
+	all_communities = (re.split(r'\t+', line.rstrip('\t')) for line in open(ground_truth_file))
+	nodes_dict = {}
+	for node in all_communities:
+		nodes_dict[int(node[0])] = int(node[1])
 	return nodes_dict
 
 def nodes_dict(graph, id_label, community_label):
@@ -35,7 +42,7 @@ def main1(file1, file2):
 	print('nmi: {:.3f}'.format(nmi))
 
 def main2(ground_truth_file, found_file):
-	ground_truth = communities_from(ground_truth_file)
+	ground_truth = communities_from_lfr(ground_truth_file)
 	found = nodes_dict(Graph.Read_GML(found_file), 'label', 'community')
 	found_filtered = {id: community for (id, community) in found.items() if id in ground_truth}
 
@@ -52,5 +59,5 @@ def main2(ground_truth_file, found_file):
 
 ground_truth_file = sys.argv[1]
 found_file = sys.argv[2]
-main1(ground_truth_file, found_file)
-#main2(ground_truth_file, found_file)
+#main1(ground_truth_file, found_file)
+main2(ground_truth_file, found_file)

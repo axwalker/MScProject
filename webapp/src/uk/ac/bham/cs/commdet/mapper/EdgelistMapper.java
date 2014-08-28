@@ -46,7 +46,7 @@ public class EdgelistMapper implements FileMapper {
 	@Override
 	public String getExternalid(int internalId) {
 		Map<String, Object> properties = internalToExternal.get(internalId);
-		return properties.get("label") + "";
+		return properties.get("vertexID") + "";
 	}
 
 	@Override
@@ -104,7 +104,7 @@ public class EdgelistMapper implements FileMapper {
 			Map<String, Object> nodeProperties = new HashMap<String, Object>();
 			//nodeProperties.put("id", externalId);
 			nodeProperties.put("id", internalId);
-			nodeProperties.put("label", externalId);
+			nodeProperties.put("vertexID", externalId);
 			internalToExternal.put(nodeCount, nodeProperties);
 			externalToInternal.put(externalId, nodeCount);
 			nodeCount++;

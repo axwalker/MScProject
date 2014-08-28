@@ -44,7 +44,7 @@ public class GMLMapper implements FileMapper {
 	
 	public String getExternalid(int internalId) {
 		Map<String, Object> gmlProperties = internalToExternal.get(internalId);
-		return gmlProperties.get(GMLTokens.ID) + "";
+		return gmlProperties.get("vertexID") + "";
 	}
 	
 	public int getInternalId(String gmlID) {
@@ -96,7 +96,8 @@ public class GMLMapper implements FileMapper {
 			throw new IOException("No id found for node");
 		}
 		Map<String, Object> nodeProperties = new HashMap<String, Object>();
-		nodeProperties.put("id", id);
+		nodeProperties.put("id", nodeCount);
+		nodeProperties.put("vertexID", id);
 		nodeProperties.putAll(map);
 		
 		internalToExternal.put(nodeCount, nodeProperties);

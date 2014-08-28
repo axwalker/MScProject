@@ -1,8 +1,8 @@
 /*jshint strict: false */
 
 var PAGE_SIZE = 10;
-var MAX_NODES_VIEWABLE = 1000;
-var MAX_EDGES_VIEWABLE = 400;
+var MAX_NODES_VIEWABLE = 2000;
+var MAX_EDGES_VIEWABLE = 2000;
 var MAX_FILESIZE = 2000 * 1000 * 1000;
 var MAX_FILESIZE_ORCA = 2000 * 1000 * 1000;
 var FILESIZE_NEEDING_PROGRESSBAR = 30* 1000;
@@ -163,7 +163,9 @@ var viewModel = function() {
         if (self.graph()) {
             var metadata = self.graph().nodes[0].data.metadata;
             for (var key in metadata) {
-               options.push(key);
+                if (key !== 'id') {
+                    options.push(key);
+                }
             }
         }
         return options;
@@ -428,7 +430,7 @@ var viewModel = function() {
         if (self.community().length > 0 && self.community()[0].data.metadata) {
             var metadata = self.community()[0].data.metadata;
             for (var key in metadata) {
-                if (key != 'community') {
+                if (key !== 'community' && key!== 'id') {
                     headings.push(key);
                 }
             }
@@ -485,6 +487,7 @@ var viewModel = function() {
                     var page = data.nodes;
                     page.forEach( function (node) {
                         delete node.data.metadata.community;
+                        delete node.data.metadata.id;
                     });
                     self.community(page);
                     self.loadingTable(false);

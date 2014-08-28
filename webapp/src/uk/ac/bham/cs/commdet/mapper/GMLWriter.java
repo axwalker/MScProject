@@ -123,6 +123,7 @@ public class GMLWriter {
 		for (String key : node.getMetadata().keySet()) {
 			if (regex.matcher(key).matches() && !key.equals("id")) {
 				final Object property = node.getMetadata().get(key);
+				//key = key.equals("vertexID") ? "OriginalVertexID" : key;
 				writeKey(writer, key);
 				writeProperty(writer, property, 0);
 			}
