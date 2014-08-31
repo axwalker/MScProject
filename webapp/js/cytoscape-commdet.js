@@ -10,7 +10,18 @@ function initCy() {
 
     viewModel.cancelLayoutStatus(false);
 
-    if (viewModel.currentLevel() !== 0) {
+    if (viewModel.currentLevel() === 0 || (viewModel.currentLevel() === 1 && $( "#algorithm option:selected" ).text() === 'ORCA')) {
+        nodeCss = {
+            'background-color': 'data(colour)',
+            'height': Math.min(750 / nodeCount, 30),
+            'width': Math.min(750 / nodeCount, 30),
+            'font-size': Math.min(750 / nodeCount, 20)
+        };
+        edgeCss = {
+            'line-color': '#53433F',
+            'width': Math.min(18 / nodeCount, 2)
+        };
+    } else {
         nodeCss = {
             'background-color': 'data(colour)',
             'height': 'mapData(size, 1, ' + maxSize + ', 2, 30)',
@@ -21,17 +32,6 @@ function initCy() {
             'line-color': '#53433F',
             'width': 'mapData(weight, 0, ' + maxEdge + ', 0.2, 5)',
             'curve-style': 'haystack'
-        };
-    } else {
-        nodeCss = {
-            'background-color': 'data(colour)',
-            'height': Math.min(750 / nodeCount, 30),
-            'width': Math.min(750 / nodeCount, 30),
-            'font-size': Math.min(750 / nodeCount, 20)
-        };
-        edgeCss = {
-            'line-color': '#53433F',
-            'width': Math.min(18 / nodeCount, 2)
         };
     }
 
@@ -72,7 +72,7 @@ function initCy() {
             cy.boxSelectionEnabled(false);
 
             cy.on('click', 'node', function(evt){
-                if (!viewModel.isBottomLevel()) {
+                if (!viewModel.isBottomLevel() && !(viewModel.currentLevel() === 1 && $( "#algorithm option:selected" ).text() === 'ORCA')) {
                     this.select();
                     viewModel.selectedCommunity(this.data('id'));
                 }
@@ -85,7 +85,9 @@ function initCy() {
                             var dataText = '';
                             var metadata = this.data('metadata');
                             for (var key in metadata) {
-                                dataText += '<b>' + key + ':</b> ' + metadata[key] + '<br>';
+                                if (key !== 'id') {
+                                    dataText += '<b>' + key + ':</b> ' + metadata[key] + '<br>';
+                                }
                             }
                             return dataText;
                         }

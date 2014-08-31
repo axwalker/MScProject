@@ -87,6 +87,7 @@ var refreshColours = function(data) {
     alertify.success('Updated colours');
 };
 
+//source: http://workshop.rs/2012/12/animated-progress-bar-in-4-lines-of-jquery/
 function progress(percent, $element, speed, callback) {
     callback = callback || $.noop;
     var progressBarWidth = percent * $element.width() / 100;

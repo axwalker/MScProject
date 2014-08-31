@@ -34,19 +34,25 @@
             <h1>Community Detection in Graphs</h1>
             <hr>
 
-            <h3>Input graph file type: </h3>
+            <h3>Input graph: </h3>
             <p class="description">
+                Graph can be weighted or unweighted. Input graphs may be directed or undirected, but all graphs will be treated as undirected - please ensure that each edge only appears once in the input file, regardless of direction. <br>
+
                 <strong>Edgelist:</strong> A file containing a list of edges, where each edge is on a separate line in the format 'source target weight'. The source and target must be a single word each (text or numeric) and the weight must be numeric. <br>
+
+                <strong>Custom edgelist:</strong> A file containing a list of edges, where each edge is on a separate line in character separated value format. A column separator value must be defined along with the column index of the source, target and weight of each edge. The first column has index 0. A  The source and target must be a single word each (text or numeric) and the weight must be numeric. <br>
+
                 <strong>GML:</strong> Graph Modelling Language format as described <a href="http://en.wikipedia.org/wiki/Graph_Modelling_Language" target="_blank">here</a>. <br>
             </p>
 
             <h3>Algorithm: </h3>
             <p class="description">
-                <strong>Louvain Method:</strong> First, assign a different community to each node of the network. Then, for each node we evaluate the gain of modularity that would take place by removing this node from its community and by placing it in a neighbouring community. This process is applied repeatedly and sequentially for all nodes until no further improvement can be achieved. All communities are then contracted into super-nodes and the steps are repeated. <a href="http://arxiv.org/pdf/0803.0476v2.pdf" target="_blank">Paper</a> <br>
 
-                <strong>Label Propagation:</strong> Every node is initialized with a unique label and at every step each node adopts the label that most of its neighbors currently have. In this iterative process densely connected groups of nodes form a consensus on a unique label to form communities. <a href="http://arxiv.org/pdf/0709.2938.pdf" target="_blank">Paper</a> <br>
+                <strong>Label Propagation:</strong> The fastest of the three options, but does not produce a community hierarchy. <a href="http://arxiv.org/pdf/0709.2938.pdf" target="_blank">Paper</a> <br>
 
-                <strong>ORCA:</strong> Preliminarily prune the graph of irrelevant vertices, then, iteratively identify dense neighborhoods and contract them into super-nodes; after contraction repeat the second step on the next hierarchy level or, if this fails, remove low-degree nodes and replace them by shortcuts. Do this until the whole graph is contracted. <a href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.164.2905&rep=rep1&type=pdf" target="_blank">Paper</a> <br>
+                <strong>Louvain Method:</strong> Focused on modularity optimisation, almost as fast as label propagation and provides a hierarchical community structure. <a href="http://arxiv.org/pdf/0803.0476v2.pdf" target="_blank">Paper</a> <br>
+
+                <strong>ORCA:</strong> The slowest option, but generally produces the greatest number of levels in its hierarchy. Currently does not support graphs that are not fully connected. <a href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.164.2905&rep=rep1&type=pdf" target="_blank">Paper</a> <br>
             </p>
             
             <hr>
@@ -142,7 +148,7 @@
                     <div id="labelling" class="menuSection">
                         <span class="help topHelp" data-bind="visible: showHelp">?</span>
                         <div class="helpContent">
-                            Choose a label to show above each node in the graph. <br><strong>Community</strong> represents the community for the node at the current colour level. Other available node labels are available at view level 0. If you uploaded an edgelist, the 'label' label represents the name of the node given in the input file.
+                            Choose a label to show above each node in the graph. <br><strong>Community</strong> represents the community for the node at the current colour level. Other available node labels are available at view level 0. <strong>VertexID</strong> refers to the id given to the node in the original input file.
                         </div>
                         Node labels: 
                         <span class="detail">

@@ -2,9 +2,9 @@
 
 var PAGE_SIZE = 10;
 var MAX_NODES_VIEWABLE = 2000;
-var MAX_EDGES_VIEWABLE = 2000;
-var MAX_FILESIZE = 2000 * 1000 * 1000;
-var MAX_FILESIZE_ORCA = 2000 * 1000 * 1000;
+var MAX_EDGES_VIEWABLE = 1000;
+var MAX_FILESIZE = 50 * 1000 * 1000;
+var MAX_FILESIZE_ORCA = 10 * 1000 * 1000;
 var FILESIZE_NEEDING_PROGRESSBAR = 30* 1000;
 
 alertify.set({ delay: 2000 });
@@ -91,7 +91,7 @@ var viewModel = function() {
     });
 
     self.updateSelectedCommunity = function() {
-        if (self.cy()) {
+        if (self.cy() && !(viewModel.currentLevel() === 1 && $( "#algorithm option:selected" ).text() === 'ORCA')) {
             if (self.cy().$('node:selected').length === 1) {
                 self.selectedCommunity(cy.$('node:selected')[0].id());
             } else {
@@ -118,7 +118,7 @@ var viewModel = function() {
     self.levelsArray = ko.computed( function() {
         var levels = [];
         for (var i = 0; i <= self.hierarchyHeight(); i++) {
-                levels.push(i);
+            levels.push(i);
         }
         return levels;
     });
@@ -503,7 +503,8 @@ var viewModel = function() {
 
     self.turnHelpOn = function() {
         self.showHelp(true);
-        alertify.alert('Hover over the ? arrows to view help information.');
+        alertify.alert('Hover over the ? arrows to view help information. If not on view level 0, select a community to see the nodes ' +
+            'within that community. If the graph is difficult to view, try adjusting the layout settings.');
     };
 
     self.turnHelpOff = function() {
