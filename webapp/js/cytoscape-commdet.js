@@ -8,14 +8,19 @@ function initCy() {
     var edgeCss;
     var nodeCount = viewModel.graph().nodes.length;
 
+    var minNodeSize = Math.max(3, 500 / nodeCount);
+    minNodeSize = Math.min(minNodeSize, 10);
+    var maxNodeSize = Math.min(50, 5000 / nodeCount);
+    maxNodeSize = Math.max(maxNodeSize, 50);
+
     viewModel.cancelLayoutStatus(false);
 
     if (viewModel.currentLevel() === 0 || (viewModel.currentLevel() === 1 && $( "#algorithm option:selected" ).text() === 'ORCA')) {
         nodeCss = {
             'background-color': 'data(colour)',
-            'height': Math.min(750 / nodeCount, 30),
-            'width': Math.min(750 / nodeCount, 30),
-            'font-size': Math.min(750 / nodeCount, 20)
+            'height': Math.min(900 / nodeCount, 30),
+            'width': Math.min(900 / nodeCount, 30),
+            'font-size': Math.min(550 / nodeCount, 20)
         };
         edgeCss = {
             'line-color': '#53433F',
@@ -24,14 +29,14 @@ function initCy() {
     } else {
         nodeCss = {
             'background-color': 'data(colour)',
-            'height': 'mapData(size, 1, ' + maxSize + ', 2, 30)',
-            'width': 'mapData(size, 1, ' + maxSize + ', 2, 30)',
-            'font-size': 'mapData(size, 1, ' + maxSize + ', 3, 20)'
+            'height': 'mapData(size, 1, ' + maxSize + ', ' + minNodeSize + ', ' + maxNodeSize + ')',
+            'width': 'mapData(size, 1, ' + maxSize + ', ' + minNodeSize + ', ' + maxNodeSize + ')',
+            'font-size': 'mapData(size, 1, ' + maxSize + ', ' + minNodeSize + ', ' + maxNodeSize + ')'
         };
         edgeCss = {
             'line-color': '#53433F',
             'width': 'mapData(weight, 0, ' + maxEdge + ', 0.2, 5)',
-            'curve-style': 'haystack'
+            //'curve-style': 'haystack'
         };
     }
 
