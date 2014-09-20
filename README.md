@@ -33,8 +33,8 @@ These libraries must be added to a `webapp/WEB-INF/libraries` directory.
 
 ###JavaScript
 
-All included in this repository. [__(Source)__](webapp/js)
+All included in this repository. [__(Source)__](webapp/js/plugins)
 
 ##Build
 
-Java source files must be compiled to the `webapp/WEB-INF/classes` directory. Then, from the `webapp` directory, you can compile a war file to be deployed on your webserver (eg. with `jar -cvf`).
+Java source files must be compiled to the `webapp/WEB-INF/classes` directory. Then, from the `webapp` directory, you can compile a war file (eg. with `jar -cvf`) to be deployed on your webserver.
