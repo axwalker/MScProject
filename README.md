@@ -33,7 +33,7 @@ These libraries must be added to a `webapp/WEB-INF/libraries` directory.
 
 ###JavaScript
 
-All included in this repository. [__(Source)__](tree/master/webapp/js)
+All included in this repository. [__(Source)__](webapp/js)
 
 ##Build
 
