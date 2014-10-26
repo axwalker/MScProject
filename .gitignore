@@ -16,6 +16,10 @@ build/
 *.war
 *.ear
 
+# IntelliJ files
+.idea/
+*.iml
+
 # Eclipse files
 .metadata/
 *.prefs
