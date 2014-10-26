@@ -20,21 +20,6 @@ Input files allowed:
 - Edge list
 - Graph Modelling Language 
 
-
-##Dependencies
-
-###Java
-
-- [Commons IO 2.4](http://commons.apache.org/proper/commons-io/)
-- [GraphChi Java v0.2](https://github.com/GraphChi/graphchi-java)
-- [Jackson Core v2.4.1](https://github.com/FasterXML/jackson-core)
-
-These libraries must be added to a `webapp/WEB-INF/libraries` directory.
-
-###JavaScript
-
-All included in this repository. [__(Source)__](webapp/js/plugins)
-
 ##Build
 
-Java source files must be compiled to the `webapp/WEB-INF/classes` directory. Then, from the `webapp` directory, you can compile a war file (eg. with `jar -cvf`) to be deployed on your webserver.
+Run with Jetty using gradle: `gradle appRun`.

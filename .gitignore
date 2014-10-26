@@ -7,6 +7,10 @@
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
 
+# Gradle
+build/
+.gradle/
+
 # Package Files #
 *.jar
 *.war
@@ -28,7 +32,3 @@ hs_err_pid*
 #TeX files
 *.bak
 *.*#
-
-#webapp build files
-*.war
-

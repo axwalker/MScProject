@@ -227,7 +227,9 @@ public class LouvainProgram implements GraphChiProgram<Float, Float>, DetectionP
 
 	private void setupAndRunEngine(String filename) throws FileNotFoundException, IOException {
 		FastSharder<Float, Float> sharder = createSharder(filename, 1);
+		System.out.println("filename: " + filename);
 		sharder.shard(new FileInputStream(new File(filename)), "edgelist");
+		System.out.println("done sharding...");
 		GraphChiEngine<Float, Float> engine = new GraphChiEngine<Float, Float>(filename, 1);
 		engine.setEdataConverter(new FloatConverter());
 		engine.setVertexDataConverter(new FloatConverter());

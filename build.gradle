@@ -1,0 +1,38 @@
+apply plugin: 'java'
+apply plugin: 'war'
+apply from: 'https://raw.github.com/akhikhl/gretty/master/pluginScripts/gretty.plugin'
+//apply plugin: 'jetty'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+	//providedCompile 'org.apache.tomcat:tomcat-catalina:7.0.47'
+	//compile 'javax.servlet:servlet-api:3.0'
+	providedCompile 'javax.servlet:javax.servlet-api:3.0.1'
+	//compile "javax.servlet:servlet-api:2.5"
+	compile 'commons-io:commons-io:2.4'
+	compile 'commons-lang:commons-lang:2.2'
+	compile 'org.codehaus.jackson:jackson-mapper-asl:1.5.0'
+	compile('org.graphchi:graphchi-java_2.11:0.2.1') {
+		exclude group: 'org.apache.pig'
+		exclude group: 'org.apache.hadoop'
+	}
+	compile('org.apache.pig:pig:0.10.0') {
+		//exclude group: 'net.java.dev.jets3t'
+		exclude group: 'org.mortbay.jetty'
+	}
+	testCompile group: 'junit', name: 'junit', version: '4.+'
+	testCompile 'org.mockito:mockito-all:1.9.5'
+}
+
+war {
+    from 'src/main/webapp'
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.1'
+}
+
+//httpPort = 8081
